@@ -43,6 +43,7 @@ const LOOK = {
   boy: { shirt: '#3a86d6', pants: '#33405a', cap: '#e24a3a', hair: '#2b1d1a', bag: '#f2c230', belt: '#f2f2f2' },
   girl: { shirt: '#ffd23a', pants: '#3d5a9e', style: 'pig', hair: '#2b1d1a', band: null, bag: '#e84a8a', belt: '#ffffff' },
   prof: { skin: '#e8b890', shirt: '#3aa8a0', pants: '#3a3f58', coat: '#f4f6fa', style: 'bun', hair: '#3a2418', glasses: true, belt: '#ffffff', shoe: '#33405a' },
+  kos: { skin: '#e8b890', shirt: '#9a4a8a', pants: '#6a4a3a', style: 'bun', hair: '#2a1a14', belt: '#f2c230', shoe: '#6a4a3a' },
   nurse: { skin: '#f0c19a', shirt: '#ffffff', pants: '#e8708f', coat: '#ffd6e5', style: 'long', hair: '#1d1612', hat: true, belt: '#ffffff', shoe: '#ffffff' },
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);

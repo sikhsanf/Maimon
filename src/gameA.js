@@ -9,22 +9,23 @@ const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[at
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan asin', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
-  kancik: { n: ['Kancik', 'Kancilon'], type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
+  kancik: { info: { cat: 'Maimon Kancil', desc: 'Kancil kecil yang cerdik. Suka petak umpet di semak taman. Kalau ada timun segar, matanya langsung berbinar!', hab: 'Hutan UI & sekitar Margonda', ht: '0,5 m', wt: '4 kg', emo: '🦌' }, n: ['Kancik', 'Kancilon'], type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
     mv: [['Seruduk', 'Biasa', 40], ['Daun Tajam', 'Daun', 55], ['Lempar Batu', 'Batu', 55]] },
-  cebongi: { n: ['Cebongi', 'Kodi'], type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
+  cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
     mv: [['Sundul', 'Biasa', 40], ['Semprot Air', 'Air', 55], ['Kuak Keras', 'Suara', 55]] },
-  pioyo: { n: ['Pioyo', 'Petokar'], type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
+  pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
     mv: [['Patuk', 'Biasa', 40], ['Kokok Api', 'Api', 55], ['Cakar Jago', 'Petarung', 55]] },
-  kucingko: { n: ['Kucingko'], type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, mv: [['Cakar', 'Biasa', 40], ['Meong Keras', 'Suara', 50]] },
-  tikusil: { n: ['Tikusil'], type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, mv: [['Gigit', 'Biasa', 40], ['Lempar Kerikil', 'Batu', 50]] },
-  dombanyo: { n: ['Dombanyo'], type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, mv: [['Seruduk', 'Biasa', 40], ['Rumput Tajam', 'Daun', 50]] },
+  kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, mv: [['Cakar', 'Biasa', 40], ['Meong Keras', 'Suara', 50]] },
+  tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, mv: [['Gigit', 'Biasa', 40], ['Lempar Kerikil', 'Batu', 50]] },
+  dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, mv: [['Seruduk', 'Biasa', 40], ['Rumput Tajam', 'Daun', 50]] },
 };
 
 /* =====================================================================
    ENTITAS: pemain, Maimon liar, teman
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
-const wilds = [], mates = [], respawns = [];
+const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
+const hpMaxOf = (sp, st) => MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1];
 let mode = 'loading', T = 0, cooldown = 0, talk = null, battle = null;
 const $ = (id) => document.getElementById(id);
 const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -102,9 +103,10 @@ $('go').onclick = () => {
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
   S.stage = 2; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya. Semangat, Pelatih!']]);
+  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya.'], ['Prof. Catherine', 'Satu lagi: kamu hanya boleh membawa 3 Maimon. Yang lebih dari itu dititip di Rumah Kos Bu Wati, di dekat jalan raya. Semangat, Pelatih!']]);
 };
-function addChip(m) { const c = document.createElement('span'); c.textContent = (mates.length === 1 ? '⭐ ' : '') + m.name; c.dataset.n = m.name; $('mchips').appendChild(c); }
+function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
+const addChip = () => renderChips();
 
 /* =====================================================================
    UI umum, partikel, teks melayang
@@ -189,8 +191,10 @@ function showFeed(w) { $('ptitle').textContent = `Kasih ${w.name} makan apa?`; $
 function feed(id) {
   if (!talk || mode !== 'feed') return; const w = talk;
   if (id === w.fav) {
-    $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w);
-    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2600); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch'); toast(`Yeay! ${w.name} ikut kamu! 🎉`, 2.4); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
+    $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
+    if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax }); world.remove(w.rig.root); }
+    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Rumah Kos 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; w.hp = w.hpMax; w.state = 'wander'; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; leaveEncounter(5); };

@@ -114,6 +114,19 @@ button .e{font-size:24px;display:block;line-height:1}
 #flash{inset:0;background:#fff;opacity:0;transition:opacity .35s;z-index:7}
 #chap{inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(36,25,18,.82);color:#fff;text-align:center;z-index:9;pointer-events:auto}
 #chap h2{font-size:min(9vw,44px);margin:0;color:var(--gold)}#chap p{font-size:20px;margin:0;max-width:80vw}#chap button{margin-top:14px}
+
+#dlg,#dex,#home,#create .card,#chap{pointer-events:auto}
+#dex{max-height:88vh;overflow:auto;width:min(620px,calc(100vw - 20px))}
+#dex .g{grid-template-columns:repeat(6,1fr)}
+#dex .c{cursor:pointer;min-height:70px;padding:4px 2px;position:relative}#dex .c .em{font-size:26px;line-height:1.1}#dex .c b{font-size:13px}#dex .c.sel{background:#ffe9a8;transform:translateY(-3px)}#dex .c i{position:absolute;right:2px;top:1px;font-style:normal;font-size:11px}
+#dexd{margin-top:10px;border:3px solid var(--edge);background:#fff;padding:8px 10px;font-size:14px;min-height:96px}
+#dexd .hint{opacity:.7}#dexd .top{display:flex;gap:10px;align-items:center}#dexd .big{font-size:44px;line-height:1}#dexd .top b{display:block;font-size:20px}#dexd .top small{font-family:var(--font-label);font-size:9px;opacity:.65}
+#dexd p{margin:6px 0;font-size:14px}#dexd .rows{display:grid;gap:3px;font-size:13px}#dexd .rare{color:#b3541e;font-weight:700;font-size:12px}
+#home{left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(640px,calc(100vw - 20px));max-height:90vh;overflow:auto;padding:10px 12px;z-index:8}
+#home h3{margin:8px 0 6px;font-size:17px}#home .row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#home .hc{border:3px solid var(--edge);background:#fff;padding:5px;text-align:center;font-size:13px;display:flex;flex-direction:column;gap:3px;align-items:center}
+#home .hc .em{font-size:28px;line-height:1}#home .hc b{font-size:15px}#home .hc button{min-height:34px;font-size:13px;padding:2px 6px;width:100%}
+#home .hint{grid-column:1/-1;opacity:.7;font-size:13px}#home .x{display:block;margin:10px auto 0;min-height:40px;padding:2px 22px}
 @media (max-width:560px){#zone{font-size:15px}#moves .mv{font-size:14px}#pick .card b{font-size:17px}}
 </style>
 </head>
@@ -126,7 +139,8 @@ button .e{font-size:24px;display:block;line-height:1}
 <div id="arrow" class="ui">⬇️</div>
 <button id="talk" class="ui">💬 Bicara</button>
 <button id="dexb" class="ui">📖</button>
-<div id="dex" class="ui panel"><h3>Maimondex</h3><div class="g" id="dexg"></div><button class="x" id="dexx">Tutup</button></div>
+<div id="dex" class="ui panel"><h3 id="dexh">Maimondex</h3><div class="g" id="dexg"></div><div id="dexd"></div><button class="x" id="dexx">Tutup</button></div>
+<div id="home" class="ui panel"><h3 style="text-align:center;margin:0">🏠 Rumah Kos · Titipan Maimon</h3><h3 id="homeH1"></h3><div class="row" id="homeP"></div><h3 id="homeH2"></h3><div class="row" id="homeB"></div><button class="x" id="homeX">Selesai</button></div>
 <div id="flash" class="ui"></div>
 <div id="chap"><h2 id="chapT"></h2><p id="chapP"></p><button id="chapB">Lanjut</button></div>
 <div id="loading">MENYIAPKAN DEPOK…</div>
@@ -966,6 +980,11 @@ function labelTex(txt, bg, fg, icon) {
   if (icon === 'flask') px(['..###..', '..#.#..', '..#.#..', '.#...#.', '#.....#', '#######'], 8, 9, 4, '#ffffff');
   g.fillStyle = fg; g.font = 'bold 15px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 112, 23); return toTex(c);
 }
+function addRoofSign(g, sign, h, rh) {
+  const tex = labelTex(sign[0], sign[1], '#ffffff', sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), sg = new THREE.Group(); sg.position.set(0, h + rh + 0.34, 0);
+  const mk2 = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.4), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
+  mk2(0); mk2(Math.PI); [-0.7, 0.7].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.34, 0.06), toon('#4a4f58')); p.position.set(px2, -0.2, 0); sg.add(p); }); g.add(sg);
+}
 function colonial(x, z, ry, i, o = {}) {
   const g = bldg(x, z, 3.2, 2.1, 1.4, Object.assign({ ry, wall: '#fbf7ee', roof: '#c04a36', door: '#3d6a4a', doorX: 1.6, wins: [[0.55, 0.33, 6, 9], [1.05, 0.33, 6, 9], [2.15, 0.33, 6, 9], [2.65, 0.33, 6, 9]], shutter: '#4a7a54', porch: true, rh: 0.8, chimney: true, frame: '#ffffff', seed: i * 11 }, o.b || {}));
   if (o.sign) {
@@ -976,7 +995,7 @@ function colonial(x, z, ry, i, o = {}) {
   return g;
 }
 
-const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9] };
+const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9], home: [-11.9, 3.3] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -1003,7 +1022,7 @@ function buildBuildings() {
   colonial(-15.0, 8.4, 0, 0); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-15.0, 12.7, Math.PI, 2); colonial(-9.9, 12.7, Math.PI, 3, { sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } });
   addTree(-12.5, 10.2, 'round', 1.5, 77);
   // KAMPUNG barat (menghadap Jl. Raya)
-  [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => house(x, 2.7, 0, i + 1));
+  [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['RUMAH KOS', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)
   [[10.9, 8.7, Math.PI / 2], [10.9, 11.7, Math.PI / 2], [13.0, 8.7, -Math.PI / 2], [13.0, 11.7, -Math.PI / 2]].forEach(([x, z, ry], i) => house(x, z, ry, i + 3));
 }
@@ -1484,6 +1503,7 @@ const LOOK = {
   boy: { shirt: '#3a86d6', pants: '#33405a', cap: '#e24a3a', hair: '#2b1d1a', bag: '#f2c230', belt: '#f2f2f2' },
   girl: { shirt: '#ffd23a', pants: '#3d5a9e', style: 'pig', hair: '#2b1d1a', band: null, bag: '#e84a8a', belt: '#ffffff' },
   prof: { skin: '#e8b890', shirt: '#3aa8a0', pants: '#3a3f58', coat: '#f4f6fa', style: 'bun', hair: '#3a2418', glasses: true, belt: '#ffffff', shoe: '#33405a' },
+  kos: { skin: '#e8b890', shirt: '#9a4a8a', pants: '#6a4a3a', style: 'bun', hair: '#2a1a14', belt: '#f2c230', shoe: '#6a4a3a' },
   nurse: { skin: '#f0c19a', shirt: '#ffffff', pants: '#e8708f', coat: '#ffd6e5', style: 'long', hair: '#1d1612', hat: true, belt: '#ffffff', shoe: '#ffffff' },
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);
@@ -1498,22 +1518,23 @@ const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[at
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan asin', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
-  kancik: { n: ['Kancik', 'Kancilon'], type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
+  kancik: { info: { cat: 'Maimon Kancil', desc: 'Kancil kecil yang cerdik. Suka petak umpet di semak taman. Kalau ada timun segar, matanya langsung berbinar!', hab: 'Hutan UI & sekitar Margonda', ht: '0,5 m', wt: '4 kg', emo: '🦌' }, n: ['Kancik', 'Kancilon'], type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
     mv: [['Seruduk', 'Biasa', 40], ['Daun Tajam', 'Daun', 55], ['Lempar Batu', 'Batu', 55]] },
-  cebongi: { n: ['Cebongi', 'Kodi'], type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
+  cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
     mv: [['Sundul', 'Biasa', 40], ['Semprot Air', 'Air', 55], ['Kuak Keras', 'Suara', 55]] },
-  pioyo: { n: ['Pioyo', 'Petokar'], type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
+  pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
     mv: [['Patuk', 'Biasa', 40], ['Kokok Api', 'Api', 55], ['Cakar Jago', 'Petarung', 55]] },
-  kucingko: { n: ['Kucingko'], type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, mv: [['Cakar', 'Biasa', 40], ['Meong Keras', 'Suara', 50]] },
-  tikusil: { n: ['Tikusil'], type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, mv: [['Gigit', 'Biasa', 40], ['Lempar Kerikil', 'Batu', 50]] },
-  dombanyo: { n: ['Dombanyo'], type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, mv: [['Seruduk', 'Biasa', 40], ['Rumput Tajam', 'Daun', 50]] },
+  kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, mv: [['Cakar', 'Biasa', 40], ['Meong Keras', 'Suara', 50]] },
+  tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, mv: [['Gigit', 'Biasa', 40], ['Lempar Kerikil', 'Batu', 50]] },
+  dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, mv: [['Seruduk', 'Biasa', 40], ['Rumput Tajam', 'Daun', 50]] },
 };
 
 /* =====================================================================
    ENTITAS: pemain, Maimon liar, teman
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
-const wilds = [], mates = [], respawns = [];
+const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
+const hpMaxOf = (sp, st) => MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1];
 let mode = 'loading', T = 0, cooldown = 0, talk = null, battle = null;
 const $ = (id) => document.getElementById(id);
 const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -1591,9 +1612,10 @@ $('go').onclick = () => {
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
   S.stage = 2; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya. Semangat, Pelatih!']]);
+  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya.'], ['Prof. Catherine', 'Satu lagi: kamu hanya boleh membawa 3 Maimon. Yang lebih dari itu dititip di Rumah Kos Bu Wati, di dekat jalan raya. Semangat, Pelatih!']]);
 };
-function addChip(m) { const c = document.createElement('span'); c.textContent = (mates.length === 1 ? '⭐ ' : '') + m.name; c.dataset.n = m.name; $('mchips').appendChild(c); }
+function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
+const addChip = () => renderChips();
 
 /* =====================================================================
    UI umum, partikel, teks melayang
@@ -1678,8 +1700,10 @@ function showFeed(w) { $('ptitle').textContent = `Kasih ${w.name} makan apa?`; $
 function feed(id) {
   if (!talk || mode !== 'feed') return; const w = talk;
   if (id === w.fav) {
-    $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w);
-    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2600); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch'); toast(`Yeay! ${w.name} ikut kamu! 🎉`, 2.4); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
+    $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
+    if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax }); world.remove(w.rig.root); }
+    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Rumah Kos 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; w.hp = w.hpMax; w.state = 'wander'; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; leaveEncounter(5); };
@@ -1731,7 +1755,7 @@ const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {} };   // stage: 0 c
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
-function saveGame() { store.set(JSON.stringify({ S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp })) })); }
+function saveGame() { store.set(JSON.stringify({ S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp })), box: stash })); }
 const nm = (s) => s.replace(/\{n\}/g, S.name);
 
 /* ---------- NPC ---------- */
@@ -1753,7 +1777,7 @@ function dialog(lines, done) {
 }
 function nextLine() {
   dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; $('joy').style.display = ''; if (d) d(); return; }
-  const [who, txt] = dq.lines[dq.i]; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === '_' ? '#241912' : '#3a5a9e';
+  const [who, txt] = dq.lines[dq.i]; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
 function dlgTick(dt) { if (!dq) return; if (dq.pos < dq.txt.length) { dq.pos = Math.min(dq.txt.length, dq.pos + dt * 48); $('dtxt').textContent = dq.txt.slice(0, dq.pos | 0); $('dnext').style.visibility = dq.pos >= dq.txt.length ? 'visible' : 'hidden'; } }
@@ -1765,13 +1789,24 @@ addEventListener('keydown', (e) => { if (!dq && mode === 'play' && (e.key === 'e
 function chapter(t, p, btn, cb) { $('chapT').textContent = t; $('chapP').textContent = p; $('chapB').textContent = btn || 'Lanjut'; $('chap').style.display = 'flex'; $('chapB').onclick = () => { $('chap').style.display = 'none'; if (cb) cb(); }; }
 function flashScreen() { const f = $('flash'); f.style.opacity = 1; setTimeout(() => { f.style.opacity = 0; }, 260); }
 
-/* ---------- Maimondex ---------- */
+/* ---------- Maimondex (ala pokedex) ---------- */
 function markDex(sp, lv) { if ((S.dex[sp] || 0) < lv) { S.dex[sp] = lv; saveGame(); } }
+let dexSel = null;
+const countOf = (sp) => mates.filter((m) => m.sp === sp).length + stash.filter((r) => r.sp === sp).length;
 function renderDex() {
   const g = $('dexg'); g.innerHTML = '';
-  DEXLIST.forEach((sp, i) => { const d = MAI[sp], v = S.dex[sp] || 0, c = document.createElement('div'); c.className = 'c' + (v ? '' : ' un');
-    c.innerHTML = v ? `<small>No.${i + 1}</small><b>${d.n[0]}</b><span class="chip" style="background:${TCOL[d.type]}">${d.type}</span><div style="font-size:12px;margin-top:3px">${v > 1 ? '✅ Tertangkap' : '👀 Terlihat'} · suka ${FOOD[d.fav][2]}</div>` : `<small>No.${i + 1}</small><b>???</b><div style="font-size:12px;margin-top:3px">belum ditemukan</div>`; g.appendChild(c); });
-  const n = DEXLIST.filter((s) => S.dex[s] > 1).length; $('dex').firstChild.textContent = `Maimondex · ${n}/${DEXLIST.length}`;
+  DEXLIST.forEach((sp, i) => { const d = MAI[sp], v = S.dex[sp] || 0, c = document.createElement('div'); c.className = 'c' + (v ? '' : ' un') + (dexSel === sp ? ' sel' : '');
+    c.innerHTML = `<small>No.${String(i + 1).padStart(3, '0')}</small><div class="em">${v ? d.info.emo : '❔'}</div><b>${v ? d.n[0] : '???'}</b>${v > 1 ? '<i class="ok">✅</i>' : v ? '<i>👀</i>' : ''}`; c.onclick = () => { dexSel = sp; renderDex(); }; g.appendChild(c); });
+  const n = DEXLIST.filter((s) => S.dex[s] > 1).length, seen = DEXLIST.filter((s) => S.dex[s] > 0).length;
+  $('dexh').textContent = `Maimondex · Tertangkap ${n} · Terlihat ${seen} / ${DEXLIST.length}`;
+  const D = $('dexd');
+  if (!dexSel) { D.innerHTML = '<div class="hint">Pilih Maimon untuk melihat datanya. Tangkap Maimon untuk membuka semua info!</div>'; return; }
+  const sp = dexSel, d = MAI[sp], v = S.dex[sp] || 0, i = DEXLIST.indexOf(sp);
+  if (!v) { D.innerHTML = `<div class="hint">No.${String(i + 1).padStart(3, '0')} · ??? — Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
+  const weak = Object.keys(BEATS).filter((t) => BEATS[t].includes(d.type)), strong = BEATS[d.type], rareTag = RARE_SP.includes(sp) ? '<span class="rare">✨ SANGAT LANGKA di alam liar</span>' : '';
+  const chip = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
+  D.innerHTML = `<div class="top"><div class="big">${d.info.emo}</div><div><small>No.${String(i + 1).padStart(3, '0')} · ${d.info.cat}</small><b>${d.n.join(' → ')}</b>${chip(d.type)} ${rareTag}</div></div>` +
+    (v > 1 ? `<p>${d.info.desc}</p><div class="rows"><div>📏 ${d.info.ht} · ⚖️ ${d.info.wt}</div><div>📍 ${d.info.hab}</div><div>🍽️ Suka: ${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div><div>❤️ HP ${d.hp.join(' / ')}</div><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div><div>⚔️ Jurus: ${d.mv.map((m) => `${m[0]} ${chip(m[1])}`).join(' · ')}</div><div>🎒 Kamu punya: ${countOf(sp)}</div></div>` : `<p class="hint">Baru terlihat. Menangkapnya akan membuka cerita, makanan favorit, dan jurusnya.</p><div class="rows"><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div></div>`);
 }
 $('dexb').onclick = () => { if (mode !== 'play') return; renderDex(); $('dex').style.display = 'block'; };
 $('dexx').onclick = () => { $('dex').style.display = 'none'; };
@@ -1787,6 +1822,7 @@ function updateObjective() {
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   else if (S.stage === 3) { txt = 'Lapor hasil penelitian ke Prof. Catherine'; tgt = npcs.find((n) => n.id === 'prof'); }
   else if (S.stage === 4) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  $('dexb').style.display = mode === 'play' && S.stage >= 2 ? 'block' : 'none';
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
 }
 function updateMarker(dt) {
@@ -1805,7 +1841,7 @@ function updateInteract() {
   const b = $('talk'); b.style.display = nearNPC && mode === 'play' ? 'block' : 'none'; if (nearNPC) b.textContent = '💬 ' + nearNPC.name.split(' ').slice(-1)[0];
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play' || !nearNPC) return; (nearNPC.id === 'prof' ? talkProf : talkNurse)(); }
+function interact() { if (mode !== 'play' || !nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : talkNurse)(); }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
 
 /* ---------- Prof. Catherine ---------- */
@@ -1824,12 +1860,28 @@ function talkProf() {
     dialog([[P, 'Penelitianku butuh banyak data. Cari Maimon berkilau ✨ ya, {n}! Kalau ketemu, kabari aku.']]);
   }
 }
+
+/* ---------- Rumah Kos: titipan Maimon (tim maks. 3) ---------- */
+function renderHome() {
+  const P = $('homeP'), B = $('homeB'); P.innerHTML = ''; B.innerHTML = '';
+  $('homeH1').textContent = `Ikut denganmu (${mates.length}/${MAXP})`; $('homeH2').textContent = `Dititip di rumah (${stash.length})`;
+  const card = (sp, name, hp, hpMax, btns, star) => { const d = MAI[sp], c = document.createElement('div'); c.className = 'hc'; c.innerHTML = `<div class="em">${d.info.emo}</div><b>${star ? '⭐ ' : ''}${name}</b><span class="chip" style="background:${TCOL[d.type]}">${d.type}</span><small>HP ${Math.ceil(hp)}/${hpMax}</small>`; btns.forEach(([t, f]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = f; c.appendChild(b); }); return c; };
+  mates.forEach((m, i) => { const bt = []; if (i > 0) bt.push(['⭐ Pimpin', () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); renderHome(); saveGame(); }]); bt.push(['🏠 Titip', () => { if (mates.length <= 1) { toast('Minimal 1 Maimon ikut denganmu!', 1.6); return; } stash.push({ sp: m.sp, st: m.st, hp: m.hp }); world.remove(m.rig.root); mates.splice(i, 1); renderChips(); renderHome(); saveGame(); }]); P.appendChild(card(m.sp, m.name, m.hp, m.hpMax, bt, i === 0)); });
+  if (!stash.length) B.innerHTML = '<div class="hint">Belum ada Maimon yang dititip. Kalau timmu penuh, Maimon baru otomatis dititip di sini.</div>';
+  stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1], r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z); m.hp = q.hp; m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
+}
+function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
+$('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
+function talkHome() {
+  const K = 'Bu Wati';
+  dialog([[K, 'Selamat datang di Rumah Kos, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
+}
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
 function talkNurse() {
-  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax);
+  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
-  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
+  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
 }
 
 /* ---------- title + buat karakter ---------- */
@@ -1863,9 +1915,9 @@ function beginStory() {
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
-  Object.assign(S, d.S); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
-  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4); m.state = 'follow'; m.hp = q.hp; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); addChip(m); });
-  player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
+  Object.assign(S, d.S); stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
+  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4); m.state = 'follow'; m.hp = q.hp; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
+  renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;
 }
@@ -1938,12 +1990,12 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
 $('loading').style.display = 'none';
 enterTitle();
-window.__g = { S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 ['visibilitychange', 'pagehide'].forEach((ev) => addEventListener(ev, () => { if (mode !== 'title' && mode !== 'create' && player.rig) saveGame(); }));
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

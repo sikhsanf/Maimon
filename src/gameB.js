@@ -67,12 +67,12 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
 $('loading').style.display = 'none';
 enterTitle();
-window.__g = { S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 ['visibilitychange', 'pagehide'].forEach((ev) => addEventListener(ev, () => { if (mode !== 'title' && mode !== 'create' && player.rig) saveGame(); }));
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));

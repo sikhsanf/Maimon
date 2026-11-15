@@ -114,6 +114,19 @@ button .e{font-size:24px;display:block;line-height:1}
 #flash{inset:0;background:#fff;opacity:0;transition:opacity .35s;z-index:7}
 #chap{inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(36,25,18,.82);color:#fff;text-align:center;z-index:9;pointer-events:auto}
 #chap h2{font-size:min(9vw,44px);margin:0;color:var(--gold)}#chap p{font-size:20px;margin:0;max-width:80vw}#chap button{margin-top:14px}
+
+#dlg,#dex,#home,#create .card,#chap{pointer-events:auto}
+#dex{max-height:88vh;overflow:auto;width:min(620px,calc(100vw - 20px))}
+#dex .g{grid-template-columns:repeat(6,1fr)}
+#dex .c{cursor:pointer;min-height:70px;padding:4px 2px;position:relative}#dex .c .em{font-size:26px;line-height:1.1}#dex .c b{font-size:13px}#dex .c.sel{background:#ffe9a8;transform:translateY(-3px)}#dex .c i{position:absolute;right:2px;top:1px;font-style:normal;font-size:11px}
+#dexd{margin-top:10px;border:3px solid var(--edge);background:#fff;padding:8px 10px;font-size:14px;min-height:96px}
+#dexd .hint{opacity:.7}#dexd .top{display:flex;gap:10px;align-items:center}#dexd .big{font-size:44px;line-height:1}#dexd .top b{display:block;font-size:20px}#dexd .top small{font-family:var(--font-label);font-size:9px;opacity:.65}
+#dexd p{margin:6px 0;font-size:14px}#dexd .rows{display:grid;gap:3px;font-size:13px}#dexd .rare{color:#b3541e;font-weight:700;font-size:12px}
+#home{left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(640px,calc(100vw - 20px));max-height:90vh;overflow:auto;padding:10px 12px;z-index:8}
+#home h3{margin:8px 0 6px;font-size:17px}#home .row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#home .hc{border:3px solid var(--edge);background:#fff;padding:5px;text-align:center;font-size:13px;display:flex;flex-direction:column;gap:3px;align-items:center}
+#home .hc .em{font-size:28px;line-height:1}#home .hc b{font-size:15px}#home .hc button{min-height:34px;font-size:13px;padding:2px 6px;width:100%}
+#home .hint{grid-column:1/-1;opacity:.7;font-size:13px}#home .x{display:block;margin:10px auto 0;min-height:40px;padding:2px 22px}
 @media (max-width:560px){#zone{font-size:15px}#moves .mv{font-size:14px}#pick .card b{font-size:17px}}
 </style>
 </head>
@@ -126,7 +139,8 @@ button .e{font-size:24px;display:block;line-height:1}
 <div id="arrow" class="ui">⬇️</div>
 <button id="talk" class="ui">💬 Bicara</button>
 <button id="dexb" class="ui">📖</button>
-<div id="dex" class="ui panel"><h3>Maimondex</h3><div class="g" id="dexg"></div><button class="x" id="dexx">Tutup</button></div>
+<div id="dex" class="ui panel"><h3 id="dexh">Maimondex</h3><div class="g" id="dexg"></div><div id="dexd"></div><button class="x" id="dexx">Tutup</button></div>
+<div id="home" class="ui panel"><h3 style="text-align:center;margin:0">🏠 Rumah Kos · Titipan Maimon</h3><h3 id="homeH1"></h3><div class="row" id="homeP"></div><h3 id="homeH2"></h3><div class="row" id="homeB"></div><button class="x" id="homeX">Selesai</button></div>
 <div id="flash" class="ui"></div>
 <div id="chap"><h2 id="chapT"></h2><p id="chapP"></p><button id="chapB">Lanjut</button></div>
 <div id="loading">MENYIAPKAN DEPOK…</div>

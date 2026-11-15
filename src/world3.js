@@ -75,6 +75,11 @@ function labelTex(txt, bg, fg, icon) {
   if (icon === 'flask') px(['..###..', '..#.#..', '..#.#..', '.#...#.', '#.....#', '#######'], 8, 9, 4, '#ffffff');
   g.fillStyle = fg; g.font = 'bold 15px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 112, 23); return toTex(c);
 }
+function addRoofSign(g, sign, h, rh) {
+  const tex = labelTex(sign[0], sign[1], '#ffffff', sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), sg = new THREE.Group(); sg.position.set(0, h + rh + 0.34, 0);
+  const mk2 = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.4), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
+  mk2(0); mk2(Math.PI); [-0.7, 0.7].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.34, 0.06), toon('#4a4f58')); p.position.set(px2, -0.2, 0); sg.add(p); }); g.add(sg);
+}
 function colonial(x, z, ry, i, o = {}) {
   const g = bldg(x, z, 3.2, 2.1, 1.4, Object.assign({ ry, wall: '#fbf7ee', roof: '#c04a36', door: '#3d6a4a', doorX: 1.6, wins: [[0.55, 0.33, 6, 9], [1.05, 0.33, 6, 9], [2.15, 0.33, 6, 9], [2.65, 0.33, 6, 9]], shutter: '#4a7a54', porch: true, rh: 0.8, chimney: true, frame: '#ffffff', seed: i * 11 }, o.b || {}));
   if (o.sign) {
@@ -85,7 +90,7 @@ function colonial(x, z, ry, i, o = {}) {
   return g;
 }
 
-const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9] };
+const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9], home: [-11.9, 3.3] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -112,7 +117,7 @@ function buildBuildings() {
   colonial(-15.0, 8.4, 0, 0); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-15.0, 12.7, Math.PI, 2); colonial(-9.9, 12.7, Math.PI, 3, { sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } });
   addTree(-12.5, 10.2, 'round', 1.5, 77);
   // KAMPUNG barat (menghadap Jl. Raya)
-  [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => house(x, 2.7, 0, i + 1));
+  [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['RUMAH KOS', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)
   [[10.9, 8.7, Math.PI / 2], [10.9, 11.7, Math.PI / 2], [13.0, 8.7, -Math.PI / 2], [13.0, 11.7, -Math.PI / 2]].forEach(([x, z, ry], i) => house(x, z, ry, i + 3));
 }
