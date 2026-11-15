@@ -1,0 +1,19 @@
+{
+  "id": "/maimon/",
+  "name": "Maimon · Edisi Jawa",
+  "short_name": "Maimon",
+  "description": "Game petualangan menangkap dan melatih Maimon di diorama piksel 3D. Edisi Jawa: Depok.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#cfe4ea",
+  "theme_color": "#241912",
+  "categories": ["games", "kids"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
