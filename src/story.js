@@ -7,7 +7,7 @@ const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {} };   // stage: 0 c
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
-function saveGame() { store.set(JSON.stringify({ S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp })), box: stash })); }
+function saveGame() { store.set(JSON.stringify({ S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp })), box: stash })); }
 const nm = (s) => s.replace(/\{n\}/g, S.name);
 
 /* ---------- NPC ---------- */
@@ -58,7 +58,7 @@ function renderDex() {
   const weak = Object.keys(BEATS).filter((t) => BEATS[t].includes(d.type)), strong = BEATS[d.type], rareTag = RARE_SP.includes(sp) ? '<span class="rare">✨ SANGAT LANGKA di alam liar</span>' : '';
   const chip = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
   D.innerHTML = `<div class="top"><div class="big">${d.info.emo}</div><div><small>No.${String(i + 1).padStart(3, '0')} · ${d.info.cat}</small><b>${d.n.join(' → ')}</b>${chip(d.type)} ${rareTag}</div></div>` +
-    (v > 1 ? `<p>${d.info.desc}</p><div class="rows"><div>📏 ${d.info.ht} · ⚖️ ${d.info.wt}</div><div>📍 ${d.info.hab}</div><div>🍽️ Suka: ${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div><div>❤️ HP ${d.hp.join(' / ')}</div><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div><div>⚔️ Jurus: ${d.mv.map((m) => `${m[0]} ${chip(m[1])}`).join(' · ')}</div><div>🎒 Kamu punya: ${countOf(sp)}</div></div>` : `<p class="hint">Baru terlihat. Menangkapnya akan membuka cerita, makanan favorit, dan jurusnya.</p><div class="rows"><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div></div>`);
+    (v > 1 ? `<p>${d.info.desc}</p><div class="rows"><div>📏 ${d.info.ht} · ⚖️ ${d.info.wt}</div><div>📍 ${d.info.hab}</div><div>🍽️ Suka: ${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div><div>❤️ HP dasar ${d.hp.join(' / ')}</div><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div><div>⚔️ Jurus: ${d.ls.map((m) => `${m[1]} ${chip(m[2])} <small>Lv${m[0]}</small>`).join(' · ')}</div><div>🎒 Kamu punya: ${countOf(sp)}</div></div>` : `<p class="hint">Baru terlihat. Menangkapnya akan membuka cerita, makanan favorit, dan jurusnya.</p><div class="rows"><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div></div>`);
 }
 $('dexb').onclick = () => { if (mode !== 'play') return; renderDex(); $('dex').style.display = 'block'; };
 $('dexx').onclick = () => { $('dex').style.display = 'none'; };
@@ -118,9 +118,9 @@ function renderHome() {
   const P = $('homeP'), B = $('homeB'); P.innerHTML = ''; B.innerHTML = '';
   $('homeH1').textContent = `Ikut denganmu (${mates.length}/${MAXP})`; $('homeH2').textContent = `Dititip di rumah (${stash.length})`;
   const card = (sp, name, hp, hpMax, btns, star) => { const d = MAI[sp], c = document.createElement('div'); c.className = 'hc'; c.innerHTML = `<div class="em">${d.info.emo}</div><b>${star ? '⭐ ' : ''}${name}</b><span class="chip" style="background:${TCOL[d.type]}">${d.type}</span><small>HP ${Math.ceil(hp)}/${hpMax}</small>`; btns.forEach(([t, f]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = f; c.appendChild(b); }); return c; };
-  mates.forEach((m, i) => { const bt = []; if (i > 0) bt.push(['⭐ Pimpin', () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); renderHome(); saveGame(); }]); bt.push(['🏠 Titip', () => { if (mates.length <= 1) { toast('Minimal 1 Maimon ikut denganmu!', 1.6); return; } stash.push({ sp: m.sp, st: m.st, hp: m.hp }); world.remove(m.rig.root); mates.splice(i, 1); renderChips(); renderHome(); saveGame(); }]); P.appendChild(card(m.sp, m.name, m.hp, m.hpMax, bt, i === 0)); });
+  mates.forEach((m, i) => { const bt = []; if (i > 0) bt.push(['⭐ Pimpin', () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); renderHome(); saveGame(); }]); bt.push(['🏠 Titip', () => { if (mates.length <= 1) { toast('Minimal 1 Maimon ikut denganmu!', 1.6); return; } stash.push({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp }); world.remove(m.rig.root); mates.splice(i, 1); renderChips(); renderHome(); saveGame(); }]); P.appendChild(card(m.sp, `${m.name} Lv${m.lv}`, m.hp, m.hpMax, bt, i === 0)); });
   if (!stash.length) B.innerHTML = '<div class="hint">Belum ada Maimon yang dititip. Kalau timmu penuh, Maimon baru otomatis dititip di sini.</div>';
-  stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1], r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z); m.hp = q.hp; m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
+  stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st, r.lv || 5); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1] + ' Lv' + (r.lv || 5), r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z, q.lv || 5, q.xp || 0); m.hp = Math.min(q.hp, m.hpMax); m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
 }
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
 $('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
@@ -130,10 +130,10 @@ function talkHome() {
 }
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
 function talkNurse() {
-  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st));
+  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
-  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
+  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
 }
 
 /* ---------- title + buat karakter ---------- */
@@ -168,7 +168,7 @@ function beginStory() {
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
   Object.assign(S, d.S); stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
-  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4); m.state = 'follow'; m.hp = q.hp; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
+  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;

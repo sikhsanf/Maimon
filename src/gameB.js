@@ -40,7 +40,9 @@ function frame() {
   }
   const bub = $('bubble');
   if (mode === 'play' && near && nd < 6.5) { const [sx, sy] = toScreen(near.x, 1.1, near.z); bub.style.display = 'block'; bub.style.left = sx + 'px'; bub.style.top = sy + 'px'; bub.textContent = (near.rare ? '✨' : '') + FOOD[near.fav][2]; } else bub.style.display = 'none';
-  if (battle) { [['hpL', battle.me], ['hpR', battle.w]].forEach(([id, e]) => { const [sx, sy] = toScreen(e.x, 0.95, e.z), el = $(id); el.style.left = sx + 'px'; el.style.top = sy + 'px'; }); }
+  if (battle) { const sm = toScreen(battle.me.x, 0.95, battle.me.z), sw = toScreen(battle.w.x, 0.95, battle.w.z), mid = (sm[0] + sw[0]) / 2, bw = 150, lo = sm[0] <= sw[0];
+    [['hpL', sm, battle.me, lo], ['hpR', sw, battle.w, !lo]].forEach(([id, p, e, left]) => { const el = $(id); let x = left ? Math.min(p[0] + 22, mid - 4) - bw : Math.max(p[0] - 22, mid + 4); x = Math.min(Math.max(x, 6), innerWidth - bw - 6); el.style.left = x + 'px'; el.style.top = Math.max(p[1], 100) + 'px'; el.style.transform = 'translate(0,-100%)'; }); }
+  if (document.body.dataset.mode !== mode) document.body.dataset.mode = mode;
   if (mode === 'play') $('zone').firstChild.textContent = zoneName(player.x, player.z);
 
   // rumput terdorong
@@ -72,7 +74,7 @@ SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
 $('loading').style.display = 'none';
 enterTitle();
-window.__g = { stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 ['visibilitychange', 'pagehide'].forEach((ev) => addEventListener(ev, () => { if (mode !== 'title' && mode !== 'create' && player.rig) saveGame(); }));
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
