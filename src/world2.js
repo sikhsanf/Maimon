@@ -32,7 +32,7 @@ function bushGeoms(x, z, s, seed) {
   bg = faceColors(bg, (c, cx, cy, cz, ny, f) => { const h = hash2(f, seed); c.set(ny > 0.4 ? (h < 0.4 ? '#82c04e' : '#6fb044') : (h < 0.5 ? '#4c8c36' : '#427e30')); if (h > 0.96) c.set(['#f0a0c0', '#ffd23a', '#fff6dc'][seed % 3]); });
   put(bg, x, y0 + 0.2 * s, z, s, seed, 0, 0);
 }
-function addTree(x, z, kind = 'pine', s = 1, seed = (x * 13 + z * 7) | 0) { if (Math.hypot(x - C.dais[0], z - C.dais[1]) < 3.4) return; treeSpots.push({ x, z, kind, s, seed }); circles.push({ x, z, r: 0.32 * s }); }
+function addTree(x, z, kind = 'pine', s = 1, seed = (x * 13 + z * 7) | 0) { if (Math.hypot(x - C.dais[0], z - C.dais[1]) < 3.4 || inRect(C.garden, x, z, 0.5)) return; treeSpots.push({ x, z, kind, s, seed }); circles.push({ x, z, r: 0.32 * s }); }
 function addBush(x, z, s = 1, seed = 1) { treeSpots.push({ x, z, kind: 'bush', s, seed }); }
 const treeMeshes = [];
 function buildTrees() {

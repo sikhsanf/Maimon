@@ -104,25 +104,12 @@ button .e{font-size:24px;display:block;line-height:1}
 #talk{right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 150px);display:none;pointer-events:auto;min-width:130px;font-size:18px;background:var(--gold);z-index:6}
 #dexb{pointer-events:auto;right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 36px);display:none;width:44px;height:44px;font-size:22px;padding:0;z-index:6;left:auto}
 #snd{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)}
-#dex{left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(560px,calc(100vw - 20px));padding:10px 12px;z-index:8}
-#dex h3{margin:0 0 8px;font-size:20px;text-align:center}
-#dex .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-#dex .c{border:3px solid var(--edge);background:#fff;padding:6px 4px;text-align:center;font-size:14px;min-height:78px}
-#dex .c b{display:block;font-size:17px}
-#dex .c.un{background:#d8cfbb;opacity:.8}
-#dex .x{display:block;margin:8px auto 0;min-height:40px;font-size:15px;padding:2px 22px}
 #arrow{display:none;font-size:30px;z-index:5;transform:translate(-50%,-50%);text-shadow:-2px 0 #241912,2px 0 #241912,0 -2px #241912,0 2px #241912}
 #flash{inset:0;background:#fff;opacity:0;transition:opacity .35s;z-index:7}
 #chap{inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:rgba(36,25,18,.82);color:#fff;text-align:center;z-index:9;pointer-events:auto}
 #chap h2{font-size:min(9vw,44px);margin:0;color:var(--gold)}#chap p{font-size:20px;margin:0;max-width:80vw}#chap button{margin-top:14px}
 
 #dlg,#dex,#home,#create .card,#chap{pointer-events:auto}
-#dex{max-height:88vh;overflow:auto;width:min(620px,calc(100vw - 20px))}
-#dex .g{grid-template-columns:repeat(6,1fr)}
-#dex .c{cursor:pointer;min-height:70px;padding:4px 2px;position:relative}#dex .c .em{font-size:26px;line-height:1.1}#dex .c b{font-size:13px}#dex .c.sel{background:#ffe9a8;transform:translateY(-3px)}#dex .c i{position:absolute;right:2px;top:1px;font-style:normal;font-size:11px}
-#dexd{margin-top:10px;border:3px solid var(--edge);background:#fff;padding:8px 10px;font-size:14px;min-height:96px}
-#dexd .hint{opacity:.7}#dexd .top{display:flex;gap:10px;align-items:center}#dexd .big{font-size:44px;line-height:1}#dexd .top b{display:block;font-size:20px}#dexd .top small{font-family:var(--font-label);font-size:9px;opacity:.65}
-#dexd p{margin:6px 0;font-size:14px}#dexd .rows{display:grid;gap:3px;font-size:13px}#dexd .rare{color:#b3541e;font-weight:700;font-size:12px}
 #home{left:50%;top:50%;transform:translate(-50%,-50%);display:none;width:min(640px,calc(100vw - 20px));max-height:90vh;overflow:auto;padding:10px 12px;z-index:8}
 #home h3{margin:8px 0 6px;font-size:17px}#home .row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 #home .hc{border:3px solid var(--edge);background:#fff;padding:5px;text-align:center;font-size:13px;display:flex;flex-direction:column;gap:3px;align-items:center}
@@ -141,7 +128,6 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
  #moves .row{grid-template-columns:1fr 1fr}#moves .mv{min-height:56px;font-size:15px}
  #log{top:calc(env(safe-area-inset-top,0px) + 14px);font-size:20px}
  #dlg p{font-size:18px}
- #dex .g{grid-template-columns:repeat(4,1fr)}
  #home .row{grid-template-columns:repeat(3,1fr)}
  #foods{grid-template-columns:repeat(3,1fr)}
  #foods button{font-size:14px;padding:4px 2px}
@@ -156,10 +142,71 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
  #moves .mv{min-height:46px;font-size:15px;padding:3px}#moves .mv small{font-size:11px}#flee{min-height:30px;font-size:13px}
  #log{font-size:18px}
  #panel{padding:5px 8px}#panel h3{font-size:15px;margin-bottom:4px}#foods{grid-template-columns:repeat(6,1fr)}#foods button{font-size:12px;padding:2px}
- #dex,#home{max-height:94vh}#dex .c{min-height:56px}#dexd{min-height:70px}
+ #home{max-height:94vh}
  #joy{width:100px;height:100px}
  #toast{top:14%;font-size:20px}
 }
+
+/* layar penuh: Maimondex / Tim Saya / Tas */
+#menu{right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 90px);display:none;flex-direction:column;gap:6px;padding:8px;z-index:7}
+#menu button{pointer-events:auto;min-width:170px;min-height:46px;font-size:18px;text-align:left;padding:0 12px}
+.scr{position:fixed;left:50%;top:max(8px,env(safe-area-inset-top));bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(820px,calc(100vw - 16px));display:none;flex-direction:column;background:var(--paper);border:3px solid var(--edge);box-shadow:0 4px 0 var(--edge);z-index:8;pointer-events:auto;overflow:hidden}
+.scr .sh{display:flex;align-items:center;gap:10px;padding:6px 8px 6px 12px;color:#fff;border-bottom:3px solid var(--edge);flex:0 0 auto}
+.scr .sh b{font-size:22px;letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.3)}
+.scr .sh .sub{flex:1;font-family:var(--font-label);font-size:10px;opacity:.95;text-align:right}
+.scr .sh button{min-height:36px;min-width:42px;padding:0 10px;font-size:18px}
+#dex .sh{background:#c8402c}#team .sh{background:#2f7a8a}#bag .sh{background:#a8742a}
+.scr .body{flex:1;overflow:auto;padding:10px;min-height:0}
+.dexbody{flex:1;display:flex;min-height:0}
+#dexl{width:38%;max-width:300px;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:6px;border-right:3px solid var(--edge);background:var(--paper-2)}
+#dexd{flex:1;overflow:auto;padding:10px;min-width:0}
+.dr{display:flex;align-items:center;gap:8px;border:3px solid var(--edge);background:#fff;padding:3px 6px;cursor:pointer;position:relative;flex:0 0 auto}
+.dr.sel{background:#ffe9a8;transform:translateX(4px)}.dr.un{background:#d8cfbb}
+.dr img,.dr .q{width:44px;height:44px;image-rendering:pixelated;flex:0 0 44px}.dr .q{display:flex;align-items:center;justify-content:center;font-size:24px;opacity:.5}
+.dr .nm b{display:block;font-size:15px;line-height:1.1}.dr small{font-family:var(--font-label);font-size:9px;opacity:.65}
+.dr i{position:absolute;right:4px;top:2px;font-style:normal;font-size:12px}
+.plate{display:flex;align-items:center;gap:12px;padding:10px;border:3px solid var(--edge);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.plate img{width:128px;height:128px;image-rendering:pixelated;flex:0 0 auto;filter:drop-shadow(2px 0 0 #241912) drop-shadow(-2px 0 0 #241912) drop-shadow(0 2px 0 #241912) drop-shadow(0 -2px 0 #241912)}
+.plate img.dim{filter:brightness(0) opacity(.55)}
+.plate .t small{font-family:var(--font-label);font-size:10px;opacity:.9;display:block}.plate .t b{display:block;font-size:24px;line-height:1.1;margin:2px 0 6px}
+.plate .t .evo{font-size:12px;opacity:.95;margin-bottom:6px}
+.rareb{display:inline-block;background:#ffe066;color:#6a3b00;text-shadow:none;border:2px solid var(--edge);font-size:11px;padding:0 6px;margin-left:4px;font-weight:700}
+.sec{margin-top:10px}.sec h4{margin:0 0 4px;font-family:var(--font-label);font-size:10px;letter-spacing:1px;opacity:.7;font-weight:400}
+.quote{border:3px solid var(--edge);background:#fff;padding:7px 9px;font-size:14px;line-height:1.35}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.stat{border:3px solid var(--edge);background:#fff;padding:5px 4px;text-align:center;font-size:13px;min-width:0}.stat small{display:block;font-family:var(--font-label);font-size:9px;opacity:.6}
+.chips2{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.mr{display:flex;align-items:center;gap:6px;border:3px solid var(--edge);background:#fff;padding:3px 6px;margin-bottom:4px;font-size:14px}.mr .lvb{font-family:var(--font-label);font-size:9px;background:var(--edge);color:#fff;padding:1px 5px}
+.mr .pw{flex:1;height:8px;background:#ddd;min-width:30px}.mr .pw i{display:block;height:100%}.mr.lk{opacity:.5}
+.hint2{opacity:.7;font-size:13px;padding:8px}
+.teamg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,320px));gap:10px;justify-content:start}
+.tc{border:3px solid var(--edge);background:#fff;padding:8px;display:flex;flex-direction:column;gap:6px}
+.tc .hd{display:flex;gap:8px;align-items:center}.tc .hd img{width:72px;height:72px;image-rendering:pixelated;flex:0 0 72px;background:var(--paper-2);border:2px solid var(--edge)}
+.tc .hd b{font-size:18px;display:block;line-height:1.1}.tc .hd small{font-family:var(--font-label);font-size:10px;opacity:.7}
+.tb{height:10px;background:#d9cfb8;border:2px solid var(--edge)}.tb i{display:block;height:100%}
+.tl{display:flex;justify-content:space-between;font-family:var(--font-label);font-size:9px;opacity:.75;margin-bottom:2px}
+.mvg{display:grid;grid-template-columns:1fr 1fr;gap:4px}.mvg .m{border:2px solid var(--edge);padding:2px 5px;font-size:12px;display:flex;gap:4px;align-items:center;min-width:0;background:var(--paper)}.mvg .m.lk{opacity:.5}
+.mvg .m span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc button{min-height:34px;font-size:13px}
+.mini{display:flex;gap:8px;flex-wrap:wrap}.mini .mc{border:3px solid var(--edge);background:#fff;padding:4px 6px;display:flex;gap:6px;align-items:center;font-size:13px}.mini img{width:36px;height:36px;image-rendering:pixelated}
+.bagg{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.bi{border:3px solid var(--edge);background:#fff;padding:8px;display:flex;gap:10px;align-items:center}.bi.zero{opacity:.55;background:#e6dcc3}
+.bi .em{font-size:38px;line-height:1}.bi b{font-size:17px;display:block}.bi .n{font-family:var(--font-label);font-size:12px;color:#a8742a}.bi small{display:block;font-size:11px;opacity:.75;line-height:1.25;margin-top:2px}
+.feedbtn small{display:block}
+#foods button small{display:block;font-family:var(--font-label);font-size:10px;opacity:.7}#foods button.none{opacity:.45}
+#phint{font-size:12px;margin-top:6px;opacity:.8;line-height:1.3}#phint:empty{display:none}
+#fishui{left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);display:none;flex-direction:column;align-items:center;gap:8px;z-index:7}
+#fishmsg{padding:6px 14px;font-size:18px;text-align:center}
+#pullb{pointer-events:auto;min-width:200px;min-height:70px;font-size:26px;background:var(--gold);opacity:.55}#pullb.on{opacity:1;animation:pl .35s infinite alternate}
+@keyframes pl{to{transform:scale(1.08)}}
+#fishx{pointer-events:auto;min-height:34px;font-size:13px}
+body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,body[data-mode=fish] #dexb,body[data-mode=fish] #talk,body[data-mode=fish] #obj,body[data-mode=fish] #mates{display:none!important}
+@media (max-aspect-ratio:1/1){
+ .dexbody{flex-direction:column}
+ #dexl{width:auto;max-width:none;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:3px solid var(--edge);padding:6px;flex:0 0 auto}
+ .dr{flex:0 0 78px;flex-direction:column;padding:4px 2px;text-align:center;gap:2px}.dr.sel{transform:translateY(3px)}.dr .nm b{font-size:12px}.dr small{display:none}
+ .plate img{width:104px;height:104px}.plate .t b{font-size:20px}
+}
+@media (max-height:480px) and (orientation:landscape){.scr .sh b{font-size:17px}.scr .sh{padding:3px 6px 3px 10px}.plate img{width:92px;height:92px}.teamg{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}#pullb{min-height:54px;font-size:22px}}
 </style>
 </head>
 <body>
@@ -170,8 +217,12 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
 <div id="obj" class="ui panel"></div>
 <div id="arrow" class="ui">⬇️</div>
 <button id="talk" class="ui">💬 Bicara</button>
-<button id="dexb" class="ui">📖</button>
-<div id="dex" class="ui panel"><h3 id="dexh">Maimondex</h3><div class="g" id="dexg"></div><div id="dexd"></div><button class="x" id="dexx">Tutup</button></div>
+<button id="dexb" class="ui">☰</button>
+<div id="menu" class="ui panel"><button data-s="dex">📖 Maimondex</button><button data-s="team">🐾 Tim Saya</button><button data-s="bag">🎒 Tas</button></div>
+<div id="dex" class="scr"><div class="sh"><b>MAIMONDEX</b><span class="sub" id="dexh"></span><button data-x="dex">✕</button></div><div class="dexbody"><div id="dexl"></div><div id="dexd"></div></div></div>
+<div id="team" class="scr"><div class="sh"><b>TIM SAYA</b><span class="sub" id="teamh"></span><button data-x="team">✕</button></div><div class="body" id="teamb"></div></div>
+<div id="bag" class="scr"><div class="sh"><b>TAS</b><span class="sub" id="bagh"></span><button data-x="bag">✕</button></div><div class="body" id="bagb"></div></div>
+<div id="fishui" class="ui"><div id="fishmsg" class="panel"></div><button id="pullb">🎣 TARIK!</button><button id="fishx">Batal</button></div>
 <div id="home" class="ui panel"><h3 style="text-align:center;margin:0">🏠 Rumah Kos · Titipan Maimon</h3><h3 id="homeH1"></h3><div class="row" id="homeP"></div><h3 id="homeH2"></h3><div class="row" id="homeB"></div><button class="x" id="homeX">Selesai</button></div>
 <div id="flash" class="ui"></div>
 <div id="chap"><h2 id="chapT"></h2><p id="chapP"></p><button id="chapB">Lanjut</button></div>
@@ -185,7 +236,7 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
   <div id="log" class="panel"></div>
   <div id="moves"><div class="row" id="mvRow"></div><button id="flee">Kabur</button></div>
 </div>
-<div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><button id="skip">Nanti saja</button></div>
+<div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
 <button id="snd" class="ui">🔊</button>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>

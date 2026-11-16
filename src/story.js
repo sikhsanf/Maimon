@@ -3,7 +3,7 @@
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
    ===================================================================== */
 const SAVE_KEY = 'maimon_save_v1';
-const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
+const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {}, bag: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
@@ -43,25 +43,7 @@ function flashScreen() { const f = $('flash'); f.style.opacity = 1; setTimeout((
 
 /* ---------- Maimondex (ala pokedex) ---------- */
 function markDex(sp, lv) { if ((S.dex[sp] || 0) < lv) { S.dex[sp] = lv; saveGame(); } }
-let dexSel = null;
 const countOf = (sp) => mates.filter((m) => m.sp === sp).length + stash.filter((r) => r.sp === sp).length;
-function renderDex() {
-  const g = $('dexg'); g.innerHTML = '';
-  DEXLIST.forEach((sp, i) => { const d = MAI[sp], v = S.dex[sp] || 0, c = document.createElement('div'); c.className = 'c' + (v ? '' : ' un') + (dexSel === sp ? ' sel' : '');
-    c.innerHTML = `<small>No.${String(i + 1).padStart(3, '0')}</small><div class="em">${v ? d.info.emo : '❔'}</div><b>${v ? d.n[0] : '???'}</b>${v > 1 ? '<i class="ok">✅</i>' : v ? '<i>👀</i>' : ''}`; c.onclick = () => { dexSel = sp; renderDex(); }; g.appendChild(c); });
-  const n = DEXLIST.filter((s) => S.dex[s] > 1).length, seen = DEXLIST.filter((s) => S.dex[s] > 0).length;
-  $('dexh').textContent = `Maimondex · Tertangkap ${n} · Terlihat ${seen} / ${DEXLIST.length}`;
-  const D = $('dexd');
-  if (!dexSel) { D.innerHTML = '<div class="hint">Pilih Maimon untuk melihat datanya. Tangkap Maimon untuk membuka semua info!</div>'; return; }
-  const sp = dexSel, d = MAI[sp], v = S.dex[sp] || 0, i = DEXLIST.indexOf(sp);
-  if (!v) { D.innerHTML = `<div class="hint">No.${String(i + 1).padStart(3, '0')} · ??? — Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
-  const weak = Object.keys(BEATS).filter((t) => BEATS[t].includes(d.type)), strong = BEATS[d.type], rareTag = RARE_SP.includes(sp) ? '<span class="rare">✨ SANGAT LANGKA di alam liar</span>' : '';
-  const chip = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
-  D.innerHTML = `<div class="top"><div class="big">${d.info.emo}</div><div><small>No.${String(i + 1).padStart(3, '0')} · ${d.info.cat}</small><b>${d.n.join(' → ')}</b>${chip(d.type)} ${rareTag}</div></div>` +
-    (v > 1 ? `<p>${d.info.desc}</p><div class="rows"><div>📏 ${d.info.ht} · ⚖️ ${d.info.wt}</div><div>📍 ${d.info.hab}</div><div>🍽️ Suka: ${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div><div>❤️ HP dasar ${d.hp.join(' / ')}</div><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div><div>⚔️ Jurus: ${d.ls.map((m) => `${m[1]} ${chip(m[2])} <small>Lv${m[0]}</small>`).join(' · ')}</div><div>🎒 Kamu punya: ${countOf(sp)}</div></div>` : `<p class="hint">Baru terlihat. Menangkapnya akan membuka cerita, makanan favorit, dan jurusnya.</p><div class="rows"><div>💪 Kuat lawan: ${strong.map(chip).join(' ')}</div><div>😵 Lemah lawan: ${weak.map(chip).join(' ')}</div></div>`);
-}
-$('dexb').onclick = () => { if (mode !== 'play') return; renderDex(); $('dex').style.display = 'block'; };
-$('dexx').onclick = () => { $('dex').style.display = 'none'; };
 const commonsCaught = () => COMMONS.filter((s) => S.dex[s] > 1).length;
 
 /* ---------- tujuan + penunjuk ---------- */
@@ -74,7 +56,7 @@ function updateObjective() {
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   else if (S.stage === 3) { txt = 'Lapor hasil penelitian ke Prof. Catherine'; tgt = npcs.find((n) => n.id === 'prof'); }
   else if (S.stage === 4) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  $('dexb').style.display = mode === 'play' && S.stage >= 2 ? 'block' : 'none';
+  $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 2 ? 'block' : 'none';
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
 }
 function updateMarker(dt) {
@@ -86,14 +68,17 @@ function updateMarker(dt) {
 }
 
 /* ---------- interaksi ---------- */
-let nearNPC = null;
+let nearNPC = null, nearSpot = null;
 function updateInteract() {
-  nearNPC = null; let bd = 1.9;
-  if (mode === 'play') npcs.forEach((n) => { const d = Math.hypot(player.x - n.x, player.z - n.z); if (d < bd) { bd = d; nearNPC = n; } });
-  const b = $('talk'); b.style.display = nearNPC && mode === 'play' ? 'block' : 'none'; if (nearNPC) b.textContent = '💬 ' + nearNPC.name.split(' ').slice(-1)[0];
+  nearNPC = null; nearSpot = null; let bd = 1.9;
+  if (mode === 'play') {
+    npcs.forEach((n) => { const d = Math.hypot(player.x - n.x, player.z - n.z); if (d < bd) { bd = d; nearNPC = n; } });
+    spots.forEach((p) => { if (!p.ripe) return; const d = Math.hypot(player.x - p.x, player.z - p.z); if (d < p.r && d < bd) { bd = d; nearSpot = p; nearNPC = null; } });
+  }
+  const b = $('talk'); b.style.display = (nearNPC || nearSpot) && mode === 'play' ? 'block' : 'none'; if (nearSpot) b.textContent = nearSpot.label; else if (nearNPC) b.textContent = '💬 ' + nearNPC.name.split(' ').slice(-1)[0];
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play' || !nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : talkNurse)(); }
+function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : talkNurse)(); }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
 
 /* ---------- Prof. Catherine ---------- */
@@ -103,7 +88,7 @@ function talkProf() {
     dialog([[P, 'Ah, kamu pasti {n}! Selamat datang di Depok.'], [P, 'Aku Prof. Catherine. Aku meneliti SEMUA Maimon di Pulau Jawa. Tapi Maimon liar itu lincah sekali, aku tidak bisa mengejarnya sendirian.'], [P, 'Maukah kamu membantuku? Latih Maimon, tangkap sebanyak mungkin, dan isi Maimondex ini!'], ['{n}', 'Siap, Prof! Aku mau jadi Pelatih Maimon terbaik di dunia!'], [P, 'Semangat yang bagus! Pertama, pilih teman pertamamu. Mereka sudah menunggu di taman.']], () => { enterPick(); });
   } else if (S.stage === 2) {
     const n = commonsCaught();
-    dialog([[P, n === 0 ? 'Aku butuh data Kucingko, Tikusil, dan Dombanyo. Mereka penghuni asli Depok.' : `Bagus sekali! Sudah ${n} dari 3 Maimon yang kuminta.`], [P, 'Ingat: menangkan battle dulu, lalu beri makanan favoritnya. Kalau Maimon-mu lelah, bawa ke Klinik Maimon.'], [P, 'Oh ya, kalau kamu lihat Maimon berkilau ✨, itu SANGAT langka. Jangan sampai lepas!']]);
+    dialog([[P, n === 0 ? 'Aku butuh data Kucingko, Tikusil, dan Dombanyo. Mereka penghuni asli Depok.' : `Bagus sekali! Sudah ${n} dari 3 Maimon yang kuminta.`], [P, 'Ingat: menangkan battle dulu, lalu beri makanan favoritnya dari Tas. Belum punya? Cari di Kebun Warga, tepi Danau UI, atau mancing ikan. Kalau Maimon-mu lelah, bawa ke Klinik Maimon.'], [P, 'Oh ya, kalau kamu lihat Maimon berkilau ✨, itu SANGAT langka. Jangan sampai lepas!']]);
   } else if (S.stage === 3) {
     dialog([[P, 'Kucingko, Tikusil, Dombanyo… datanya lengkap! Kamu hebat, {n}!'], [P, 'Penelitianku di Depok berjalan lancar berkat kamu. Tapi Pulau Jawa itu luas. Ada Jakarta, Bogor, Bandung, Yogyakarta, Surabaya…'], ['{n}', 'Masih banyak Maimon yang belum kutemui! Aku siap, Prof!'], [P, 'Kuliahmu di UI juga akan segera mulai, jadi jaga keseimbangan ya. Tapi gelar Pelatih Maimon terbaik di dunia menunggumu!']], () => {
       S.stage = 4; saveGame(); Music.jingle('catch'); chapter('BAB 1 SELESAI', `Selamat, ${S.name}! Petualanganmu di Depok baru permulaan. Kota berikutnya menanti…`, 'Lanjut jelajah Depok');
@@ -153,7 +138,7 @@ function enterCreate() {
   $('gGo').disabled = true; $('gGo').textContent = 'Pilih dulu ya'; $('create').style.display = 'flex';
 }
 $('gGo').onclick = () => {
-  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {};
+  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {};
   humans.forEach((h) => world.remove(h.rig.root)); humans.length = 0; $('create').style.display = 'none'; $('nameIn').blur();
   setupPlayer(); beginStory();
 };
@@ -167,7 +152,7 @@ function beginStory() {
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
-  Object.assign(S, d.S); stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
+  Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
   (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';

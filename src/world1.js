@@ -23,7 +23,7 @@ const C = {
   forest: [-17.5, -3.6, -13.5, 0.6], plaza: [-10.5, -3.0, 3.6, 2.0],
   mall: [2.2, 6.8, -9.5, -1.6], station: [9.3, 13.8, -9.8, -4.4], platform: [9.3, 10.7, -9, -4.8],
   lama: [-17.5, -7.5, 7.2, 13.5], orchard: [2.2, 7.4, 7.4, 13.5], kamW: [-17.5, -3.6, 0.8, 3.9], kamE: [10, 13.6, 7.4, 13.5],
-  dais: [-5, 10.4, 1.9, 1.9],
+  dais: [-5, 10.4, 1.9, 1.9], garden: [3.2, 7.8, -0.8, 3.4],
 };
 
 /* tile(): jenis permukaan + warna piksel (tekstur tanah dilukis per-piksel seperti Arena Piksel) */
@@ -50,6 +50,7 @@ function kindAt(x, z) {
   if (inEll(C.plaza, x, z)) return 'plaza';
   if (inRect(C.mall, x, z)) return z > -4.4 ? 'park' : 'mallfloor';
   if (inRect(C.station, x, z)) return 'stationfloor';
+  if (inRect(C.garden, x, z)) return 'garden';
   if (inEll(C.dais, x, z)) return 'dais';
   if (inRect(C.lama, x, z)) return (Math.abs(z - 10.2) < 0.4 || Math.abs(x + 12.5) < 0.4) ? 'brick' : 'lawn';
   if (inRect(C.orchard, x, z)) return 'orchard';
@@ -84,6 +85,7 @@ function tileColor(k, x, z, pxi, pzi) {
     case 'lane': return shade(mixc(hex('#b98b5e'), hex('#a47a52'), n), 0.9 + hh * 0.16);
     case 'forest': { const c = PAL.forest[clamp(Math.floor((v - 0.1) * 6), 0, 3)]; if (hh < 0.01) return hex('#6f5a3a'); return c; }
     case 'lawn': { const c = PAL.lawn[clamp(Math.floor((v - 0.1) * 6), 0, 3)]; const f = hash2(pxi * 5 + 1, pzi * 3 + 2); if (f < 0.003) return hex('#fff6dc'); return c; }
+    case 'garden': { const f = Math.sin(z * Math.PI * 2.0 + 0.6); return shade(mixc(hex('#6a4a2c'), hex('#7d5a36'), f > 0.35 ? 1 : 0), 0.9 + hh * 0.16 - (f < -0.6 ? 0.12 : 0)); }
     case 'orchard': return PAL.orch[clamp(Math.floor((v - 0.1) * 5), 0, 2)];
     default: {
       const f = hash2(pxi * 5 + 1, pzi * 3 + 2);
