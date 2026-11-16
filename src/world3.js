@@ -73,19 +73,19 @@ function labelTex(txt, bg, fg, icon) {
   const px = (rows, x0, y0, s, col) => { g.fillStyle = col; rows.forEach((row, j) => [...row].forEach((ch, i) => { if (ch === '#') g.fillRect(x0 + i * s, y0 + j * s, s, s); })); };
   if (icon === 'heart') px(['.##.##.', '#######', '#######', '.#####.', '..###..', '...#...'], 8, 9, 4, '#ffffff');
   if (icon === 'flask') px(['..###..', '..#.#..', '..#.#..', '.#...#.', '#.....#', '#######'], 8, 9, 4, '#ffffff');
-  g.fillStyle = fg; g.font = 'bold 15px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 112, 23); return toTex(c);
+  g.fillStyle = fg; g.font = 'bold 19px monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 112, 23); return toTex(c);
 }
 function addRoofSign(g, sign, h, rh) {
-  const tex = labelTex(sign[0], sign[1], '#ffffff', sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), sg = new THREE.Group(); sg.position.set(0, h + rh + 0.34, 0);
-  const mk2 = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.4), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
-  mk2(0); mk2(Math.PI); [-0.7, 0.7].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.34, 0.06), toon('#4a4f58')); p.position.set(px2, -0.2, 0); sg.add(p); }); g.add(sg);
+  const tex = labelTex(sign[0], sign[1], '#ffffff', sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), sg = new THREE.Group(); sg.position.set(0, h + rh + 0.5, 0);
+  const mk2 = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 0.62), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
+  mk2(0); mk2(Math.PI); [-1.1, 1.1].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.5, 0.07), toon('#4a4f58')); p.position.set(px2, -0.3, 0); sg.add(p); }); g.add(sg);
 }
 function colonial(x, z, ry, i, o = {}) {
   const g = bldg(x, z, 3.2, 2.1, 1.4, Object.assign({ ry, wall: '#fbf7ee', roof: '#c04a36', door: '#3d6a4a', doorX: 1.6, wins: [[0.55, 0.33, 6, 9], [1.05, 0.33, 6, 9], [2.15, 0.33, 6, 9], [2.65, 0.33, 6, 9]], shutter: '#4a7a54', porch: true, rh: 0.8, chimney: true, frame: '#ffffff', seed: i * 11 }, o.b || {}));
   if (o.sign) {
-    const tex = labelTex(o.sign[0], o.sign[1], '#ffffff', o.sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), h = 1.4 * 1.3, sg = new THREE.Group(); sg.position.set(0, h + 0.8 + 0.34, 0);
-    const mk = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.4), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
-    mk(0); mk(Math.PI); [-0.7, 0.7].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.34, 0.06), toon('#4a4f58')); p.position.set(px2, -0.2, 0); sg.add(p); }); g.add(sg);
+    const tex = labelTex(o.sign[0], o.sign[1], '#ffffff', o.sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), h = 1.4 * 1.3, sg = new THREE.Group(); sg.position.set(0, h + 0.8 + 0.5, 0);
+    const mk = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 0.62), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
+    mk(0); mk(Math.PI); [-1.1, 1.1].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.5, 0.07), toon('#4a4f58')); p.position.set(px2, -0.3, 0); sg.add(p); }); g.add(sg);
   }
   return g;
 }
@@ -99,7 +99,7 @@ function buildBuildings() {
     for (const px2 of [-1.2, 0.8]) { const ac = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.6), toon('#b8bcc4')); ac.position.set(px2, 2.37, -0.6); ac.castShadow = true; g.add(ac); }
     const can = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.8), toon('#e0587a')); can.position.set(0.0, 1.0, 2.7); can.castShadow = true; g.add(can);
     for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), toon('#ffffff')); p.position.set(s * 0.8, 0.5, 3.05); g.add(p); }
-    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.9 + (i % 3) * 1.4, groundY(3, -3), -2.9 + Math.floor(i / 3) * 0.95); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); circles.push({ x: car.position.x, z: car.position.z, r: 0.5 }); });
+    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.9 + (i % 3) * 1.4, groundY(3, -3), -2.9 + Math.floor(i / 3) * 0.95); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); [-0.45, 0.45].forEach((o) => circles.push({ x: car.position.x + o, z: car.position.z, r: 0.42 })); });
   }
   // STASIUN DEPOK BARU
   { const g = bldg(12.4, -7.0, 2.8, 2.4, 1.3, { ry: -Math.PI / 2, wall: '#f5f0e0', roof: '#e0587a', rh: 0.6, wins: [[0.7, 0.45, 6, 6], [2.1, 0.45, 6, 6]], door: '#4a6a8a', doorX: 1.4, seed: 5 });
@@ -160,17 +160,16 @@ function buildCar(color, angkot) {
   [[-0.4, 0.55], [0.4, 0.55], [-0.4, -0.55], [0.4, -0.55]].forEach(([x, z]) => M(new THREE.BoxGeometry(0.1, 0.22, 0.26), dark, x, 0.11, z * (angkot ? 1.25 : 1)));
   g.traverse((m) => { if (m.isMesh) { m.castShadow = true; } }); return g;
 }
-const vehicles = [];
 function buildTraffic() {
   const len = polyLen(C.margonda.pts);
-  [['#3a86d6', true, 1], ['#e84a4a', false, 1], ['#3a86d6', true, -1], ['#f2c230', false, -1], ['#52b857', false, 1], ['#9a6ad8', false, -1]].forEach(([c, ang, dir], i) => { const m = buildCar(c, ang); world.add(m); vehicles.push({ m, dir, s: (i * 9.1) % len, v: ang ? 2.0 : 2.7, len }); });
+  [['#3a86d6', true, 1], ['#e84a4a', false, 1], ['#3a86d6', true, -1], ['#f2c230', false, -1], ['#52b857', false, 1], ['#9a6ad8', false, -1]].forEach(([c, ang, dir], i) => { const m = buildCar(c, ang); world.add(m); vehicles.push({ m, dir, ang, s: (i * 9.1) % len, v: ang ? 2.0 : 2.7, len }); });
 }
 function updateTraffic(dt, px_, pz_) {
   vehicles.forEach((v) => {
     const [x, z, tx, tz] = polyAt(C.margonda.pts, v.s), rx = -tz, rz = tx, off = (C.margonda.w / 2 + 0.26) / 2 * 0.98, sgn = v.dir > 0 ? -1 : 1;
-    const cx = x + rx * off * sgn, cz = z + rz * off * sgn, near = Math.hypot(cx - px_, cz - pz_) < 2.6;
+    const cx = x + rx * off * sgn, cz = z + rz * off * sgn, near = (mode === 'play' || mode === 'gather') && Math.hypot(cx - px_, cz - pz_) < 1.9;
     if (!near) { v.s += v.dir * v.v * dt; if (v.s > v.len) v.s -= v.len; if (v.s < 0) v.s += v.len; }
-    v.m.position.set(cx, 0, cz); v.m.rotation.y = Math.atan2(v.dir * tx, v.dir * tz);
+    v.m.position.set(cx, 0, cz); v.m.rotation.y = Math.atan2(v.dir * tx, v.dir * tz); v.m.visible = !(battle && Math.hypot(cx - battle.cx, cz - battle.cz) < 3.6);
   });
 }
 const train = new THREE.Group(); world.add(train);

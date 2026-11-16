@@ -3,21 +3,23 @@
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
    ===================================================================== */
 const PR = { r: null, s: null, cam: null, cache: {} };
-function portrait(sp, st = 1) {
-  const key = sp + st; if (PR.cache[key]) return PR.cache[key];
+function portraitRig(key, build, rot = 0.75) {
+  if (PR.cache[key]) return PR.cache[key];
   try {
     if (!PR.r) {
       PR.r = new THREE.WebGLRenderer({ antialias: false, alpha: true, preserveDrawingBuffer: true }); PR.r.setPixelRatio(1); PR.r.setSize(160, 160, false); PR.r.setClearColor(0x000000, 0);
       PR.s = new THREE.Scene(); PR.s.add(new THREE.HemisphereLight('#ffffff', '#9a8a6a', 2.1)); const dl = new THREE.DirectionalLight('#ffffff', 2.6); dl.position.set(2.5, 4, 3.5); PR.s.add(dl);
       PR.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
     }
-    const rig = MAI[sp].build(st); rig.root.rotation.y = 0.75; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
+    const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(rig.root), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.y * 1.05, sz.z) * 0.62;
     PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
     PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c);
     PR.r.render(PR.s, PR.cam); const url = PR.r.domElement.toDataURL('image/png'); PR.s.remove(rig.root); PR.cache[key] = url; return url;
   } catch (e) { console.warn('portrait', e); return ''; }
 }
+const portrait = (sp, st = 1) => portraitRig(sp + st, () => MAI[sp].build(st));
+const portraitHuman = (g) => portraitRig('h_' + g, () => buildPlayer2(g), 0.4);
 const pimg = (sp, st, cls = '') => { const u = portrait(sp, st); return u ? `<img class="${cls}" src="${u}" alt="">` : `<div class="q">${MAI[sp].info.emo}</div>`; };
 const chipT = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
 const pad3 = (n) => String(n).padStart(3, '0');
@@ -46,7 +48,7 @@ function renderDex() {
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
   if (v > 1) {
     h += `<div class="sec"><h4>CATATAN PENELITI</h4><div class="quote">${d.info.desc}</div></div>`;
-    h += `<div class="sec"><div class="stats"><div class="stat"><small>TINGGI</small>${d.info.ht}</div><div class="stat"><small>BERAT</small>${d.info.wt}</div><div class="stat"><small>FAVORIT</small>${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div></div></div>`;
+    h += `<div class="sec"><div class="stats"><div class="stat"><small>TINGGI</small>${d.info.ht}</div><div class="stat"><small>BERAT</small>${d.info.wt}</div><div class="stat"><small>FAVORIT</small>${FOOD[d.fav][2]} ${FOOD[d.fav][1]}</div></div><div class="mr" style="margin-top:6px"><b>⚡ Kecepatan</b><span class="pw"><i style="width:${d.spd}%;background:#e8b030"></i></span><b>${d.spd}</b></div></div>`;
     h += `<div class="sec"><h4>HABITAT</h4><div class="quote">📍 ${d.info.hab}</div></div>`;
     h += `<div class="sec"><h4>JURUS (MAKS. 4 · TERBUKA SESUAI LEVEL)</h4>${d.ls.map((m) => `<div class="mr"><span class="lvb">Lv ${m[0]}</span><b>${m[1]}</b>${chipT(m[2])}<span class="pw"><i style="width:${Math.round(m[3])}%;background:${TCOL[m[2]]}"></i></span></div>`).join('')}</div>`;
     h += `<div class="sec"><h4>KOLEKSIMU</h4><div class="quote">🎒 Kamu punya ${countOf(sp)} ${d.n[0]}</div></div>`;
@@ -61,7 +63,7 @@ function renderTeam() {
   mates.forEach((m, i) => {
     const hp = Math.max(0, m.hp) / m.hpMax, need = xpNeed(m.lv), xp = m.lv >= LVCAP ? 1 : m.xp / need, kn = movesAt(m.sp, m.lv), lk = MAI[m.sp].ls.filter((x) => x[0] > m.lv).slice(0, 4 - kn.length);
     const c = document.createElement('div'); c.className = 'tc';
-    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''}</small><div style="margin-top:3px">${chipT(m.type)}</div></div></div>` +
+    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''} · ⚡ ${speedOf(m)}</small><div style="margin-top:3px">${chipT(m.type)}</div></div></div>` +
       `<div><div class="tl"><span>HP</span><span>${Math.ceil(m.hp)} / ${m.hpMax}</span></div><div class="tb"><i style="width:${Math.round(hp * 100)}%;background:${hp < 0.25 ? '#d8452e' : hp < 0.55 ? '#e8b030' : '#5cae3c'}"></i></div></div>` +
       `<div><div class="tl"><span>XP</span><span>${m.lv >= LVCAP ? 'MAKS' : `${m.xp} / ${need}`}</span></div><div class="tb"><i style="width:${Math.round(xp * 100)}%;background:#4a9ae8"></i></div></div>` +
       `<div class="mvg">${kn.map((x) => `<div class="m"><i class="chip" style="background:${TCOL[x[2]]};padding:0 4px">&nbsp;</i><span>${x[1]}</span></div>`).join('')}${lk.map((x) => `<div class="m lk">🔒 <span>Lv ${x[0]}</span></div>`).join('')}</div>`;

@@ -60,7 +60,7 @@ button .e{font-size:24px;display:block;line-height:1}
 #battle .hp .lv{font-family:var(--font-label);font-size:10px;opacity:.7}
 #battle .hp.fl{position:fixed;transform:translate(-50%,-100%);right:auto;bottom:auto;width:150px;font-size:13px;padding:4px 8px;pointer-events:none}
 #snd{position:fixed;pointer-events:auto;right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:44px;height:44px;font-size:22px;padding:0;z-index:6;pointer-events:auto}
-#log{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);padding:6px 16px;font-size:22px;font-weight:700;text-align:center;max-width:88vw;opacity:0;transition:opacity .15s}
+#log{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);padding:6px 16px;font-size:26px;font-weight:700;text-align:center;max-width:88vw;opacity:0;transition:opacity .15s}
 #moves{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;width:min(660px,calc(100vw - 20px))}
 #moves .row{display:flex;gap:8px;width:100%}
 #moves .mv{flex:1;padding:6px 4px;min-height:64px;font-size:17px}
@@ -87,21 +87,32 @@ button .e{font-size:24px;display:block;line-height:1}
 #title .btns{display:flex;flex-direction:column;gap:10px;margin-top:10px;pointer-events:auto}
 #title button{min-width:240px;font-size:22px;min-height:56px}
 #title .hint{font-family:var(--font-label);font-size:10px;opacity:.7;background:rgba(243,233,210,.8);padding:2px 8px}
-#create{left:0;right:0;bottom:0;padding:0 10px calc(env(safe-area-inset-bottom,0px) + 12px);display:none;flex-direction:column;align-items:center;gap:8px}
-#create h2{margin:0;padding:6px 14px;font-size:20px;text-align:center}
-#create .cards{display:flex;gap:8px;width:min(480px,100%)}
-#create .card{flex:1;padding:8px 6px;text-align:center;cursor:pointer;min-height:64px;font-size:20px;font-weight:700;pointer-events:auto}
+#create{inset:0;padding:12px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5;overflow:auto}
+#create h2{margin:0;padding:8px 18px;font-size:26px;text-align:center}
+#create .cards{display:flex;gap:14px;width:min(520px,100%)}
+#create .card{flex:1;padding:10px 6px;text-align:center;cursor:pointer;font-size:24px;font-weight:700;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:4px}
+#create .card img{width:min(34vw,150px);height:min(34vw,150px);image-rendering:pixelated}
+#cbg{position:fixed;inset:0;display:none;z-index:4;background:linear-gradient(#7fc4e6 0%,#bfe4f0 55%,#f1e7c9 55.2%,#8ec65a 55.4%,#5f9a3a 100%)}
+#cbg::before{content:'';position:absolute;left:8%;top:12%;width:90px;height:26px;background:#fff;box-shadow:30px -14px 0 #fff,60px 0 0 #fff,300px 40px 0 #fff,330px 26px 0 #fff,360px 40px 0 #fff;opacity:.9}
+#intro{inset:0;display:none;z-index:9;background:transparent}
+#intro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.4s ease-out}
+#intro .bar.t{top:0}#intro .bar.b{bottom:0}#intro.go .bar{height:13vh}
+#icap{position:absolute;left:50%;bottom:calc(13vh + 18px);transform:translateX(-50%);width:min(90vw,760px);text-align:center;color:#fff;font-size:min(6vw,30px);line-height:1.3;text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,0 3px 0 #000;opacity:0;transition:opacity .5s}
+#ititle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,130px);font-weight:700;letter-spacing:4px;color:#fff;text-shadow:-5px 0 var(--edge),5px 0 var(--edge),0 -5px var(--edge),0 5px var(--edge),0 9px 0 var(--edge);opacity:0;transition:opacity 1s;background:rgba(0,0,0,.35)}#ititle b{color:var(--gold)}
+#iskip{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(13vh + 12px);pointer-events:auto;min-height:38px;font-size:15px;padding:2px 14px;z-index:2}
 #create .card.sel{background:#ffe9a8;transform:translateY(-6px)}
 #nameIn{width:min(300px,90%);font:inherit;font-size:22px;text-align:center;padding:6px;border:3px solid var(--edge);background:#fff;color:var(--ink);pointer-events:auto;-webkit-user-select:text;user-select:text}
 #gGo{min-width:240px;font-size:20px;background:var(--gold)}
-#dlg{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:none;width:min(680px,calc(100vw - 20px));padding:10px 16px 14px;min-height:120px;cursor:pointer;z-index:7}
-#dlg b{display:inline-block;font-family:var(--font-label);font-size:12px;letter-spacing:1px;background:var(--edge);color:#fff;padding:2px 10px;margin:-18px 0 6px -6px}
-#dlg p{margin:0;font-size:20px;line-height:1.35;min-height:54px}
+#dlg{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:none;width:min(760px,calc(100vw - 16px));padding:12px 18px 16px;min-height:150px;cursor:pointer;z-index:7}
+#dlg b{display:inline-block;font-family:var(--font-label);font-size:15px;letter-spacing:1px;background:var(--edge);color:#fff;padding:2px 10px;margin:-18px 0 6px -6px}
+#dlg p{margin:0;font-size:27px;line-height:1.3;min-height:84px}
 #dnext{position:absolute;right:12px;bottom:6px;font-size:18px;animation:bl .7s steps(2) infinite}
 @keyframes bl{50%{opacity:0}}
-#obj{left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);display:none;padding:5px 12px;font-size:15px;text-align:center;max-width:46vw}
+#obj{left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);display:none;padding:6px 14px;font-size:18px;text-align:center;max-width:46vw}
 #obj small{display:block;font-family:var(--font-label);font-size:9px;opacity:.6;letter-spacing:1px}
-#talk{right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 150px);display:none;pointer-events:auto;min-width:130px;font-size:18px;background:var(--gold);z-index:6}
+#talk{left:50%;top:50%;right:auto;bottom:auto;display:none;pointer-events:auto;min-width:140px;min-height:56px;font-size:23px;padding:4px 18px;background:var(--gold);z-index:6;transform:translate(-50%,-100%);animation:tb .6s infinite alternate}
+#talk::after{content:'';position:absolute;left:50%;bottom:-13px;margin-left:-9px;border:9px solid transparent;border-top-color:var(--edge);border-bottom:0}
+@keyframes tb{to{margin-top:-9px}}
 #dexb{pointer-events:auto;right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 36px);display:none;width:44px;height:44px;font-size:22px;padding:0;z-index:6;left:auto}
 #snd{bottom:calc(env(safe-area-inset-bottom,0px) + 90px)}
 #arrow{display:none;font-size:30px;z-index:5;transform:translate(-50%,-50%);text-shadow:-2px 0 #241912,2px 0 #241912,0 -2px #241912,0 2px #241912}
@@ -127,7 +138,7 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
  #obj{top:calc(env(safe-area-inset-top,0px) + 66px);max-width:calc(100vw - 24px);width:max-content;font-size:14px;padding:4px 10px}
  #moves .row{grid-template-columns:1fr 1fr}#moves .mv{min-height:56px;font-size:15px}
  #log{top:calc(env(safe-area-inset-top,0px) + 14px);font-size:20px}
- #dlg p{font-size:18px}
+ #dlg p{font-size:24px}
  #home .row{grid-template-columns:repeat(3,1fr)}
  #foods{grid-template-columns:repeat(3,1fr)}
  #foods button{font-size:14px;padding:4px 2px}
@@ -136,9 +147,9 @@ body[data-mode=dialog] #snd,body[data-mode=dialog] #dexb,body[data-mode=home] #s
  #zone{font-size:15px;padding:4px 10px}#zone small{display:none}
  #mates{padding:4px 8px;font-size:13px}
  #obj{font-size:13px;padding:3px 10px;max-width:40vw}
- #dlg{min-height:84px;padding:8px 14px 10px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}#dlg p{font-size:17px;min-height:40px}
+ #dlg{min-height:100px;padding:8px 14px 10px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}#dlg p{font-size:21px;min-height:56px}
  #pick h2{font-size:16px;padding:3px 10px}#pick .card{min-height:70px;padding:4px}#pick .card b{font-size:16px}#pick .card .fav{display:none}
- #create h2{font-size:16px}#create .card{min-height:48px;font-size:17px}
+ #create h2{font-size:18px}#create .card{font-size:18px;flex-direction:row;padding:4px 8px}#create .card img{width:70px;height:70px}#create{gap:6px}
  #moves .mv{min-height:46px;font-size:15px;padding:3px}#moves .mv small{font-size:11px}#flee{min-height:30px;font-size:13px}
  #log{font-size:18px}
  #panel{padding:5px 8px}#panel h3{font-size:15px;margin-bottom:4px}#foods{grid-template-columns:repeat(6,1fr)}#foods button{font-size:12px;padding:2px}
@@ -212,6 +223,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <body>
 <div id="app"><canvas id="view"></canvas></div>
 <div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
+<div id="cbg"></div>
 <div id="create" class="ui"><h2 class="panel">Siapa kamu?</h2><div class="cards" id="gcards"></div><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Mulai Petualangan!</button></div>
 <div id="dlg" class="ui panel"><b id="dwho"></b><p id="dtxt"></p><span id="dnext">▶</span></div>
 <div id="obj" class="ui panel"></div>
@@ -224,6 +236,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <div id="bag" class="scr"><div class="sh"><b>TAS</b><span class="sub" id="bagh"></span><button data-x="bag">✕</button></div><div class="body" id="bagb"></div></div>
 <div id="fishui" class="ui"><div id="fishmsg" class="panel"></div><button id="pullb">🎣 TARIK!</button><button id="fishx">Batal</button></div>
 <div id="home" class="ui panel"><h3 style="text-align:center;margin:0">🏠 Rumah Kos · Titipan Maimon</h3><h3 id="homeH1"></h3><div class="row" id="homeP"></div><h3 id="homeH2"></h3><div class="row" id="homeB"></div><button class="x" id="homeX">Selesai</button></div>
+<div id="intro" class="ui"><div class="bar t"></div><div class="bar b"></div><div id="icap"></div><div id="ititle">MAI<b>MON</b></div><button id="iskip">Lewati ▶</button></div>
 <div id="flash" class="ui"></div>
 <div id="chap"><h2 id="chapT"></h2><p id="chapP"></p><button id="chapB">Lanjut</button></div>
 <div id="loading">MENYIAPKAN DEPOK…</div>

@@ -20,11 +20,11 @@ const Music = (() => {
       ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [5, 'maj7']], bass: 'r.....r.5.....8.', arp: '0.2.4.2.0.2.4.2.',
       dr: { k: 'X.......x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.xo', p: '..o...o...o...o.' },
       A: [[0, 4, 3], [3, 5, 3], [6, 7, 6], [16, 7, 3], [19, 5, 3], [22, 4, 8]], B: [[0, 5, 3], [3, 7, 3], [6, 9, 6], [16, 8, 3], [19, 7, 3], [22, 5, 8]] },
-    depok: { bpm: 104, swing: 0.1, spb: 16, root: 48, sc: 'maj', lead: 'bell', lead2: 'flute', bassI: 'sub', padV: 1, arpI: 'pluck', gong: false,
-      ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [5, 'maj7'], [0, 'add9'], [4, 'm7'], [5, 'maj7'], [7, 'sus4']],
-      bass: 'r..r..5.r..8..5.', arp: '0.2.4.2.1.3.4.3.',
-      dr: { k: 'X.....x...X.x...', s: '....X.......X..o', h: 'x.xoxox.x.xoxoxo', d: '......t.....d.t.', p: 'o.o.o.o.o.o.o.o.' },
-      A: [[0, 4, 3], [3, 5, 2], [5, 7, 5], [12, 5, 2], [14, 4, 2], [16, 2, 3], [19, 4, 3], [22, 5, 8]], B: [[0, 7, 3], [3, 9, 2], [5, 8, 3], [8, 7, 3], [12, 5, 4], [16, 4, 3], [19, 2, 3], [22, 4, 8]] },
+    depok: { bpm: 96, swing: 0, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj'], [0, 'maj'], [7, 'maj'], [5, 'maj'], [7, 'sus4']],
+      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
+      dr: { k: 'X.......x.......', s: '........x.......', h: '..x...x...x...x.', p: 'o...o...o...o...' },
+      A: [[0, 4, 3], [4, 4, 1], [6, 5, 2], [8, 4, 4], [14, 2, 2], [16, 2, 3], [20, 2, 1], [22, 4, 2], [24, 2, 4], [28, 1, 2]], B: [[0, 5, 3], [4, 5, 1], [6, 7, 2], [8, 5, 4], [14, 4, 2], [16, 4, 3], [20, 2, 1], [22, 1, 2], [24, 0, 8]] },
     jakarta: { bpm: 118, swing: 0.08, spb: 16, root: 50, sc: 'dor', lead: 'synth', lead2: 'brass', bassI: 'pluck', padV: 0.8, arpI: 'pluck',
       ch: [[0, 'm9'], [5, 'dom7'], [3, 'maj7'], [7, 'm7'], [0, 'm9'], [5, 'dom7'], [3, 'maj7'], [10, 'dom7']],
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
@@ -220,6 +220,12 @@ const Music = (() => {
     seq.forEach(([m, dt]) => { (kind === 'lose' ? VOICE.flute : VOICE.bell)(t + dt, mtof(m), 0.5, 1, bus); }); if (kind !== 'lose') [48, 55, 64, 72].forEach((m) => VOICE.pad(t + 0.7, mtof(m), 1.6, 1.2, bus));
     setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 8000);
   }
+  function blip(f) {
+    if (!ctx || muted || ctx.state !== 'running') return; const t = ctx.currentTime, o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o2.type = 'triangle'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.12, t + 0.05); o2.frequency.setValueAtTime(f * 2, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+    o.connect(g); o2.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t + 0.08); o2.stop(t + 0.08);
+  }
   function toggle() { muted = !muted; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.5, ctx.currentTime + 0.2); return !muted; }
   function unlock() { if (ensure() && pending) { const p = pending; pending = null; cur = null; play(p); } }
   // render offline (untuk uji kualitas)
@@ -227,5 +233,5 @@ const Music = (() => {
     const sr = 22050, oc = new OfflineAudioContext(2, sr * secs, sr), saved = ctx; build(oc); const th = TH[name]; cur = start(name); cur.bus.gain.value = 1; cur.nextT = 0; sched(secs);
     const buf = await oc.startRendering(); ctx = saved; cur = null; return buf;
   }
-  return { TH, play, jingle, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
+  return { TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
 })();

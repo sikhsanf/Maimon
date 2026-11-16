@@ -57,16 +57,26 @@ function buildGatherWorld() {
 const GATHERDBG = {};
 buildGatherWorld();
 
-function gatherAt(s) {
+const FCOL = { jagung: '#f4cf3a', timun: '#2f8a38', wortel: '#f08a24', kacang: '#c8a064', kangkung: '#58b43c' };
+async function gatherAt(s) {
   if (s.kind === 'fish') return startFish(s);
-  if (!s.ripe) return;
-  const n = s.food === 'jagung' ? 2 : 1 + (R0() < 0.35 ? 1 : 0); addBag(s.food, n); s.ripe = false; s.t = 0;
-  const f = FOOD[s.food]; toast(`+${n} ${f[2]} ${f[1]}`, 1.6); burst(s.x, 0.5, s.z, '#9be85a', 10); floatText(`+${n} ${f[2]}`, player.x, 1.8, player.z, '#33241b'); saveGame();
+  if (!s.ripe || mode !== 'play') return;
+  mode = 'gather'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; player.walk = false; player.ang = Math.atan2(s.x - player.x, s.z - player.z);
+  const root = player.rig.root, P = s.g, n = s.food === 'jagung' ? 2 : 1 + (R0() < 0.35 ? 1 : 0), items = []; for (let i = 0; i < n; i++) items.push(fxCube(FCOL[s.food] || '#fff', 0.16));
+  const base = [s.x, groundY(s.x, s.z), s.z]; let popped = false;
+  await tween(1150, (k) => {
+    const lean = k < 0.15 ? k / 0.15 : k < 0.62 ? 1 : 1 - (k - 0.62) / 0.2; root.rotation.x = Math.max(0, lean) * 0.55;
+    if (k < 0.5) { P.rotation.z = Math.sin(k * 70) * 0.16 * (k / 0.5); P.position.y = 0; if (k > 0.2 && ((k * 100) | 0) % 9 === 0) burst(s.x, 0.15, s.z, '#8a6a3a', 2); }
+    else { if (!popped) { popped = true; s.ripe = false; s.t = 0; burst(s.x, 0.3, s.z, '#9be85a', 12); P.rotation.z = 0; } }
+    items.forEach((m, i) => { const kk = Math.min(1, Math.max(0, (k - 0.5 - i * 0.08) / 0.4)); m.visible = kk > 0 && kk < 1; const tx = player.x, tz = player.z; m.position.set(mix(base[0], tx, kk), base[1] + 0.3 + Math.sin(kk * Math.PI) * 1.1, mix(base[2], tz, kk)); m.rotation.y = kk * 8; });
+  });
+  fxClear(); root.rotation.x = 0; P.rotation.z = 0; addBag(s.food, n); const f = FOOD[s.food]; toast(`+${n} ${f[2]} ${f[1]}`, 1.6); floatText(`+${n} ${f[2]}`, player.x, 1.8, player.z, '#33241b'); Music.blip(660); setTimeout(() => Music.blip(880), 90); saveGame();
+  mode = 'play'; $('joy').style.display = '';
 }
 function updateGather(dt) {
   spots.forEach((s) => {
     if (s.kind === 'crop') { if (!s.ripe) { s.t += dt; if (s.t > REGROW) s.ripe = true; } const k = s.ripe ? 1 : 0.22 + 0.78 * (s.t / REGROW); s.g.scale.setScalar(k); }
-    s.mark.visible = s.ripe && (mode === 'play') && Math.hypot(player.x - s.x, player.z - s.z) < 9;
+    s.mark.visible = s.ripe && (mode === 'play' || mode === 'gather') && s.kind !== 'zz' && Math.hypot(player.x - s.x, player.z - s.z) < 9;
     s.mark.position.set(s.x, groundY(s.x, s.z) + (s.h || 1) + 0.25 + Math.sin(T * 3 + s.x) * 0.05, s.z); s.mark.rotation.y = T * 2;
   });
   updateFish(dt);
@@ -91,7 +101,7 @@ function updateFish(dt) {
   const s = f.s, hx = player.x + Math.sin(player.ang) * 0.3, hy = groundY(player.x, player.z) + 0.75, hz = player.z + Math.cos(player.ang) * 0.3;
   const k = Math.min(1, f.t / 0.6), wy = -0.45 + 0.05;
   let bx = mix(hx, s.tx, k), bz = mix(hz, s.tz, k), by = mix(hy, wy, k) + Math.sin(k * Math.PI) * 1.2;
-  if (f.phase === 'wait') { by += Math.sin(T * 4) * 0.015; if (f.t > f.wait + 0.6) { f.phase = 'bite'; f.bite = 0; $('pullb').classList.add('on'); $('fishmsg').textContent = '❗ Ikan menggigit! TARIK!'; Music.jingle('catch'); } }
+  if (f.phase === 'wait') { by += Math.sin(T * 4) * 0.015; if (f.t > f.wait + 0.6) { f.phase = 'bite'; f.bite = 0; $('pullb').classList.add('on'); $('fishmsg').textContent = '❗ Ikan menggigit! TARIK!'; Music.blip(880); setTimeout(() => Music.blip(1175), 100); } }
   else if (f.phase === 'bite') { f.bite += dt; by += -0.1 + Math.sin(T * 30) * 0.05; if (((f.bite * 10) | 0) % 4 === 0 && R0() < 0.3) burst(s.tx, -0.3, s.tz, '#bfe8ff', 2); if (f.bite > 2.6) { toast('Yah, ikannya kabur… coba lagi!', 1.8); endFish(false); return; } }
   f.bob.position.set(bx, by, bz);
   f.line.position.set((hx + bx) / 2, (hy + by) / 2, (hz + bz) / 2); f.line.lookAt(bx, by, bz); f.line.scale.z = Math.hypot(bx - hx, by - hy, bz - hz);

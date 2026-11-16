@@ -29,10 +29,11 @@ function dialog(lines, done) {
 }
 function nextLine() {
   dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; $('joy').style.display = ''; if (d) d(); return; }
-  const [who, txt] = dq.lines[dq.i]; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
+  const [who, txt] = dq.lines[dq.i]; dq.who = who; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
-function dlgTick(dt) { if (!dq) return; if (dq.pos < dq.txt.length) { dq.pos = Math.min(dq.txt.length, dq.pos + dt * 48); $('dtxt').textContent = dq.txt.slice(0, dq.pos | 0); $('dnext').style.visibility = dq.pos >= dq.txt.length ? 'visible' : 'hidden'; } }
+const VOICEF = { 'Prof. Catherine': 560, 'Dokter Sari': 620, 'Bu Wati': 430, '_': 330 };
+function dlgTick(dt) { if (!dq) return; if (dq.pos < dq.txt.length) { const p0 = dq.pos | 0; dq.pos = Math.min(dq.txt.length, dq.pos + dt * 40); const p1 = dq.pos | 0; if (p1 > p0 && dq.txt[p1 - 1] !== ' ' && p1 % 2 === 0) Music.blip((VOICEF[dq.who] || 400) * (0.92 + R0() * 0.2)); $('dtxt').textContent = dq.txt.slice(0, dq.pos | 0); $('dnext').style.visibility = dq.pos >= dq.txt.length ? 'visible' : 'hidden'; } }
 function dlgAdvance() { if (!dq) return; if (dq.pos < dq.txt.length) { dq.pos = dq.txt.length; $('dtxt').textContent = dq.txt; $('dnext').style.visibility = 'visible'; } else nextLine(); }
 dlgEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); dlgAdvance(); });
 addEventListener('keydown', (e) => { if (!dq && mode === 'play' && (e.key === 'e' || e.key === 'Enter' || e.key === ' ')) interact(); else if (dq && (e.key === 'Enter' || e.key === ' ' || e.key === 'e')) dlgAdvance(); });
@@ -75,7 +76,8 @@ function updateInteract() {
     npcs.forEach((n) => { const d = Math.hypot(player.x - n.x, player.z - n.z); if (d < bd) { bd = d; nearNPC = n; } });
     spots.forEach((p) => { if (!p.ripe) return; const d = Math.hypot(player.x - p.x, player.z - p.z); if (d < p.r && d < bd) { bd = d; nearSpot = p; nearNPC = null; } });
   }
-  const b = $('talk'); b.style.display = (nearNPC || nearSpot) && mode === 'play' ? 'block' : 'none'; if (nearSpot) b.textContent = nearSpot.label; else if (nearNPC) b.textContent = '💬 ' + nearNPC.name.split(' ').slice(-1)[0];
+  const b = $('talk'), on = (nearNPC || nearSpot) && mode === 'play'; b.style.display = on ? 'block' : 'none';
+  if (on) { b.textContent = nearSpot ? nearSpot.label : '💬 Bicara: ' + nearNPC.name.split(' ').slice(-1)[0]; const t = nearSpot || nearNPC, [sx, sy] = toScreen(t.x, groundY(t.x, t.z) + (nearSpot ? (nearSpot.h || 1) + 0.35 : 2.0), t.z); b.style.left = Math.min(Math.max(sx, 90), innerWidth - 90) + 'px'; b.style.top = Math.min(Math.max(sy, 80), innerHeight - 130) + 'px'; }
 }
 $('talk').onclick = () => interact();
 function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : talkNurse)(); }
@@ -127,22 +129,42 @@ function enterTitle() {
   mode = 'title'; Music.play('pick'); $('title').style.display = 'flex'; $('bCont').style.display = store.get() ? '' : 'none'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none'; $('snd').style.display = '';
   yaw = 0.3; pitch = 0.78; camGoal.set(-3, 0, 1); camTarget.copy(camGoal); zoomGoal = zoom = 1.55;
 }
-$('bNew').onclick = () => { Music.unlock(); $('title').style.display = 'none'; enterCreate(); };
+$('bNew').onclick = () => { Music.unlock(); $('title').style.display = 'none'; startIntro(() => enterCreate()); };
 $('bCont').onclick = () => { Music.unlock(); $('title').style.display = 'none'; loadGame(); };
+
+/* ---------- intro sinematik ---------- */
+const INTRO_KEYS = [[0, 0, 0, 0.5, 0.95, 1.9], [6, 3, -3, 1.0, 0.8, 1.2], [10.5, 11, -6.5, 0.9, 0.55, 0.62], [16, -8, 8.5, 0.55, 0.6, 0.58], [21.5, -5, 10.4, 0.62, 0.62, 0.45]];
+const INTRO_CAPS = [[0.6, 5.6, 'Pulau Jawa… tempat manusia dan Maimon hidup berdampingan.'], [6.6, 10.6, 'Pagi ini, kereta tiba di Stasiun Depok Baru membawa harapan baru…'], [11.4, 15.8, 'Seorang calon mahasiswa UI datang untuk bersiap kuliah, dengan satu mimpi besar.'], [16.6, 21, 'Menjadi Pelatih Maimon terbaik di dunia!']];
+const INTRO_END = 25; let intro = null;
+function startIntro(done) {
+  mode = 'intro'; intro = { t: 0, done }; trainT = -4.5; $('intro').style.display = 'block'; $('ititle').style.opacity = 0; $('icap').style.opacity = 0; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
+  Music.play('pick'); requestAnimationFrame(() => $('intro').classList.add('go'));
+}
+function endIntro() { if (!intro) return; const d = intro.done; intro = null; $('intro').style.display = 'none'; $('intro').classList.remove('go'); $('icap').style.opacity = 0; if (d) d(); }
+$('iskip').onclick = () => endIntro();
+function introTick(dt) {
+  if (!intro) return; intro.t += dt; const t = intro.t, K = INTRO_KEYS; let a = K[0], b = K[K.length - 1];
+  for (let i = 0; i < K.length - 1; i++) if (t >= K[i][0] && t <= K[i + 1][0]) { a = K[i]; b = K[i + 1]; break; }
+  let k = t >= K[K.length - 1][0] ? 1 : Math.min(1, Math.max(0, (t - a[0]) / (b[0] - a[0]))); k = k * k * (3 - 2 * k); if (t >= K[K.length - 1][0]) a = b;
+  const L = (i) => a[i] + (b[i] - a[i]) * k; camGoal.set(L(1), 0.3, L(2)); camTarget.copy(camGoal); yaw = L(3); pitch = L(4); zoom = zoomGoal = L(5);
+  const cap = INTRO_CAPS.find((c) => t >= c[0] && t <= c[1]); if (cap) { if ($('icap').textContent !== cap[2]) $('icap').textContent = cap[2]; $('icap').style.opacity = t < cap[0] + 0.5 || t > cap[1] - 0.5 ? 0.3 : 1; } else $('icap').style.opacity = 0;
+  $('ititle').style.opacity = t > 21.8 && t < 24.4 ? 1 : 0;
+  if (t > INTRO_END) endIntro();
+}
+
+/* ---------- pilih karakter (layar sendiri, bukan di peta) ---------- */
 function enterCreate() {
-  mode = 'create';
-  [['boy', 11.5], ['girl', 9.3]].forEach(([g, z]) => { const rig = buildPlayer2(g); castAll(rig.root); world.add(rig.root); rig.root.scale.setScalar(0.68 * 1.3); humans.push({ g, rig, x: -5.3, z, ang: Math.PI / 2, jump: 0, off: R0() * 3 }); });
-  yaw = 0.62; pitch = 0.6; camGoal.set(-4.2, 0.5, 11.9); camTarget.copy(camGoal); zoomGoal = zoom = 0.4;
+  mode = 'create'; Music.play('pick'); $('cbg').style.display = 'block'; $('joy').style.display = 'none';
   const c = $('gcards'); c.innerHTML = '';
-  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.textContent = label; b.onclick = () => { gender = g; [...c.children].forEach((x, i) => x.classList.toggle('sel', i === (g === 'boy' ? 0 : 1))); humans.forEach((h) => { if (h.g === g) h.jump = 0.6; }); $('gGo').disabled = false; $('gGo').textContent = 'Mulai Petualangan!'; }; c.appendChild(b); });
+  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<img src="${portraitHuman(g)}" alt=""><span>${label}</span>`; b.onclick = () => { gender = g; [...c.children].forEach((x, i) => x.classList.toggle('sel', i === (g === 'boy' ? 0 : 1))); $('gGo').disabled = false; $('gGo').textContent = 'Mulai Petualangan!'; Music.blip(g === 'boy' ? 440 : 600); }; c.appendChild(b); });
   $('gGo').disabled = true; $('gGo').textContent = 'Pilih dulu ya'; $('create').style.display = 'flex';
 }
 $('gGo').onclick = () => {
   if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {};
-  humans.forEach((h) => world.remove(h.rig.root)); humans.length = 0; $('create').style.display = 'none'; $('nameIn').blur();
+  $('create').style.display = 'none'; $('cbg').style.display = 'none'; $('nameIn').blur();
   setupPlayer(); beginStory();
 };
-function setupPlayer() { if (player.rig) world.remove(player.rig.root); player.rig = buildPlayer2(S.gender); castAll(player.rig.root); world.add(player.rig.root); player.rig.root.visible = true; }
+function setupPlayer() { if (player.rig) world.remove(player.rig.root); player.rig = buildPlayer2(S.gender); castAll(player.rig.root); world.add(player.rig.root); player.rig.root.visible = true; player.rig.root.rotation.order = 'YXZ'; }
 function beginStory() {
   let sx = 11.6, sz = -3.0, best = -1;
   for (let a = 9.6; a <= 14; a += 0.4) for (let b = -3.6; b <= 4; b += 0.4) { if (blockedAt(a, b, 0.5)) continue; let md = 9; treeMeshes.forEach((t) => { md = Math.min(md, Math.hypot(t.userData.x - a, t.userData.z - b)); }); const sc = md - 0.05 * Math.hypot(a - 11.6, b + 3); if (sc > best) { best = sc; sx = a; sz = b; } } player.x = sx; player.z = sz; player.ang = -Math.PI / 2; trail.length = 0;

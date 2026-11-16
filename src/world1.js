@@ -120,13 +120,14 @@ function groundY(x, z) {
 }
 
 /* tumbukan */
-const circles = [], rects = [];
+const circles = [], rects = [], vehicles = [];
 function waterAt(x, z) { const k = kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
   if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8 || z > HZ - 0.8) return true;
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }
   for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true;
+  for (const v of vehicles) { if (!v.m.visible) continue; const ry = v.m.rotation.y, sx = Math.sin(ry), sz = Math.cos(ry), hl = v.ang ? 0.5 : 0.38, rr = (v.ang ? 0.46 : 0.42) + r; for (const o of [-hl, hl]) { const dx = x - (v.m.position.x + sx * o), dz = z - (v.m.position.z + sz * o); if (dx * dx + dz * dz < rr * rr) return true; } }
   return false;
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }

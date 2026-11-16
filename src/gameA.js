@@ -9,15 +9,15 @@ const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[at
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
-  kancik: { info: { cat: 'Maimon Kancil', desc: 'Kancil kecil yang cerdik. Suka petak umpet di semak taman. Kalau ada timun segar, matanya langsung berbinar!', hab: 'Hutan UI & sekitar Margonda', ht: '0,5 m', wt: '4 kg', emo: '🦌' }, n: ['Kancik', 'Kancilon'], type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
+  kancik: { info: { cat: 'Maimon Kancil', desc: 'Kancil kecil yang cerdik. Suka petak umpet di semak taman. Kalau ada timun segar, matanya langsung berbinar!', hab: 'Hutan UI & sekitar Margonda', ht: '0,5 m', wt: '4 kg', emo: '🦌' }, n: ['Kancik', 'Kancilon'], spd: 60, type: 'Daun', fav: 'timun', hp: [46, 74], animal: 'kancil', build: (st) => buildKancik(st), s: 0.66,
     ls: [[1,'Seruduk','Biasa',40],[4,'Daun Tajam','Daun',55],[8,'Lempar Batu','Batu',55],[13,'Daun Badai','Daun',80]] },
-  cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
+  cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], spd: 50, type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
     ls: [[1,'Sundul','Biasa',40],[4,'Semprot Air','Air',55],[8,'Kuak Keras','Suara',55],[13,'Ombak Besar','Air',80]] },
-  pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
+  pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], spd: 70, type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
     ls: [[1,'Patuk','Biasa',40],[4,'Kokok Api','Api',55],[8,'Cakar Jago','Petarung',55],[13,'Api Jago','Api',80]] },
-  kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, ls: [[1,'Cakar','Biasa',40],[3,'Meong Keras','Suara',50],[8,'Loncat Lincah','Biasa',55],[13,'Mata Bersinar','Cahaya',60]] },
-  tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, ls: [[1,'Gigit','Biasa',40],[3,'Lempar Kerikil','Batu',50],[9,'Cicit Nyaring','Suara',55],[14,'Longsor Mini','Batu',75]] },
-  dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
+  kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], spd: 80, type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, ls: [[1,'Cakar','Biasa',40],[3,'Meong Keras','Suara',50],[8,'Loncat Lincah','Biasa',55],[13,'Mata Bersinar','Cahaya',60]] },
+  tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], spd: 75, type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, ls: [[1,'Gigit','Biasa',40],[3,'Lempar Kerikil','Batu',50],[9,'Cicit Nyaring','Suara',55],[14,'Longsor Mini','Batu',75]] },
+  dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], spd: 40, type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
 };
 
 /* =====================================================================
@@ -26,6 +26,7 @@ const MAI = {
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
 const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
 const LVCAP = 20, xpNeed = (lv) => 10 + lv * 12;
+const speedOf = (e) => Math.round(MAI[e.sp].spd * (0.7 + 0.06 * e.lv));
 const hpMaxOf = (sp, st, lv = 5) => Math.round(MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1] * (0.6 + 0.08 * lv));
 const movesAt = (sp, lv) => MAI[sp].ls.filter((m) => m[0] <= lv).slice(-4);
 const FXK = { 'Seruduk': 'tackle', 'Sundul': 'tackle', 'Patuk': 'peck', 'Cakar': 'claw', 'Gigit': 'bite', 'Daun Tajam': 'leaf', 'Rumput Tajam': 'leaf', 'Daun Badai': 'leafstorm', 'Hujan Daun': 'leafstorm', 'Lempar Batu': 'rock', 'Lempar Kerikil': 'rock', 'Longsor Mini': 'rockfall', 'Semprot Air': 'water', 'Ombak Besar': 'wave', 'Kuak Keras': 'sound', 'Meong Keras': 'sound', 'Cicit Nyaring': 'sound', 'Kokok Api': 'fire', 'Api Jago': 'fireblast', 'Cakar Jago': 'fight', 'Loncat Lincah': 'pounce', 'Mata Bersinar': 'beam', 'Wol Beku': 'ice' };
@@ -135,11 +136,21 @@ function clearArena(cx, cz, R) {
   treeMeshes.forEach((m) => { if (m.visible && Math.hypot(m.userData.x - cx, m.userData.z - cz) < R) { m.visible = false; hidden.push(m); burst(m.userData.x, 0.4, m.userData.z, '#8cc656', 4); } });
 }
 function restoreArena() { hidden.forEach((m) => { m.visible = true; }); hidden = []; }
+function bestBattleYaw(cx, cz) {
+  let best = yaw, bs = 1e9;
+  for (let k = 0; k < 24; k++) {
+    const y = k * Math.PI / 12, dx = Math.sin(y), dz = Math.cos(y); let blocked = 0;
+    for (let d = 0.6; d <= 4.2; d += 0.4) { const px = cx + dx * d, pz = cz + dz * d; if (rects.some((b) => px > b[0] - 0.25 && px < b[1] + 0.25 && pz > b[2] - 0.25 && pz < b[3] + 0.25)) blocked += (4.4 - d); if (px < -HX + 1 || px > HX - 1 || pz < -HZ + 1 || pz > HZ - 1) blocked += 0.5; }
+    const dyaw = Math.abs(((y - yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI), sc = blocked * 3 + dyaw * 0.35; if (sc < bs) { bs = sc; best = y; }
+  }
+  return best;
+}
 function startBattle(w) {
   const me = mates[0]; if (!me) return;
   if (me.hp <= 0) me.hp = 1;
   markDex(w.sp, 1); mode = 'battle'; Music.play(w.rare ? 'battleRare' : 'battle'); battle = { w, me, busy: false }; w.state = 'battle'; me.state = 'battle'; $('joy').style.display = 'none'; $('bubble').style.display = 'none';
-  const rx = Math.cos(yaw), rz = -Math.sin(yaw);
+  const by = bestBattleYaw(w.x, w.z); battle.yawG = by;
+  const rx = Math.cos(by), rz = -Math.sin(by);
   let sgn = 1; const okSide = (s) => !blockedAt(w.x - rx * s * 2.0, w.z - rz * s * 2.0, 0.4);
   if (!okSide(1) && okSide(-1)) sgn = -1;
   battle.me.bx = w.x - rx * sgn * 2.0; battle.me.bz = w.z - rz * sgn * 2.0; battle.px = w.x - rx * sgn * 3.0; battle.pz = w.z - rz * sgn * 3.0;
@@ -271,13 +282,11 @@ async function round(i) {
   const { w, me } = battle, mvA = curMoves(me)[i], wk = curMoves(w), mvB = wk[(R0() * wk.length) | 0];
   const a = calcDmg(me, mvA, w), b = calcDmg(w, mvB, me);
   const mkHit = (def, mv, r) => () => { burst(def.x, 0.45, def.z, TCOL[mv[2]], 14); def.hp -= r.dmg; def.shake = 0.4; flash(def, 0.7); floatText(`-${r.dmg}`, def.x, 1.1, def.z, '#d8452e'); hpBar($('hpL'), me); hpBar($('hpR'), w); setTimeout(() => flash(def, 0), 260); if (r.mult > 1) floatText('⭐', def.x, 1.6, def.z); };
-  say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(250);
-  await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear();
-  if (a.mult > 1) say('Ampuh banget! ⭐', 800); else if (a.mult < 1) say('Kurang ampuh… 💤', 800);
-  await sleep(550);
-  say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(250);
-  await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear();
-  if (b.mult > 1) say('Aduh, ampuh! ⭐', 800); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 800);
+  const sA = speedOf(me), sB = speedOf(w), meFirst = sA === sB ? R0() < 0.5 : sA > sB;
+  const doMe = async () => { say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
+  const doFoe = async () => { say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
+  say(`⚡ ${meFirst ? me.name : w.name} lebih cepat!`, 900); await sleep(650);
+  if (meFirst) { await doMe(); await sleep(250); await doFoe(); } else { await doFoe(); await sleep(250); await doMe(); }
   await sleep(750);
   if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return endBattle('lose');
   battle.busy = false; setMovesEnabled(true); say('Pilih jurus!', 900);
