@@ -93,7 +93,6 @@ button .e{font-size:24px;display:block;line-height:1}
 #create .card{flex:1;padding:10px 6px;text-align:center;cursor:pointer;font-size:24px;font-weight:700;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:4px}
 #create .card img{width:min(34vw,150px);height:min(34vw,150px);image-rendering:pixelated}
 #cbg{position:fixed;inset:0;display:none;z-index:4;background:linear-gradient(#7fc4e6 0%,#bfe4f0 55%,#f1e7c9 55.2%,#8ec65a 55.4%,#5f9a3a 100%)}
-#cbg::before{content:'';position:absolute;left:8%;top:12%;width:90px;height:26px;background:#fff;box-shadow:30px -14px 0 #fff,60px 0 0 #fff,300px 40px 0 #fff,330px 26px 0 #fff,360px 40px 0 #fff;opacity:.9}
 #intro{inset:0;display:none;z-index:9;background:transparent}
 #intro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.4s ease-out}
 #intro .bar.t{top:0}#intro .bar.b{bottom:0}#intro.go .bar{height:13vh}
@@ -218,13 +217,51 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
  .plate img{width:104px;height:104px}.plate .t b{font-size:20px}
 }
 @media (max-height:480px) and (orientation:landscape){.scr .sh b{font-size:17px}.scr .sh{padding:3px 6px 3px 10px}.plate img{width:92px;height:92px}.teamg{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}#pullb{min-height:54px;font-size:22px}}
+
+/* ---- layar kenalan ala Pokemon: lab + closeup Prof ---- */
+#cbg{overflow:hidden;background:#2b8f89}
+#cbg i,#cbg .pl,#cbg .spk{position:absolute;display:block}
+#cbg .wall{inset:0 0 33% 0;background:repeating-linear-gradient(90deg,#33a29b 0 52px,#2d958e 52px 56px),linear-gradient(#33a29b,#2a8a84)}
+#cbg .wain{left:0;right:0;bottom:33%;height:7%;background:linear-gradient(#f0e6cf 0 18%,#d9ccae 18% 100%);border-top:4px solid #8c7a55}
+#cbg .floor{left:0;right:0;bottom:0;height:33%;background:conic-gradient(#d6ac74 25%,#c39863 0 50%,#d6ac74 0 75%,#c39863 0) 0 0/72px 72px}
+#cbg .floor::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,0) 45%)}
+#cbg .win{top:8%;width:min(22vw,190px);height:min(30vh,170px);border:6px solid #f4ecd8;box-shadow:0 0 0 3px #8c7a55,inset 0 0 0 3px #8c7a55;background:linear-gradient(#8fd4f2,#d6f0f8 70%,#a6d86a 70% 100%)}
+#cbg .win::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:6px;margin-left:-3px;background:#f4ecd8}
+#cbg .win::after{content:'';position:absolute;left:12%;top:20%;width:34%;height:14%;background:#fff;box-shadow:26px -8px 0 #fff,70px 8px 0 #fff;opacity:.9}
+#cbg .w1{left:4%}#cbg .w2{right:4%}
+#cbg .shelf{bottom:40%;width:min(15vw,130px);height:min(40vh,250px);background:linear-gradient(#7a4f2a,#5d3a1c);border:4px solid #3d2812}
+#cbg .shelf::before{content:'';position:absolute;inset:6px;background:repeating-linear-gradient(0deg,transparent 0 32%,#3d2812 32% 36%),repeating-linear-gradient(90deg,#d8452e 0 9px,#f0b43a 9px 17px,#3a86d6 17px 26px,#5cae3c 26px 33px,#9a6ad8 33px 41px,#f2f2f2 41px 47px);-webkit-mask:repeating-linear-gradient(0deg,#000 0 28%,transparent 28% 36%);mask:repeating-linear-gradient(0deg,#000 0 28%,transparent 28% 36%)}
+#cbg .s1{left:27%}#cbg .s2{right:27%}
+#cbg .plaque{left:50%;top:6%;transform:translateX(-50%);font:700 min(4.2vw,22px) var(--font-label);font-style:normal;letter-spacing:2px;background:#1d6f6a;color:#fff;padding:5px 16px;border:3px solid #f4ecd8;box-shadow:0 3px 0 #0f3f3c}
+#cbg .lamp{left:50%;top:0;width:3px;height:6%;background:#444;transform:translateX(-50%)}
+#cbg .pl{font-size:min(11vw,64px);bottom:31%;line-height:1}#cbg .p1{left:1%}#cbg .p2{right:1%}
+#cbg .spk{width:8px;height:8px;background:#fff6b0;box-shadow:0 0 8px #fff6b0;animation:spk 4s linear infinite}
+#cbg .k1{left:20%;top:70%}#cbg .k2{left:44%;top:78%;animation-delay:-1s}#cbg .k3{left:66%;top:72%;animation-delay:-2s}#cbg .k4{left:82%;top:80%;animation-delay:-3s}#cbg .k5{left:33%;top:84%;animation-delay:-1.5s}
+@keyframes spk{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-50vh) scale(1);opacity:0}}
+#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 270px);width:min(52vw,42vh);height:min(52vw,42vh);transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
+#cprof{left:50%;transform:translateX(-50%)}
+#cplayer{left:70%;transform:translateX(-50%) translateY(30px);opacity:0}
+#cbg.two #cprof{left:28%}#cbg.two #cplayer{opacity:1;transform:translateX(-50%);left:72%}
+#cprof img,#cplayer img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;-webkit-mask-image:linear-gradient(#000 78%,transparent 98%);mask-image:linear-gradient(#000 78%,transparent 98%);filter:drop-shadow(0 8px 0 rgba(0,0,0,.25));animation:bob 2.2s ease-in-out infinite}
+#cplayer img{animation-delay:-1s}
+@keyframes bob{50%{transform:translateY(-6px)}}
+#create{inset:auto 0 calc(env(safe-area-inset-bottom,0px) + 170px) 0;padding:0;display:none;flex-direction:column;align-items:center;gap:8px;z-index:6;overflow:visible}
+#create .cards{display:none;gap:12px;width:min(440px,92vw)}
+#create .card{flex:1;padding:6px;text-align:center;cursor:pointer;font-size:22px;font-weight:700;pointer-events:auto;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px}
+#create .card img{width:64px;height:64px;image-rendering:pixelated}
+#nameBox{display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;width:min(340px,90vw)}
+@media (max-height:480px) and (orientation:landscape){#cbg.two #cprof{left:24%}#cbg.two #cplayer{left:50%}#cprof,#cplayer{bottom:100px;width:min(46vh,40vw);height:min(46vh,40vw)}#create{inset:auto 3vw 124px auto;align-items:flex-end}#create .cards{flex-direction:column;width:200px}#cbg .shelf{height:34vh}#cbg .win{height:26vh}}
+.pulse{animation:pls .7s ease-in-out infinite alternate!important;outline:4px solid #ffd84a}
+@keyframes pls{from{box-shadow:0 0 0 0 rgba(255,216,74,.9)}to{box-shadow:0 0 0 12px rgba(255,216,74,0)}}
+#pvig{position:fixed;inset:0;display:none;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 38%,rgba(10,6,30,.62) 100%)}
+.plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app"><canvas id="view"></canvas></div>
 <div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
-<div id="cbg"></div>
-<div id="create" class="ui"><h2 class="panel">Siapa kamu?</h2><div class="cards" id="gcards"></div><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Mulai Petualangan!</button></div>
+<div id="cbg"><i class="wall"></i><i class="wain"></i><i class="floor"></i><i class="win w1"></i><i class="win w2"></i><i class="shelf s1"></i><i class="shelf s2"></i><i class="plaque">LAB MAIMON UI</i><i class="lamp"></i><span class="pl p1">🪴</span><span class="pl p2">🪴</span><span class="spk k1"></span><span class="spk k2"></span><span class="spk k3"></span><span class="spk k4"></span><span class="spk k5"></span><div id="cprof"><img id="cprofImg" alt=""></div><div id="cplayer"><img id="cplayerImg" alt=""></div></div>
+<div id="create" class="ui"><div class="cards" id="gcards"></div><div id="nameBox" class="panel"><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Lanjut ▶</button></div></div>
 <div id="dlg" class="ui panel"><b id="dwho"></b><p id="dtxt"></p><span id="dnext">▶</span></div>
 <div id="obj" class="ui panel"></div>
 <div id="arrow" class="ui">⬇️</div>
@@ -243,7 +280,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <div id="zone" class="ui panel">Depok<small>EDISI JAWA</small></div>
 <div id="mates" class="ui panel"><span class="lb">TEMAN</span><div class="chips" id="mchips"></div></div>
 <div id="bubble" class="ui"></div>
-<div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
+<div id="pvig"></div><div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
 <div id="battle" class="ui">
   <div class="hp l panel" id="hpL"></div><div class="hp r panel" id="hpR"></div>
   <div id="log" class="panel"></div>

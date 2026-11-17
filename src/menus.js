@@ -3,7 +3,7 @@
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
    ===================================================================== */
 const PR = { r: null, s: null, cam: null, cache: {} };
-function portraitRig(key, build, rot = 0.75) {
+function portraitRig(key, build, rot = 0.75, bust = false) {
   if (PR.cache[key]) return PR.cache[key];
   try {
     if (!PR.r) {
@@ -11,15 +11,18 @@ function portraitRig(key, build, rot = 0.75) {
       PR.s = new THREE.Scene(); PR.s.add(new THREE.HemisphereLight('#ffffff', '#9a8a6a', 2.1)); const dl = new THREE.DirectionalLight('#ffffff', 2.6); dl.position.set(2.5, 4, 3.5); PR.s.add(dl);
       PR.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
     }
-    const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
+    PR.r.setSize(bust ? 384 : 160, bust ? 384 : 160, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(rig.root), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.y * 1.05, sz.z) * 0.62;
-    PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
-    PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c);
+    if (bust) { const cy = bb.max.y - sz.y * 0.36, rb = sz.y * 0.44; PR.cam.left = -rb; PR.cam.right = rb; PR.cam.top = rb; PR.cam.bottom = -rb; PR.cam.updateProjectionMatrix(); c.y = cy; PR.cam.position.set(c.x + 1.3, cy + 0.7, c.z + 5); PR.cam.lookAt(c); }
+    else { PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
+    PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c); }
     PR.r.render(PR.s, PR.cam); const url = PR.r.domElement.toDataURL('image/png'); PR.s.remove(rig.root); PR.cache[key] = url; return url;
   } catch (e) { console.warn('portrait', e); return ''; }
 }
 const portrait = (sp, st = 1) => portraitRig(sp + st, () => MAI[sp].build(st));
 const portraitHuman = (g) => portraitRig('h_' + g, () => buildPlayer2(g), 0.4);
+const bustHuman = (g) => portraitRig('hb_' + g, () => buildPlayer2(g), -0.15, true);
+const bustProf = () => portraitRig('hb_prof', () => buildHuman(LOOK.prof), 0.12, true);
 const pimg = (sp, st, cls = '') => { const u = portrait(sp, st); return u ? `<img class="${cls}" src="${u}" alt="">` : `<div class="q">${MAI[sp].info.emo}</div>`; };
 const chipT = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
 const pad3 = (n) => String(n).padStart(3, '0');
@@ -93,7 +96,7 @@ function renderBag() {
 /* ----- navigasi menu ----- */
 const SCR = { dex: renderDex, team: renderTeam, bag: renderBag };
 const closeMenuPop = () => { $('menu').style.display = 'none'; };
-function openScr(id) { closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
+function openScr(id) { if (S.stage === 1) S.tf[id === 'bag' ? 'bag' : 'menu'] = 1; closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
 function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; $('joy').style.display = ''; }
 $('dexb').onclick = () => {
   if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; $('joy').style.display = ''; return; }

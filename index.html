@@ -93,7 +93,6 @@ button .e{font-size:24px;display:block;line-height:1}
 #create .card{flex:1;padding:10px 6px;text-align:center;cursor:pointer;font-size:24px;font-weight:700;pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:4px}
 #create .card img{width:min(34vw,150px);height:min(34vw,150px);image-rendering:pixelated}
 #cbg{position:fixed;inset:0;display:none;z-index:4;background:linear-gradient(#7fc4e6 0%,#bfe4f0 55%,#f1e7c9 55.2%,#8ec65a 55.4%,#5f9a3a 100%)}
-#cbg::before{content:'';position:absolute;left:8%;top:12%;width:90px;height:26px;background:#fff;box-shadow:30px -14px 0 #fff,60px 0 0 #fff,300px 40px 0 #fff,330px 26px 0 #fff,360px 40px 0 #fff;opacity:.9}
 #intro{inset:0;display:none;z-index:9;background:transparent}
 #intro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.4s ease-out}
 #intro .bar.t{top:0}#intro .bar.b{bottom:0}#intro.go .bar{height:13vh}
@@ -218,13 +217,51 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
  .plate img{width:104px;height:104px}.plate .t b{font-size:20px}
 }
 @media (max-height:480px) and (orientation:landscape){.scr .sh b{font-size:17px}.scr .sh{padding:3px 6px 3px 10px}.plate img{width:92px;height:92px}.teamg{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}#pullb{min-height:54px;font-size:22px}}
+
+/* ---- layar kenalan ala Pokemon: lab + closeup Prof ---- */
+#cbg{overflow:hidden;background:#2b8f89}
+#cbg i,#cbg .pl,#cbg .spk{position:absolute;display:block}
+#cbg .wall{inset:0 0 33% 0;background:repeating-linear-gradient(90deg,#33a29b 0 52px,#2d958e 52px 56px),linear-gradient(#33a29b,#2a8a84)}
+#cbg .wain{left:0;right:0;bottom:33%;height:7%;background:linear-gradient(#f0e6cf 0 18%,#d9ccae 18% 100%);border-top:4px solid #8c7a55}
+#cbg .floor{left:0;right:0;bottom:0;height:33%;background:conic-gradient(#d6ac74 25%,#c39863 0 50%,#d6ac74 0 75%,#c39863 0) 0 0/72px 72px}
+#cbg .floor::after{content:'';position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,0) 45%)}
+#cbg .win{top:8%;width:min(22vw,190px);height:min(30vh,170px);border:6px solid #f4ecd8;box-shadow:0 0 0 3px #8c7a55,inset 0 0 0 3px #8c7a55;background:linear-gradient(#8fd4f2,#d6f0f8 70%,#a6d86a 70% 100%)}
+#cbg .win::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:6px;margin-left:-3px;background:#f4ecd8}
+#cbg .win::after{content:'';position:absolute;left:12%;top:20%;width:34%;height:14%;background:#fff;box-shadow:26px -8px 0 #fff,70px 8px 0 #fff;opacity:.9}
+#cbg .w1{left:4%}#cbg .w2{right:4%}
+#cbg .shelf{bottom:40%;width:min(15vw,130px);height:min(40vh,250px);background:linear-gradient(#7a4f2a,#5d3a1c);border:4px solid #3d2812}
+#cbg .shelf::before{content:'';position:absolute;inset:6px;background:repeating-linear-gradient(0deg,transparent 0 32%,#3d2812 32% 36%),repeating-linear-gradient(90deg,#d8452e 0 9px,#f0b43a 9px 17px,#3a86d6 17px 26px,#5cae3c 26px 33px,#9a6ad8 33px 41px,#f2f2f2 41px 47px);-webkit-mask:repeating-linear-gradient(0deg,#000 0 28%,transparent 28% 36%);mask:repeating-linear-gradient(0deg,#000 0 28%,transparent 28% 36%)}
+#cbg .s1{left:27%}#cbg .s2{right:27%}
+#cbg .plaque{left:50%;top:6%;transform:translateX(-50%);font:700 min(4.2vw,22px) var(--font-label);font-style:normal;letter-spacing:2px;background:#1d6f6a;color:#fff;padding:5px 16px;border:3px solid #f4ecd8;box-shadow:0 3px 0 #0f3f3c}
+#cbg .lamp{left:50%;top:0;width:3px;height:6%;background:#444;transform:translateX(-50%)}
+#cbg .pl{font-size:min(11vw,64px);bottom:31%;line-height:1}#cbg .p1{left:1%}#cbg .p2{right:1%}
+#cbg .spk{width:8px;height:8px;background:#fff6b0;box-shadow:0 0 8px #fff6b0;animation:spk 4s linear infinite}
+#cbg .k1{left:20%;top:70%}#cbg .k2{left:44%;top:78%;animation-delay:-1s}#cbg .k3{left:66%;top:72%;animation-delay:-2s}#cbg .k4{left:82%;top:80%;animation-delay:-3s}#cbg .k5{left:33%;top:84%;animation-delay:-1.5s}
+@keyframes spk{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-50vh) scale(1);opacity:0}}
+#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 270px);width:min(52vw,42vh);height:min(52vw,42vh);transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
+#cprof{left:50%;transform:translateX(-50%)}
+#cplayer{left:70%;transform:translateX(-50%) translateY(30px);opacity:0}
+#cbg.two #cprof{left:28%}#cbg.two #cplayer{opacity:1;transform:translateX(-50%);left:72%}
+#cprof img,#cplayer img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;-webkit-mask-image:linear-gradient(#000 78%,transparent 98%);mask-image:linear-gradient(#000 78%,transparent 98%);filter:drop-shadow(0 8px 0 rgba(0,0,0,.25));animation:bob 2.2s ease-in-out infinite}
+#cplayer img{animation-delay:-1s}
+@keyframes bob{50%{transform:translateY(-6px)}}
+#create{inset:auto 0 calc(env(safe-area-inset-bottom,0px) + 170px) 0;padding:0;display:none;flex-direction:column;align-items:center;gap:8px;z-index:6;overflow:visible}
+#create .cards{display:none;gap:12px;width:min(440px,92vw)}
+#create .card{flex:1;padding:6px;text-align:center;cursor:pointer;font-size:22px;font-weight:700;pointer-events:auto;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px}
+#create .card img{width:64px;height:64px;image-rendering:pixelated}
+#nameBox{display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;width:min(340px,90vw)}
+@media (max-height:480px) and (orientation:landscape){#cbg.two #cprof{left:24%}#cbg.two #cplayer{left:50%}#cprof,#cplayer{bottom:100px;width:min(46vh,40vw);height:min(46vh,40vw)}#create{inset:auto 3vw 124px auto;align-items:flex-end}#create .cards{flex-direction:column;width:200px}#cbg .shelf{height:34vh}#cbg .win{height:26vh}}
+.pulse{animation:pls .7s ease-in-out infinite alternate!important;outline:4px solid #ffd84a}
+@keyframes pls{from{box-shadow:0 0 0 0 rgba(255,216,74,.9)}to{box-shadow:0 0 0 12px rgba(255,216,74,0)}}
+#pvig{position:fixed;inset:0;display:none;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 38%,rgba(10,6,30,.62) 100%)}
+.plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app"><canvas id="view"></canvas></div>
 <div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
-<div id="cbg"></div>
-<div id="create" class="ui"><h2 class="panel">Siapa kamu?</h2><div class="cards" id="gcards"></div><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Mulai Petualangan!</button></div>
+<div id="cbg"><i class="wall"></i><i class="wain"></i><i class="floor"></i><i class="win w1"></i><i class="win w2"></i><i class="shelf s1"></i><i class="shelf s2"></i><i class="plaque">LAB MAIMON UI</i><i class="lamp"></i><span class="pl p1">🪴</span><span class="pl p2">🪴</span><span class="spk k1"></span><span class="spk k2"></span><span class="spk k3"></span><span class="spk k4"></span><span class="spk k5"></span><div id="cprof"><img id="cprofImg" alt=""></div><div id="cplayer"><img id="cplayerImg" alt=""></div></div>
+<div id="create" class="ui"><div class="cards" id="gcards"></div><div id="nameBox" class="panel"><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Lanjut ▶</button></div></div>
 <div id="dlg" class="ui panel"><b id="dwho"></b><p id="dtxt"></p><span id="dnext">▶</span></div>
 <div id="obj" class="ui panel"></div>
 <div id="arrow" class="ui">⬇️</div>
@@ -243,7 +280,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <div id="zone" class="ui panel">Depok<small>EDISI JAWA</small></div>
 <div id="mates" class="ui panel"><span class="lb">TEMAN</span><div class="chips" id="mchips"></div></div>
 <div id="bubble" class="ui"></div>
-<div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
+<div id="pvig"></div><div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
 <div id="battle" class="ui">
   <div class="hp l panel" id="hpL"></div><div class="hp r panel" id="hpR"></div>
   <div id="log" class="panel"></div>
@@ -1090,11 +1127,12 @@ function colonial(x, z, ry, i, o = {}) {
     const tex = labelTex(o.sign[0], o.sign[1], '#ffffff', o.sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), h = 1.4 * 1.3, sg = new THREE.Group(); sg.position.set(0, h + 0.8 + 0.5, 0);
     const mk = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 0.62), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
     mk(0); mk(Math.PI); [-1.1, 1.1].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.5, 0.07), toon('#4a4f58')); p.position.set(px2, -0.3, 0); sg.add(p); }); g.add(sg);
+    if (o.board) { const bg = new THREE.Group(); bg.position.set(o.board[0], 0, o.board[1]); const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.5), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })); pl.position.y = 1.2; bg.add(pl); [-0.95, 0.95].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.2, 0.07), toon('#4a4f58')); p.position.set(px2, 0.6, 0); bg.add(p); }); g.add(bg); }
   }
   return g;
 }
 
-const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9], home: [-11.9, 3.3] };
+const POI = { lab: [-9.9, 10.2], clinic: [-15.0, 10.2], prof: [-8.2, 10.3], nurse: [-14.6, 10.45], home: [-11.9, 3.3] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -1103,7 +1141,7 @@ function buildBuildings() {
     for (const px2 of [-1.2, 0.8]) { const ac = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.6), toon('#b8bcc4')); ac.position.set(px2, 2.37, -0.6); ac.castShadow = true; g.add(ac); }
     const can = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.8), toon('#e0587a')); can.position.set(0.0, 1.0, 2.7); can.castShadow = true; g.add(can);
     for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), toon('#ffffff')); p.position.set(s * 0.8, 0.5, 3.05); g.add(p); }
-    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.9 + (i % 3) * 1.4, groundY(3, -3), -2.9 + Math.floor(i / 3) * 0.95); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); [-0.45, 0.45].forEach((o) => circles.push({ x: car.position.x + o, z: car.position.z, r: 0.42 })); });
+    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.7 + (i % 3) * 1.75, groundY(3, -3), -2.9 + Math.floor(i / 3) * 1.0); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); [-0.5, 0.5].forEach((o) => circles.push({ x: car.position.x + o, z: car.position.z, r: 0.4 })); });
   }
   // STASIUN DEPOK BARU
   { const g = bldg(12.4, -7.0, 2.8, 2.4, 1.3, { ry: -Math.PI / 2, wall: '#f5f0e0', roof: '#e0587a', rh: 0.6, wins: [[0.7, 0.45, 6, 6], [2.1, 0.45, 6, 6]], door: '#4a6a8a', doorX: 1.4, seed: 5 });
@@ -1118,8 +1156,7 @@ function buildBuildings() {
     rects.pop(); rects.pop();
   }
   // DEPOK LAMA: rumah kolonial putih berpilar
-  colonial(-15.0, 8.4, 0, 0); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-15.0, 12.7, Math.PI, 2); colonial(-9.9, 12.7, Math.PI, 3, { sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } });
-  addTree(-12.5, 10.2, 'round', 1.5, 77);
+  colonial(-15.0, 8.4, 0, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-9.9, 12.7, Math.PI, 3);
   // KAMPUNG barat (menghadap Jl. Raya)
   [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['RUMAH KOS', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)
@@ -1172,7 +1209,9 @@ function updateTraffic(dt, px_, pz_) {
   vehicles.forEach((v) => {
     const [x, z, tx, tz] = polyAt(C.margonda.pts, v.s), rx = -tz, rz = tx, off = (C.margonda.w / 2 + 0.26) / 2 * 0.98, sgn = v.dir > 0 ? -1 : 1;
     const cx = x + rx * off * sgn, cz = z + rz * off * sgn, near = (mode === 'play' || mode === 'gather') && Math.hypot(cx - px_, cz - pz_) < 1.9;
-    if (!near) { v.s += v.dir * v.v * dt; if (v.s > v.len) v.s -= v.len; if (v.s < 0) v.s += v.len; }
+    let sp = v.v; if (near) sp = 0;
+    else vehicles.forEach((u) => { if (u === v || u.dir !== v.dir) return; let g = ((u.s - v.s) * v.dir) % v.len; if (g < 0) g += v.len; if (g < 2.3) sp = 0; else if (g < 3.4) sp = Math.min(sp, u.v * 0.8); });
+    v.s += v.dir * sp * dt; if (v.s > v.len) v.s -= v.len; if (v.s < 0) v.s += v.len;
     v.m.position.set(cx, 0, cz); v.m.rotation.y = Math.atan2(v.dir * tx, v.dir * tz); v.m.visible = !(battle && Math.hypot(cx - battle.cx, cz - battle.cz) < 3.6);
   });
 }
@@ -1347,11 +1386,16 @@ const Music = (() => {
       ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [5, 'maj7']], bass: 'r.....r.5.....8.', arp: '0.2.4.2.0.2.4.2.',
       dr: { k: 'X.......x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.xo', p: '..o...o...o...o.' },
       A: [[0, 4, 3], [3, 5, 3], [6, 7, 6], [16, 7, 3], [19, 5, 3], [22, 4, 8]], B: [[0, 5, 3], [3, 7, 3], [6, 9, 6], [16, 8, 3], [19, 7, 3], [22, 5, 8]] },
-    depok: { bpm: 96, swing: 0, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1, arpI: 'pluck', gong: false,
-      ch: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj'], [0, 'maj'], [7, 'maj'], [5, 'maj'], [7, 'sus4']],
-      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
-      dr: { k: 'X.......x.......', s: '........x.......', h: '..x...x...x...x.', p: 'o...o...o...o...' },
-      A: [[0, 4, 3], [4, 4, 1], [6, 5, 2], [8, 4, 4], [14, 2, 2], [16, 2, 3], [20, 2, 1], [22, 4, 2], [24, 2, 4], [28, 1, 2]], B: [[0, 5, 3], [4, 5, 1], [6, 7, 2], [8, 5, 4], [14, 4, 2], [16, 4, 3], [20, 2, 1], [22, 1, 2], [24, 0, 8]] },
+    intro: { bpm: 124, swing: 0, spb: 16, root: 50, sc: 'min', lead: 'brass', lead2: 'bell', bassI: 'pluck', padV: 1.3, arpI: 'pluck', arpOct: 1, gong: true,
+      ch: [[0, 'min'], [8, 'maj'], [3, 'maj'], [10, 'maj'], [0, 'min'], [8, 'maj'], [5, 'min'], [7, 'dom7']],
+      bass: 'r.r.r.r.r.r.r.8.', arp: '0.1.2.3.2.1.2.1.',
+      dr: { k: 'X...X...X...X.x.', s: '....X.......X..x', h: 'x.x.x.x.x.x.x.xx', d: 'x..x..x.x..x.x..', c: '........x.......' },
+      A: [[0, 7, 3], [4, 7, 1], [6, 9, 2], [8, 11, 6], [16, 10, 3], [20, 9, 1], [22, 7, 2], [24, 9, 8]], B: [[0, 11, 3], [4, 11, 1], [6, 12, 2], [8, 13, 6], [16, 12, 3], [20, 11, 1], [22, 9, 2], [24, 11, 8]] },
+    depok: { bpm: 104, swing: 0.05, spb: 16, root: 45, sc: 'mix', lead: 'pluck', lead2: 'flute', bassI: 'pluck', padV: 0.9, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [10, 'maj'], [5, 'maj'], [0, 'maj'], [0, 'maj'], [10, 'maj'], [5, 'maj'], [7, 'min']],
+      bass: 'r..r..5.r..r..5.', arp: '..0.1.2...0.1.2.',
+      dr: { k: 'X.....x.X.....x.', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', w: '..x.....x...x...', p: 'o.o.o.o.o.o.o.o.' },
+      A: [[0, 4, 2], [2, 5, 2], [4, 4, 4], [8, 2, 2], [10, 4, 2], [12, 5, 4], [16, 4, 2], [18, 2, 2], [20, 0, 4], [24, 2, 8]], B: [[0, 5, 2], [2, 6, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 4, 4], [16, 2, 2], [18, 0, 2], [20, -1, 4], [24, 0, 8]] },
     jakarta: { bpm: 118, swing: 0.08, spb: 16, root: 50, sc: 'dor', lead: 'synth', lead2: 'brass', bassI: 'pluck', padV: 0.8, arpI: 'pluck',
       ch: [[0, 'm9'], [5, 'dom7'], [3, 'maj7'], [7, 'm7'], [0, 'm9'], [5, 'dom7'], [3, 'maj7'], [10, 'dom7']],
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
@@ -1417,7 +1461,7 @@ const Music = (() => {
     comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.22;
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.5; master.connect(comp); comp.connect(ctx.destination);
     duck = ctx.createGain(); duck.gain.value = 1; duck.connect(master);
-    const rev = ctx.createConvolver(); rev.buffer = impulse(2.6, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
+    const rev = ctx.createConvolver(); rev.buffer = impulse(1.8, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
     const dl = ctx.createDelay(1.5), fb = ctx.createGain(), dlf = ctx.createBiquadFilter(), dg = ctx.createGain(); dl.delayTime.value = 0.36; fb.gain.value = 0.38; dlf.type = 'lowpass'; dlf.frequency.value = 2600; dg.gain.value = 0.3; dlyIn = ctx.createGain();
     dlyIn.connect(dl); dl.connect(dlf); dlf.connect(fb); fb.connect(dl); dlf.connect(dg); dg.connect(duck); dg.connect(revIn);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -1529,12 +1573,13 @@ const Music = (() => {
     if (!cur) return;
     while (cur.nextT < until) { playStep(cur, cur.nextT); cur.nextT += cur.sd; cur.step++; }
   }
-  function tick() { if (cur && ctx) sched(ctx.currentTime + 0.35); }
+  function tick() { if (!cur || !ctx) return; const now = ctx.currentTime; if (cur.nextT < now - 0.4) cur.nextT = now + 0.1; sched(now + 1.0); }
+  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (ctx && !document.hidden) ctx.resume(); }); }
 
   /* ---------------- API ---------------- */
-  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); if (!timer) timer = setInterval(tick, 60); return true; }
+  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
   function play(name) {
-    pending = name; if (!ctx || ctx.state === 'suspended') return; if (cur && cur.name === name) return;
+    if (!ctx || ctx.state === 'suspended') { pending = name; return; } pending = null; if (cur && cur.name === name) return;
     const old = cur, nw = start(name); if (!nw) return;
     const t = ctx.currentTime; nw.bus.gain.setValueAtTime(0.0001, t); nw.bus.gain.linearRampToValueAtTime(1, t + 0.9);
     if (old) { old.bus.gain.cancelScheduledValues(t); old.bus.gain.setValueAtTime(old.bus.gain.value, t); old.bus.gain.linearRampToValueAtTime(0.0001, t + 1.1); setTimeout(() => { try { old.bus.disconnect(); } catch (e) {} }, 4000); }
@@ -1701,29 +1746,36 @@ function updateWild(w, dt) {
 /* =====================================================================
    PIL IH STARTER (di awal) — 1 dari 3
    ===================================================================== */
-const starters = []; let pickSel = null;
+const starters = [], peds = []; let pickSel = null, sparkT = 0;
 const STARTS = [['kancik', 11.7], ['cebongi', 10.4], ['pioyo', 9.1]];
 function enterPick() {
   mode = 'pick'; player.rig.root.visible = false;
-  STARTS.forEach(([sp, z]) => { const m = mkMon(sp, 1, -5.3, z, 5); m.state = 'display'; m.ang = Math.PI / 2; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8 * 1.35; m.baseZ = z; starters.push(m); });
+  STARTS.forEach(([sp, z]) => { const m = mkMon(sp, 1, -5.3, z, 5); m.state = 'display'; m.ang = Math.PI / 2; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8 * 1.35; m.baseZ = z; starters.push(m); const pd = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.08, 16), glow(TCOL[m.type] || '#ffd84a')); pd.position.set(-5.3, groundY(-5.3, z) + 0.04, z); world.add(pd); peds.push(pd); });
+  $('pvig').style.display = 'block'; pickSel = null;
   yaw = 0.62; pitch = 0.6; camGoal.set(-5.2 + 1.0, 0.5, 10.4 + 1.5); camTarget.copy(camGoal); zoomGoal = zoom = 0.48;
   const cards = $('cards'); cards.innerHTML = '';
   starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b><span class="chip" style="background:${TCOL[m.type]}">${m.type}</span><div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
   $('go').textContent = 'Pilih satu dulu'; $('go').disabled = true; $('pick').style.display = 'flex'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
 }
+function updatePick(dt) {
+  if (mode !== 'pick') return;
+  if (pickSel == null) { camGoal.set(-4.9, 0.55, 10.4); zoomGoal = innerWidth > innerHeight ? 0.5 : 0.7; yaw = 0.62 + Math.sin(T * 0.5) * 0.3; }
+  else { const s = starters[pickSel]; camGoal.set(s.x - 0.1, 0.55, s.z); zoomGoal = 0.3; yaw = lerpAng(yaw, 1.2, Math.min(1, dt * 2.5)); if (T > sparkT) { sparkT = T + 0.28; burst(s.x + (R0() - 0.5) * 0.8, 0.2 + R0() * 0.8, s.z + (R0() - 0.5) * 0.8, TCOL[s.type] || '#ffd84a', 2); } s.jump = Math.max(s.jump, T % 1.4 < 0.05 ? 0.4 : 0); }
+  peds.forEach((q, i) => { q.rotation.y += dt * 1.2; q.scale.setScalar(i === pickSel ? 1.15 + Math.sin(T * 5) * 0.06 : 1); });
+}
 function selectStarter(i) {
   pickSel = i; [...$('cards').children].forEach((c, k) => c.classList.toggle('sel', k === i));
-  starters[i].jump = 0.6; starters[i].shake = 0; $('go').textContent = `Ajak ${starters[i].name}!`; $('go').disabled = false;
+  starters[i].jump = 0.6; starters[i].shake = 0; Music.blip(880); setTimeout(() => Music.blip(1320), 90); burst(starters[i].x, 0.7, starters[i].z, null, 22); $('go').textContent = `Ajak ${starters[i].name}!`; $('go').disabled = false;
 }
 $('go').onclick = () => {
   if (pickSel == null) return; Music.unlock(); Music.play(CITY); Music.jingle('catch'); const m = starters[pickSel];
   starters.forEach((s, i) => { if (i !== pickSel) { burst(s.x, 0.6, s.z, '#fff3a0'); world.remove(s.rig.root); } });
-  starters.length = 0; $('pick').style.display = 'none';
+  starters.length = 0; $('pick').style.display = 'none'; $('pvig').style.display = 'none'; peds.forEach((q) => world.remove(q)); peds.length = 0; camBack = { yaw: 0.62, zoom: 1 };
   m.state = 'follow'; m.sc = m.rig.size * m.d.s * 0.8; m.pop = 0; mates.push(m); m.x = -4.4; m.z = 10.4; m.ang = Math.PI / 2; trail.length = 0;
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
-  S.stage = 2; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Makanan favorit tidak jatuh dari langit, lho! Petik jagung, timun, wortel, dan kacang di Kebun Warga dekat Stasiun. Kangkung tumbuh di tepi Danau UI, dan ikan harus dipancing di danau.'], ['Prof. Catherine', 'Semua hasilnya masuk Tas. Buka lewat tombol ☰ — di sana ada juga Maimondex dan daftar Tim Saya.'],['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya.'], ['Prof. Catherine', 'Satu lagi: kamu hanya boleh membawa 3 Maimon. Yang lebih dari itu dititip di Rumah Kos Bu Wati, di dekat jalan raya. Semangat, Pelatih!']]);
+  S.stage = 1; S.tut = 0; S.tf = {}; markDex(m.sp, 2); saveGame();
+  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik kuning di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']], null, npcs.find((n) => n.id === 'prof'));
 };
 function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name + ' Lv' + m.lv; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
 const addChip = () => renderChips();
@@ -1982,7 +2034,7 @@ function updateMates(dt) {
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
    ===================================================================== */
 const SAVE_KEY = 'maimon_save_v1';
-const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {}, bag: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
+const S = { name: 'Pelatih', gender: 'boy', stage: 0, tut: 0, tf: {}, dex: {}, bag: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
@@ -2002,12 +2054,15 @@ function updateNPCs(dt) {
 }
 
 /* ---------- dialog ---------- */
-const dlgEl = $('dlg'); let dq = null;
-function dialog(lines, done) {
+const dlgEl = $('dlg'); let dq = null, creating = false, camFocus = null, camBack = null;
+function focusOn(n) { if (!n) return; camBack = null; camFocus = { n, yaw0: yaw, zoom0: zoomGoal }; }
+let pendingFocus = null;
+function dialog(lines, done, focus) {
+  focus = focus || pendingFocus; pendingFocus = null; if (focus) focusOn(focus);
   mode = 'dialog'; dq = { lines, i: -1, done, txt: '', pos: 0 }; $('joy').style.display = 'none'; $('talk').style.display = 'none'; dlgEl.style.display = 'block'; nextLine();
 }
 function nextLine() {
-  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; $('joy').style.display = ''; if (d) d(); return; }
+  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
   const [who, txt] = dq.lines[dq.i]; dq.who = who; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
@@ -2029,14 +2084,26 @@ const commonsCaught = () => COMMONS.filter((s) => S.dex[s] > 1).length;
 /* ---------- tujuan + penunjuk ---------- */
 const mk = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.45, 4).rotateX(Math.PI), glow('#ffd84a')); mk.visible = false; scene.add(mk);
 let objTarget = null;
+const nearestSpot = (pred) => { let b = null, bd = 1e9; spots.forEach((p) => { if (pred(p)) { const d = Math.hypot(p.x - player.x, p.z - player.z); if (d < bd) { bd = d; b = p; } } }); return b; };
+const TUT = [
+  { id: 'menu', hint: 'team', txt: 'Tekan ☰ di kanan atas, lalu pilih 🐾 Tim Saya untuk melihat Maimon-mu' },
+  { id: 'fish', txt: 'Pergi ke tepi Danau UI, tekan 🎣 Mancing, lalu TARIK saat ikan menggigit', tgt: () => spots.find((p) => p.kind === 'fish') },
+  { id: 'crop', txt: 'Di Kebun Warga, dekati 🌽 jagung dan tekan tombol Petik', tgt: () => nearestSpot((p) => p.kind === 'crop' && p.food === 'jagung' && p.ripe) },
+  { id: 'bag', hint: 'bag', txt: 'Tekan ☰ lalu pilih 🎒 Tas — semua hasil panenmu ada di sana' },
+];
+const tutHit = (id) => { if (S.stage === 1) S.tf[id] = 1; };
 function leadLow() { const m = mates[0]; return m && m.hp < m.hpMax * 0.4; }
 function updateObjective() {
   let txt = '', tgt = null;
   if (S.stage === 0) { txt = 'Temui Prof. Catherine di Lab Maimon UI (Depok Lama)'; tgt = npcs.find((n) => n.id === 'prof'); }
+  else if (S.stage === 1) { while (S.tut < TUT.length && S.tf[TUT[S.tut].id]) { S.tut++; saveGame(); if (S.tut < TUT.length) { Music.jingle('catch'); toast('Bagus! Langkah berikutnya ✨', 2); } }
+    if (S.tut >= TUT.length) { S.stage = 2; saveGame(); Music.jingle('win'); toast('Latihan selesai! Sekarang tangkap Maimon liar 🎉', 3.2); }
+    else { const st = TUT[S.tut]; txt = `Latihan ${S.tut + 1}/${TUT.length}: ${st.txt}`; tgt = st.tgt ? st.tgt() : null; } }
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   else if (S.stage === 3) { txt = 'Lapor hasil penelitian ke Prof. Catherine'; tgt = npcs.find((n) => n.id === 'prof'); }
   else if (S.stage === 4) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 2 ? 'block' : 'none';
+  $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
+  const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
 }
 function updateMarker(dt) {
@@ -2045,6 +2112,43 @@ function updateMarker(dt) {
   mk.visible = true; mk.position.set(objTarget.x, groundY(objTarget.x, objTarget.z) + 1.5 + Math.sin(T * 4) * 0.12, objTarget.z); mk.rotation.y = T * 2;
   const [sx, sy] = toScreen(objTarget.x, 1.5, objTarget.z), W = innerWidth, H = innerHeight, m = 40;
   if (sx < m || sx > W - m || sy < m || sy > H - m) { ar.style.display = 'block'; const cx = W / 2, cy = H / 2, dx = sx - cx, dy = sy - cy, k = Math.min((W / 2 - m) / Math.abs(dx || 1e-6), (H / 2 - m) / Math.abs(dy || 1e-6)); ar.style.left = cx + dx * k + 'px'; ar.style.top = cy + dy * k + 'px'; ar.textContent = '📍'; } else ar.style.display = 'none';
+}
+
+/* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
+const PLABELS = [{ x: -15.0, z: 8.6, y: 3.4, t: '🏥 KLINIK MAIMON', c: '#e0507a' }, { x: -9.9, z: 8.6, y: 3.4, t: '🔬 LAB MAIMON UI', c: '#1d8f8a' }, { x: -13.4, z: 2.8, y: 2.6, t: '🏠 RUMAH KOS', c: '#8a5a2a' }];
+PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
+function updateLabels() {
+  PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
+}
+/* ---------- jalur penunjuk (titik-titik kuning di tanah, dicari lewat A*) ---------- */
+const PATH_N = 110, pathM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.06, 0.3).rotateY(Math.PI / 4), glow('#ffe14a'), PATH_N); pathM.visible = false; pathM.frustumCulled = false; scene.add(pathM);
+let pathPts = [], pathFor = null, pathX = 1e9, pathZ = 1e9, pathT = 0; const _pd = new THREE.Object3D();
+function findPath(sx, sz, tx, tz) {
+  const CS = 0.5, NX = Math.round(HX * 2 / CS), NZ = Math.round(HZ * 2 / CS), cx = (i) => -HX + (i + 0.5) * CS, cz = (j) => -HZ + (j + 0.5) * CS, idx = (i, j) => j * NX + i;
+  const ci = (x) => Math.min(NX - 1, Math.max(0, Math.floor((x + HX) / CS))), cj = (z) => Math.min(NZ - 1, Math.max(0, Math.floor((z + HZ) / CS)));
+  const blk = new Int8Array(NX * NZ).fill(-1), isB = (i, j) => { const k = idx(i, j); if (blk[k] < 0) blk[k] = blockedAt(cx(i), cz(j), 0.28) ? 1 : 0; return blk[k] === 1; };
+  const si = ci(sx), sj = cj(sz); let gi = ci(tx), gj = cj(tz);
+  if (isB(gi, gj)) { let bd = 1e9; for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const i = gi + a, j = gj + b; if (i < 0 || j < 0 || i >= NX || j >= NZ || isB(i, j)) continue; const d = a * a + b * b; if (d < bd) { bd = d; gi = i + 0; gj = j + 0; } } }
+  const g = new Float32Array(NX * NZ).fill(1e9), par = new Int32Array(NX * NZ).fill(-1), done = new Uint8Array(NX * NZ), open = [idx(si, sj)]; g[open[0]] = 0;
+  const h = (i, j) => { const dx = Math.abs(i - gi), dz = Math.abs(j - gj); return Math.max(dx, dz) + 0.414 * Math.min(dx, dz); };
+  let found = -1, guard = 0;
+  while (open.length && guard++ < 6000) {
+    let bi = 0, bf = 1e9; for (let q = 0; q < open.length; q++) { const k = open[q], f = g[k] + h(k % NX, (k / NX) | 0); if (f < bf) { bf = f; bi = q; } }
+    const k = open.splice(bi, 1)[0]; if (done[k]) continue; done[k] = 1; const i = k % NX, j = (k / NX) | 0; if (i === gi && j === gj) { found = k; break; }
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (!a && !b) continue; const ni = i + a, nj = j + b; if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ || (isB(ni, nj) && !(ni === si && nj === sj))) continue; if (a && b && (isB(i + a, j) || isB(i, j + b))) continue; const nk = idx(ni, nj), ng = g[k] + (a && b ? 1.414 : 1); if (ng < g[nk]) { g[nk] = ng; par[nk] = k; open.push(nk); } }
+  }
+  if (found < 0) return [];
+  const pts = []; for (let k = found; k >= 0; k = par[k]) pts.push([cx(k % NX), cz((k / NX) | 0)]); return pts.reverse();
+}
+function updatePath(dt) {
+  pathT -= dt;
+  if (!objTarget || mode !== 'play') { pathM.visible = false; pathFor = null; return; }
+  if (objTarget !== pathFor || Math.hypot(player.x - pathX, player.z - pathZ) > 1.2 || pathT < -2.5) { pathFor = objTarget; pathX = player.x; pathZ = player.z; pathT = 0; pathPts = findPath(player.x, player.z, objTarget.x, objTarget.z); pathPts.push([objTarget.x, objTarget.z]); }
+  const dots = []; let carry = 0.2;
+  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
+  const n = Math.min(dots.length, PATH_N); pathM.visible = n > 0; pathM.count = n;
+  for (let i = 0; i < n; i++) { const [x, z] = dots[i], k = 0.55 + 0.6 * Math.max(0, Math.sin(T * 5 - i * 0.55)); _pd.position.set(x, groundY(x, z) + 0.07, z); _pd.scale.set(k, 1, k); _pd.rotation.y = 0; _pd.updateMatrix(); pathM.setMatrixAt(i, _pd.matrix); }
+  pathM.instanceMatrix.needsUpdate = true;
 }
 
 /* ---------- interaksi ---------- */
@@ -2064,9 +2168,11 @@ function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs
 
 /* ---------- Prof. Catherine ---------- */
 function talkProf() {
-  const P = 'Prof. Catherine';
+  const P = 'Prof. Catherine'; pendingFocus = npcs.find((n) => n.id === 'prof');
   if (S.stage === 0) {
     dialog([[P, 'Ah, kamu pasti {n}! Selamat datang di Depok.'], [P, 'Aku Prof. Catherine. Aku meneliti SEMUA Maimon di Pulau Jawa. Tapi Maimon liar itu lincah sekali, aku tidak bisa mengejarnya sendirian.'], [P, 'Maukah kamu membantuku? Latih Maimon, tangkap sebanyak mungkin, dan isi Maimondex ini!'], ['{n}', 'Siap, Prof! Aku mau jadi Pelatih Maimon terbaik di dunia!'], [P, 'Semangat yang bagus! Pertama, pilih teman pertamamu. Mereka sudah menunggu di taman.']], () => { enterPick(); });
+  } else if (S.stage === 1) {
+    dialog([[P, 'Selesaikan latihan dasarnya dulu ya, {n}. Ikuti titik-titik kuning dan lihat TUJUAN di layar. Setelah itu baru kita tangkap Maimon liar!']]);
   } else if (S.stage === 2) {
     const n = commonsCaught();
     dialog([[P, n === 0 ? 'Aku butuh data Kucingko, Tikusil, dan Dombanyo. Mereka penghuni asli Depok.' : `Bagus sekali! Sudah ${n} dari 3 Maimon yang kuminta.`], [P, 'Ingat: menangkan battle dulu, lalu beri makanan favoritnya dari Tas. Belum punya? Cari di Kebun Warga, tepi Danau UI, atau mancing ikan. Kalau Maimon-mu lelah, bawa ke Klinik Maimon.'], [P, 'Oh ya, kalau kamu lihat Maimon berkilau ✨, itu SANGAT langka. Jangan sampai lepas!']]);
@@ -2091,12 +2197,12 @@ function renderHome() {
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
 $('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
 function talkHome() {
-  const K = 'Bu Wati';
+  const K = 'Bu Wati'; pendingFocus = npcs.find((n) => n.id === 'home');
   dialog([[K, 'Selamat datang di Rumah Kos, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
 }
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
 function talkNurse() {
-  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
+  pendingFocus = npcs.find((n) => n.id === 'nurse'); const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
   dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
@@ -2117,7 +2223,7 @@ const INTRO_CAPS = [[0.6, 5.6, 'Pulau Jawa… tempat manusia dan Maimon hidup be
 const INTRO_END = 25; let intro = null;
 function startIntro(done) {
   mode = 'intro'; intro = { t: 0, done }; trainT = -4.5; $('intro').style.display = 'block'; $('ititle').style.opacity = 0; $('icap').style.opacity = 0; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
-  Music.play('pick'); requestAnimationFrame(() => $('intro').classList.add('go'));
+  Music.play('intro'); requestAnimationFrame(() => $('intro').classList.add('go'));
 }
 function endIntro() { if (!intro) return; const d = intro.done; intro = null; $('intro').style.display = 'none'; $('intro').classList.remove('go'); $('icap').style.opacity = 0; if (d) d(); }
 $('iskip').onclick = () => endIntro();
@@ -2131,17 +2237,27 @@ function introTick(dt) {
   if (t > INTRO_END) endIntro();
 }
 
-/* ---------- pilih karakter (layar sendiri, bukan di peta) ---------- */
+/* ---------- kenalan ala Pokemon: closeup Prof. Catherine, lalu pemain memperkenalkan diri ---------- */
+const PROF = 'Prof. Catherine';
 function enterCreate() {
-  mode = 'create'; Music.play('pick'); $('cbg').style.display = 'block'; $('joy').style.display = 'none';
-  const c = $('gcards'); c.innerHTML = '';
-  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<img src="${portraitHuman(g)}" alt=""><span>${label}</span>`; b.onclick = () => { gender = g; [...c.children].forEach((x, i) => x.classList.toggle('sel', i === (g === 'boy' ? 0 : 1))); $('gGo').disabled = false; $('gGo').textContent = 'Mulai Petualangan!'; Music.blip(g === 'boy' ? 440 : 600); }; c.appendChild(b); });
-  $('gGo').disabled = true; $('gGo').textContent = 'Pilih dulu ya'; $('create').style.display = 'flex';
+  creating = true; mode = 'create'; gender = null; Music.play('pick'); $('cbg').style.display = 'block'; $('cbg').classList.remove('two'); $('joy').style.display = 'none';
+  $('cprofImg').src = bustProf(); $('gcards').style.display = 'none'; $('nameBox').style.display = 'none'; $('create').style.display = 'flex'; $('nameIn').value = '';
+  setTimeout(() => dialog([[PROF, 'Halo! Selamat datang di dunia Maimon!'], [PROF, 'Aku Prof. Catherine, peneliti Maimon dari Universitas Indonesia.'], [PROF, 'Di sini manusia dan Maimon hidup berdampingan. Ada yang lucu, ada yang kuat, dan ada yang sangat langka!'], [PROF, 'Nah, sebelum petualanganmu dimulai, aku ingin mengenalmu dulu. Kamu laki-laki atau perempuan?']], () => { mode = 'create'; showGender(); }), 500);
+}
+function showGender() {
+  const c = $('gcards'); c.innerHTML = ''; c.style.display = 'flex';
+  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<img src="${portraitHuman(g)}" alt=""><span>${label}</span>`; b.onclick = () => pickGender(g); c.appendChild(b); });
+}
+function pickGender(g) {
+  gender = g; Music.unlock(); Music.blip(700); $('gcards').style.display = 'none'; $('cplayerImg').src = bustHuman(g); $('cbg').classList.add('two');
+  dialog([[PROF, 'Oh, begitu! Senang bertemu denganmu.'], [PROF, 'Lalu, siapa namamu?']], () => { mode = 'create'; $('nameBox').style.display = 'flex'; $('gGo').disabled = false; setTimeout(() => $('nameIn').focus(), 100); });
 }
 $('gGo').onclick = () => {
-  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {};
-  $('create').style.display = 'none'; $('cbg').style.display = 'none'; $('nameIn').blur();
-  setupPlayer(); beginStory();
+  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {}; S.tut = 0;
+  $('nameBox').style.display = 'none'; $('nameIn').blur();
+  dialog([['{n}', 'Halo, Prof! Namaku {n}. Aku baru pindah ke Depok untuk kuliah di UI.'], [PROF, '{n}! Nama yang bagus. Selamat datang di Depok!'], [PROF, 'Aku menunggumu di Lab Maimon UI, di Depok Lama, dekat Taman Maimon. Sampai ketemu di sana!']], () => {
+    creating = false; $('create').style.display = 'none'; $('cbg').style.display = 'none'; setupPlayer(); beginStory();
+  });
 };
 function setupPlayer() { if (player.rig) world.remove(player.rig.root); player.rig = buildPlayer2(S.gender); castAll(player.rig.root); world.add(player.rig.root); player.rig.root.visible = true; player.rig.root.rotation.order = 'YXZ'; }
 function beginStory() {
@@ -2149,7 +2265,7 @@ function beginStory() {
   for (let a = 9.6; a <= 14; a += 0.4) for (let b = -3.6; b <= 4; b += 0.4) { if (blockedAt(a, b, 0.5)) continue; let md = 9; treeMeshes.forEach((t) => { md = Math.min(md, Math.hypot(t.userData.x - a, t.userData.z - b)); }); const sc = md - 0.05 * Math.hypot(a - 11.6, b + 3); if (sc > best) { best = sc; sx = a; sz = b; } } player.x = sx; player.z = sz; player.ang = -Math.PI / 2; trail.length = 0;
   yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; Music.play(CITY);
-  mode = 'dialog'; setTimeout(() => dialog([['_', 'Selamat datang di dunia Maimon! Makhluk-makhluk lucu hidup berdampingan dengan manusia di seluruh Pulau Jawa.'], ['_', '{n} baru saja pindah ke Kota Depok. Beberapa bulan lagi, {n} akan mulai kuliah di Universitas Indonesia (UI), dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Sebelum kuliah dimulai, aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan masuk dari Prof. Catherine: "Halo, {n}! Aku peneliti Maimon di UI. Mampir ke Lab Maimon di Depok Lama ya, aku tunggu di dekat Taman Maimon!"']], () => { saveGame(); }), 600);
+  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Mampir ke Lab Maimon di Depok Lama ya, {n}. Ikuti titik-titik kuning di jalan!"']], () => { saveGame(); }), 600);
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
@@ -2166,7 +2282,7 @@ function loadGame() {
 const FOODWHERE = { timun: 'Petik di Kebun Warga (dekat Stasiun)', kangkung: 'Petik di tepi Danau UI', jagung: 'Petik di Kebun Warga (dekat Stasiun)', ikan: 'Mancing di Danau UI 🎣', kacang: 'Cabut di Kebun Warga (dekat Stasiun)', wortel: 'Cabut di Kebun Warga (dekat Stasiun)' };
 const BAGMAX = 99;
 const bagN = (id) => (S.bag && S.bag[id]) || 0;
-function addBag(id, n) { S.bag = S.bag || {}; S.bag[id] = Math.min(BAGMAX, bagN(id) + n); }
+function addBag(id, n) { if (S.stage === 1) S.tf[id === 'ikan' ? 'fish' : 'crop'] = 1; S.bag = S.bag || {}; S.bag[id] = Math.min(BAGMAX, bagN(id) + n); }
 function useBag(id) { if (bagN(id) > 0) { S.bag[id]--; return true; } return false; }
 
 const spots = [], toonM = {};
@@ -2278,7 +2394,7 @@ $('fishx').onclick = () => { if (fishSt) endFish(false); };
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
    ===================================================================== */
 const PR = { r: null, s: null, cam: null, cache: {} };
-function portraitRig(key, build, rot = 0.75) {
+function portraitRig(key, build, rot = 0.75, bust = false) {
   if (PR.cache[key]) return PR.cache[key];
   try {
     if (!PR.r) {
@@ -2286,15 +2402,18 @@ function portraitRig(key, build, rot = 0.75) {
       PR.s = new THREE.Scene(); PR.s.add(new THREE.HemisphereLight('#ffffff', '#9a8a6a', 2.1)); const dl = new THREE.DirectionalLight('#ffffff', 2.6); dl.position.set(2.5, 4, 3.5); PR.s.add(dl);
       PR.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
     }
-    const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
+    PR.r.setSize(bust ? 384 : 160, bust ? 384 : 160, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(rig.root), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.y * 1.05, sz.z) * 0.62;
-    PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
-    PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c);
+    if (bust) { const cy = bb.max.y - sz.y * 0.36, rb = sz.y * 0.44; PR.cam.left = -rb; PR.cam.right = rb; PR.cam.top = rb; PR.cam.bottom = -rb; PR.cam.updateProjectionMatrix(); c.y = cy; PR.cam.position.set(c.x + 1.3, cy + 0.7, c.z + 5); PR.cam.lookAt(c); }
+    else { PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
+    PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c); }
     PR.r.render(PR.s, PR.cam); const url = PR.r.domElement.toDataURL('image/png'); PR.s.remove(rig.root); PR.cache[key] = url; return url;
   } catch (e) { console.warn('portrait', e); return ''; }
 }
 const portrait = (sp, st = 1) => portraitRig(sp + st, () => MAI[sp].build(st));
 const portraitHuman = (g) => portraitRig('h_' + g, () => buildPlayer2(g), 0.4);
+const bustHuman = (g) => portraitRig('hb_' + g, () => buildPlayer2(g), -0.15, true);
+const bustProf = () => portraitRig('hb_prof', () => buildHuman(LOOK.prof), 0.12, true);
 const pimg = (sp, st, cls = '') => { const u = portrait(sp, st); return u ? `<img class="${cls}" src="${u}" alt="">` : `<div class="q">${MAI[sp].info.emo}</div>`; };
 const chipT = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
 const pad3 = (n) => String(n).padStart(3, '0');
@@ -2368,7 +2487,7 @@ function renderBag() {
 /* ----- navigasi menu ----- */
 const SCR = { dex: renderDex, team: renderTeam, bag: renderBag };
 const closeMenuPop = () => { $('menu').style.display = 'none'; };
-function openScr(id) { closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
+function openScr(id) { if (S.stage === 1) S.tf[id === 'bag' ? 'bag' : 'menu'] = 1; closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
 function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; $('joy').style.display = ''; }
 $('dexb').onclick = () => {
   if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; $('joy').style.display = ''; return; }
@@ -2407,14 +2526,14 @@ function frame() {
   // respawn
   for (let i = respawns.length - 1; i >= 0; i--) if (T > respawns[i].t) { const r = respawns.splice(i, 1)[0]; trySpawn(r.sp, r.st, r.hx, r.hz); }
 
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); autoMeetProf(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan
   let near = null, nd = 1e9;
   if (mode === 'play') {
     wilds.forEach((w) => { const d = Math.hypot(w.x - player.x, w.z - player.z); if (d < nd) { nd = d; near = w; } });
-    if (near && nd < 2.2 && T > cooldown && mates[0]) startBattle(near);
+    if (near && nd < 2.2 && T > cooldown && mates[0] && S.stage !== 1) startBattle(near);
   }
   const bub = $('bubble');
   if (mode === 'play' && near && nd < 6.5) { const [sx, sy] = toScreen(near.x, 1.1, near.z); bub.style.display = 'block'; bub.style.left = sx + 'px'; bub.style.top = sy + 'px'; bub.textContent = (near.rare ? '✨' : '') + FOOD[near.fav][2]; } else bub.style.display = 'none';
@@ -2435,6 +2554,8 @@ function frame() {
   if (mode === 'play' || mode === 'dialog' || mode === 'fish') camGoal.set(player.x, 0.4, player.z);
   if (mode === 'pick') { const s = starters[pickSel == null ? 1 : pickSel]; }
   if (mode === 'feed' && talk) camGoal.set((talk.x + player.x) / 2, 0.5, (talk.z + player.z) / 2);
+  if (camFocus) { const n = camFocus.n; yaw = lerpAng(yaw, Math.atan2(player.x - n.x, player.z - n.z) + 0.55, Math.min(1, dt * 3)); zoomGoal = 0.36; camGoal.set(n.x * 0.7 + player.x * 0.3, 0.75, n.z * 0.7 + player.z * 0.3); }
+  else if (camBack) { yaw = lerpAng(yaw, camBack.yaw, Math.min(1, dt * 3)); zoomGoal = camBack.zoom; if (Math.abs(Math.atan2(Math.sin(yaw - camBack.yaw), Math.cos(yaw - camBack.yaw))) < 0.03) camBack = null; }
 
   toastT -= dt; if (toastT < 0) toastEl.style.opacity = 0;
   logT -= dt; if (logT < 0 && mode !== 'battle') logEl.style.opacity = 0;
@@ -2448,7 +2569,7 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
 $('loading').style.display = 'none';

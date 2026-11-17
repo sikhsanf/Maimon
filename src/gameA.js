@@ -85,29 +85,36 @@ function updateWild(w, dt) {
 /* =====================================================================
    PIL IH STARTER (di awal) — 1 dari 3
    ===================================================================== */
-const starters = []; let pickSel = null;
+const starters = [], peds = []; let pickSel = null, sparkT = 0;
 const STARTS = [['kancik', 11.7], ['cebongi', 10.4], ['pioyo', 9.1]];
 function enterPick() {
   mode = 'pick'; player.rig.root.visible = false;
-  STARTS.forEach(([sp, z]) => { const m = mkMon(sp, 1, -5.3, z, 5); m.state = 'display'; m.ang = Math.PI / 2; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8 * 1.35; m.baseZ = z; starters.push(m); });
+  STARTS.forEach(([sp, z]) => { const m = mkMon(sp, 1, -5.3, z, 5); m.state = 'display'; m.ang = Math.PI / 2; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8 * 1.35; m.baseZ = z; starters.push(m); const pd = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.08, 16), glow(TCOL[m.type] || '#ffd84a')); pd.position.set(-5.3, groundY(-5.3, z) + 0.04, z); world.add(pd); peds.push(pd); });
+  $('pvig').style.display = 'block'; pickSel = null;
   yaw = 0.62; pitch = 0.6; camGoal.set(-5.2 + 1.0, 0.5, 10.4 + 1.5); camTarget.copy(camGoal); zoomGoal = zoom = 0.48;
   const cards = $('cards'); cards.innerHTML = '';
   starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b><span class="chip" style="background:${TCOL[m.type]}">${m.type}</span><div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
   $('go').textContent = 'Pilih satu dulu'; $('go').disabled = true; $('pick').style.display = 'flex'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
 }
+function updatePick(dt) {
+  if (mode !== 'pick') return;
+  if (pickSel == null) { camGoal.set(-4.9, 0.55, 10.4); zoomGoal = innerWidth > innerHeight ? 0.5 : 0.7; yaw = 0.62 + Math.sin(T * 0.5) * 0.3; }
+  else { const s = starters[pickSel]; camGoal.set(s.x - 0.1, 0.55, s.z); zoomGoal = 0.3; yaw = lerpAng(yaw, 1.2, Math.min(1, dt * 2.5)); if (T > sparkT) { sparkT = T + 0.28; burst(s.x + (R0() - 0.5) * 0.8, 0.2 + R0() * 0.8, s.z + (R0() - 0.5) * 0.8, TCOL[s.type] || '#ffd84a', 2); } s.jump = Math.max(s.jump, T % 1.4 < 0.05 ? 0.4 : 0); }
+  peds.forEach((q, i) => { q.rotation.y += dt * 1.2; q.scale.setScalar(i === pickSel ? 1.15 + Math.sin(T * 5) * 0.06 : 1); });
+}
 function selectStarter(i) {
   pickSel = i; [...$('cards').children].forEach((c, k) => c.classList.toggle('sel', k === i));
-  starters[i].jump = 0.6; starters[i].shake = 0; $('go').textContent = `Ajak ${starters[i].name}!`; $('go').disabled = false;
+  starters[i].jump = 0.6; starters[i].shake = 0; Music.blip(880); setTimeout(() => Music.blip(1320), 90); burst(starters[i].x, 0.7, starters[i].z, null, 22); $('go').textContent = `Ajak ${starters[i].name}!`; $('go').disabled = false;
 }
 $('go').onclick = () => {
   if (pickSel == null) return; Music.unlock(); Music.play(CITY); Music.jingle('catch'); const m = starters[pickSel];
   starters.forEach((s, i) => { if (i !== pickSel) { burst(s.x, 0.6, s.z, '#fff3a0'); world.remove(s.rig.root); } });
-  starters.length = 0; $('pick').style.display = 'none';
+  starters.length = 0; $('pick').style.display = 'none'; $('pvig').style.display = 'none'; peds.forEach((q) => world.remove(q)); peds.length = 0; camBack = { yaw: 0.62, zoom: 1 };
   m.state = 'follow'; m.sc = m.rig.size * m.d.s * 0.8; m.pop = 0; mates.push(m); m.x = -4.4; m.z = 10.4; m.ang = Math.PI / 2; trail.length = 0;
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
-  S.stage = 2; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Dekati Maimon liar untuk battle. Kalau menang, beri makanan favoritnya supaya mau ikut denganmu.'], ['Prof. Catherine', 'Makanan favorit tidak jatuh dari langit, lho! Petik jagung, timun, wortel, dan kacang di Kebun Warga dekat Stasiun. Kangkung tumbuh di tepi Danau UI, dan ikan harus dipancing di danau.'], ['Prof. Catherine', 'Semua hasilnya masuk Tas. Buka lewat tombol ☰ — di sana ada juga Maimondex dan daftar Tim Saya.'],['Prof. Catherine', 'Kalau Maimon-mu lelah, bawa ke Klinik Maimon di seberangku. Dokter Sari akan merawatnya.'], ['Prof. Catherine', 'Satu lagi: kamu hanya boleh membawa 3 Maimon. Yang lebih dari itu dititip di Rumah Kos Bu Wati, di dekat jalan raya. Semangat, Pelatih!']]);
+  S.stage = 1; S.tut = 0; S.tf = {}; markDex(m.sp, 2); saveGame();
+  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik kuning di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']], null, npcs.find((n) => n.id === 'prof'));
 };
 function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name + ' Lv' + m.lv; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
 const addChip = () => renderChips();

@@ -20,11 +20,16 @@ const Music = (() => {
       ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [5, 'maj7']], bass: 'r.....r.5.....8.', arp: '0.2.4.2.0.2.4.2.',
       dr: { k: 'X.......x.......', s: '....x.......x...', h: 'x.x.x.x.x.x.x.xo', p: '..o...o...o...o.' },
       A: [[0, 4, 3], [3, 5, 3], [6, 7, 6], [16, 7, 3], [19, 5, 3], [22, 4, 8]], B: [[0, 5, 3], [3, 7, 3], [6, 9, 6], [16, 8, 3], [19, 7, 3], [22, 5, 8]] },
-    depok: { bpm: 96, swing: 0, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1, arpI: 'pluck', gong: false,
-      ch: [[0, 'maj'], [7, 'maj'], [9, 'min'], [5, 'maj'], [0, 'maj'], [7, 'maj'], [5, 'maj'], [7, 'sus4']],
-      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
-      dr: { k: 'X.......x.......', s: '........x.......', h: '..x...x...x...x.', p: 'o...o...o...o...' },
-      A: [[0, 4, 3], [4, 4, 1], [6, 5, 2], [8, 4, 4], [14, 2, 2], [16, 2, 3], [20, 2, 1], [22, 4, 2], [24, 2, 4], [28, 1, 2]], B: [[0, 5, 3], [4, 5, 1], [6, 7, 2], [8, 5, 4], [14, 4, 2], [16, 4, 3], [20, 2, 1], [22, 1, 2], [24, 0, 8]] },
+    intro: { bpm: 124, swing: 0, spb: 16, root: 50, sc: 'min', lead: 'brass', lead2: 'bell', bassI: 'pluck', padV: 1.3, arpI: 'pluck', arpOct: 1, gong: true,
+      ch: [[0, 'min'], [8, 'maj'], [3, 'maj'], [10, 'maj'], [0, 'min'], [8, 'maj'], [5, 'min'], [7, 'dom7']],
+      bass: 'r.r.r.r.r.r.r.8.', arp: '0.1.2.3.2.1.2.1.',
+      dr: { k: 'X...X...X...X.x.', s: '....X.......X..x', h: 'x.x.x.x.x.x.x.xx', d: 'x..x..x.x..x.x..', c: '........x.......' },
+      A: [[0, 7, 3], [4, 7, 1], [6, 9, 2], [8, 11, 6], [16, 10, 3], [20, 9, 1], [22, 7, 2], [24, 9, 8]], B: [[0, 11, 3], [4, 11, 1], [6, 12, 2], [8, 13, 6], [16, 12, 3], [20, 11, 1], [22, 9, 2], [24, 11, 8]] },
+    depok: { bpm: 104, swing: 0.05, spb: 16, root: 45, sc: 'mix', lead: 'pluck', lead2: 'flute', bassI: 'pluck', padV: 0.9, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [10, 'maj'], [5, 'maj'], [0, 'maj'], [0, 'maj'], [10, 'maj'], [5, 'maj'], [7, 'min']],
+      bass: 'r..r..5.r..r..5.', arp: '..0.1.2...0.1.2.',
+      dr: { k: 'X.....x.X.....x.', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', w: '..x.....x...x...', p: 'o.o.o.o.o.o.o.o.' },
+      A: [[0, 4, 2], [2, 5, 2], [4, 4, 4], [8, 2, 2], [10, 4, 2], [12, 5, 4], [16, 4, 2], [18, 2, 2], [20, 0, 4], [24, 2, 8]], B: [[0, 5, 2], [2, 6, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 4, 4], [16, 2, 2], [18, 0, 2], [20, -1, 4], [24, 0, 8]] },
     jakarta: { bpm: 118, swing: 0.08, spb: 16, root: 50, sc: 'dor', lead: 'synth', lead2: 'brass', bassI: 'pluck', padV: 0.8, arpI: 'pluck',
       ch: [[0, 'm9'], [5, 'dom7'], [3, 'maj7'], [7, 'm7'], [0, 'm9'], [5, 'dom7'], [3, 'maj7'], [10, 'dom7']],
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
@@ -90,7 +95,7 @@ const Music = (() => {
     comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.22;
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.5; master.connect(comp); comp.connect(ctx.destination);
     duck = ctx.createGain(); duck.gain.value = 1; duck.connect(master);
-    const rev = ctx.createConvolver(); rev.buffer = impulse(2.6, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
+    const rev = ctx.createConvolver(); rev.buffer = impulse(1.8, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
     const dl = ctx.createDelay(1.5), fb = ctx.createGain(), dlf = ctx.createBiquadFilter(), dg = ctx.createGain(); dl.delayTime.value = 0.36; fb.gain.value = 0.38; dlf.type = 'lowpass'; dlf.frequency.value = 2600; dg.gain.value = 0.3; dlyIn = ctx.createGain();
     dlyIn.connect(dl); dl.connect(dlf); dlf.connect(fb); fb.connect(dl); dlf.connect(dg); dg.connect(duck); dg.connect(revIn);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -202,12 +207,13 @@ const Music = (() => {
     if (!cur) return;
     while (cur.nextT < until) { playStep(cur, cur.nextT); cur.nextT += cur.sd; cur.step++; }
   }
-  function tick() { if (cur && ctx) sched(ctx.currentTime + 0.35); }
+  function tick() { if (!cur || !ctx) return; const now = ctx.currentTime; if (cur.nextT < now - 0.4) cur.nextT = now + 0.1; sched(now + 1.0); }
+  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (ctx && !document.hidden) ctx.resume(); }); }
 
   /* ---------------- API ---------------- */
-  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); if (!timer) timer = setInterval(tick, 60); return true; }
+  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
   function play(name) {
-    pending = name; if (!ctx || ctx.state === 'suspended') return; if (cur && cur.name === name) return;
+    if (!ctx || ctx.state === 'suspended') { pending = name; return; } pending = null; if (cur && cur.name === name) return;
     const old = cur, nw = start(name); if (!nw) return;
     const t = ctx.currentTime; nw.bus.gain.setValueAtTime(0.0001, t); nw.bus.gain.linearRampToValueAtTime(1, t + 0.9);
     if (old) { old.bus.gain.cancelScheduledValues(t); old.bus.gain.setValueAtTime(old.bus.gain.value, t); old.bus.gain.linearRampToValueAtTime(0.0001, t + 1.1); setTimeout(() => { try { old.bus.disconnect(); } catch (e) {} }, 4000); }

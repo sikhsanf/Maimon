@@ -3,7 +3,7 @@
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
    ===================================================================== */
 const SAVE_KEY = 'maimon_save_v1';
-const S = { name: 'Pelatih', gender: 'boy', stage: 0, dex: {}, bag: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
+const S = { name: 'Pelatih', gender: 'boy', stage: 0, tut: 0, tf: {}, dex: {}, bag: {} };   // stage: 0 cari Prof, 2 tangkap 3 Maimon, 3 lapor, 4 bebas
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
@@ -23,12 +23,15 @@ function updateNPCs(dt) {
 }
 
 /* ---------- dialog ---------- */
-const dlgEl = $('dlg'); let dq = null;
-function dialog(lines, done) {
+const dlgEl = $('dlg'); let dq = null, creating = false, camFocus = null, camBack = null;
+function focusOn(n) { if (!n) return; camBack = null; camFocus = { n, yaw0: yaw, zoom0: zoomGoal }; }
+let pendingFocus = null;
+function dialog(lines, done, focus) {
+  focus = focus || pendingFocus; pendingFocus = null; if (focus) focusOn(focus);
   mode = 'dialog'; dq = { lines, i: -1, done, txt: '', pos: 0 }; $('joy').style.display = 'none'; $('talk').style.display = 'none'; dlgEl.style.display = 'block'; nextLine();
 }
 function nextLine() {
-  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; $('joy').style.display = ''; if (d) d(); return; }
+  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
   const [who, txt] = dq.lines[dq.i]; dq.who = who; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
@@ -50,14 +53,26 @@ const commonsCaught = () => COMMONS.filter((s) => S.dex[s] > 1).length;
 /* ---------- tujuan + penunjuk ---------- */
 const mk = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.45, 4).rotateX(Math.PI), glow('#ffd84a')); mk.visible = false; scene.add(mk);
 let objTarget = null;
+const nearestSpot = (pred) => { let b = null, bd = 1e9; spots.forEach((p) => { if (pred(p)) { const d = Math.hypot(p.x - player.x, p.z - player.z); if (d < bd) { bd = d; b = p; } } }); return b; };
+const TUT = [
+  { id: 'menu', hint: 'team', txt: 'Tekan ☰ di kanan atas, lalu pilih 🐾 Tim Saya untuk melihat Maimon-mu' },
+  { id: 'fish', txt: 'Pergi ke tepi Danau UI, tekan 🎣 Mancing, lalu TARIK saat ikan menggigit', tgt: () => spots.find((p) => p.kind === 'fish') },
+  { id: 'crop', txt: 'Di Kebun Warga, dekati 🌽 jagung dan tekan tombol Petik', tgt: () => nearestSpot((p) => p.kind === 'crop' && p.food === 'jagung' && p.ripe) },
+  { id: 'bag', hint: 'bag', txt: 'Tekan ☰ lalu pilih 🎒 Tas — semua hasil panenmu ada di sana' },
+];
+const tutHit = (id) => { if (S.stage === 1) S.tf[id] = 1; };
 function leadLow() { const m = mates[0]; return m && m.hp < m.hpMax * 0.4; }
 function updateObjective() {
   let txt = '', tgt = null;
   if (S.stage === 0) { txt = 'Temui Prof. Catherine di Lab Maimon UI (Depok Lama)'; tgt = npcs.find((n) => n.id === 'prof'); }
+  else if (S.stage === 1) { while (S.tut < TUT.length && S.tf[TUT[S.tut].id]) { S.tut++; saveGame(); if (S.tut < TUT.length) { Music.jingle('catch'); toast('Bagus! Langkah berikutnya ✨', 2); } }
+    if (S.tut >= TUT.length) { S.stage = 2; saveGame(); Music.jingle('win'); toast('Latihan selesai! Sekarang tangkap Maimon liar 🎉', 3.2); }
+    else { const st = TUT[S.tut]; txt = `Latihan ${S.tut + 1}/${TUT.length}: ${st.txt}`; tgt = st.tgt ? st.tgt() : null; } }
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   else if (S.stage === 3) { txt = 'Lapor hasil penelitian ke Prof. Catherine'; tgt = npcs.find((n) => n.id === 'prof'); }
   else if (S.stage === 4) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 2 ? 'block' : 'none';
+  $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
+  const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
 }
 function updateMarker(dt) {
@@ -66,6 +81,43 @@ function updateMarker(dt) {
   mk.visible = true; mk.position.set(objTarget.x, groundY(objTarget.x, objTarget.z) + 1.5 + Math.sin(T * 4) * 0.12, objTarget.z); mk.rotation.y = T * 2;
   const [sx, sy] = toScreen(objTarget.x, 1.5, objTarget.z), W = innerWidth, H = innerHeight, m = 40;
   if (sx < m || sx > W - m || sy < m || sy > H - m) { ar.style.display = 'block'; const cx = W / 2, cy = H / 2, dx = sx - cx, dy = sy - cy, k = Math.min((W / 2 - m) / Math.abs(dx || 1e-6), (H / 2 - m) / Math.abs(dy || 1e-6)); ar.style.left = cx + dx * k + 'px'; ar.style.top = cy + dy * k + 'px'; ar.textContent = '📍'; } else ar.style.display = 'none';
+}
+
+/* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
+const PLABELS = [{ x: -15.0, z: 8.6, y: 3.4, t: '🏥 KLINIK MAIMON', c: '#e0507a' }, { x: -9.9, z: 8.6, y: 3.4, t: '🔬 LAB MAIMON UI', c: '#1d8f8a' }, { x: -13.4, z: 2.8, y: 2.6, t: '🏠 RUMAH KOS', c: '#8a5a2a' }];
+PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
+function updateLabels() {
+  PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
+}
+/* ---------- jalur penunjuk (titik-titik kuning di tanah, dicari lewat A*) ---------- */
+const PATH_N = 110, pathM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.06, 0.3).rotateY(Math.PI / 4), glow('#ffe14a'), PATH_N); pathM.visible = false; pathM.frustumCulled = false; scene.add(pathM);
+let pathPts = [], pathFor = null, pathX = 1e9, pathZ = 1e9, pathT = 0; const _pd = new THREE.Object3D();
+function findPath(sx, sz, tx, tz) {
+  const CS = 0.5, NX = Math.round(HX * 2 / CS), NZ = Math.round(HZ * 2 / CS), cx = (i) => -HX + (i + 0.5) * CS, cz = (j) => -HZ + (j + 0.5) * CS, idx = (i, j) => j * NX + i;
+  const ci = (x) => Math.min(NX - 1, Math.max(0, Math.floor((x + HX) / CS))), cj = (z) => Math.min(NZ - 1, Math.max(0, Math.floor((z + HZ) / CS)));
+  const blk = new Int8Array(NX * NZ).fill(-1), isB = (i, j) => { const k = idx(i, j); if (blk[k] < 0) blk[k] = blockedAt(cx(i), cz(j), 0.28) ? 1 : 0; return blk[k] === 1; };
+  const si = ci(sx), sj = cj(sz); let gi = ci(tx), gj = cj(tz);
+  if (isB(gi, gj)) { let bd = 1e9; for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const i = gi + a, j = gj + b; if (i < 0 || j < 0 || i >= NX || j >= NZ || isB(i, j)) continue; const d = a * a + b * b; if (d < bd) { bd = d; gi = i + 0; gj = j + 0; } } }
+  const g = new Float32Array(NX * NZ).fill(1e9), par = new Int32Array(NX * NZ).fill(-1), done = new Uint8Array(NX * NZ), open = [idx(si, sj)]; g[open[0]] = 0;
+  const h = (i, j) => { const dx = Math.abs(i - gi), dz = Math.abs(j - gj); return Math.max(dx, dz) + 0.414 * Math.min(dx, dz); };
+  let found = -1, guard = 0;
+  while (open.length && guard++ < 6000) {
+    let bi = 0, bf = 1e9; for (let q = 0; q < open.length; q++) { const k = open[q], f = g[k] + h(k % NX, (k / NX) | 0); if (f < bf) { bf = f; bi = q; } }
+    const k = open.splice(bi, 1)[0]; if (done[k]) continue; done[k] = 1; const i = k % NX, j = (k / NX) | 0; if (i === gi && j === gj) { found = k; break; }
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (!a && !b) continue; const ni = i + a, nj = j + b; if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ || (isB(ni, nj) && !(ni === si && nj === sj))) continue; if (a && b && (isB(i + a, j) || isB(i, j + b))) continue; const nk = idx(ni, nj), ng = g[k] + (a && b ? 1.414 : 1); if (ng < g[nk]) { g[nk] = ng; par[nk] = k; open.push(nk); } }
+  }
+  if (found < 0) return [];
+  const pts = []; for (let k = found; k >= 0; k = par[k]) pts.push([cx(k % NX), cz((k / NX) | 0)]); return pts.reverse();
+}
+function updatePath(dt) {
+  pathT -= dt;
+  if (!objTarget || mode !== 'play') { pathM.visible = false; pathFor = null; return; }
+  if (objTarget !== pathFor || Math.hypot(player.x - pathX, player.z - pathZ) > 1.2 || pathT < -2.5) { pathFor = objTarget; pathX = player.x; pathZ = player.z; pathT = 0; pathPts = findPath(player.x, player.z, objTarget.x, objTarget.z); pathPts.push([objTarget.x, objTarget.z]); }
+  const dots = []; let carry = 0.2;
+  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
+  const n = Math.min(dots.length, PATH_N); pathM.visible = n > 0; pathM.count = n;
+  for (let i = 0; i < n; i++) { const [x, z] = dots[i], k = 0.55 + 0.6 * Math.max(0, Math.sin(T * 5 - i * 0.55)); _pd.position.set(x, groundY(x, z) + 0.07, z); _pd.scale.set(k, 1, k); _pd.rotation.y = 0; _pd.updateMatrix(); pathM.setMatrixAt(i, _pd.matrix); }
+  pathM.instanceMatrix.needsUpdate = true;
 }
 
 /* ---------- interaksi ---------- */
@@ -85,9 +137,11 @@ function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs
 
 /* ---------- Prof. Catherine ---------- */
 function talkProf() {
-  const P = 'Prof. Catherine';
+  const P = 'Prof. Catherine'; pendingFocus = npcs.find((n) => n.id === 'prof');
   if (S.stage === 0) {
     dialog([[P, 'Ah, kamu pasti {n}! Selamat datang di Depok.'], [P, 'Aku Prof. Catherine. Aku meneliti SEMUA Maimon di Pulau Jawa. Tapi Maimon liar itu lincah sekali, aku tidak bisa mengejarnya sendirian.'], [P, 'Maukah kamu membantuku? Latih Maimon, tangkap sebanyak mungkin, dan isi Maimondex ini!'], ['{n}', 'Siap, Prof! Aku mau jadi Pelatih Maimon terbaik di dunia!'], [P, 'Semangat yang bagus! Pertama, pilih teman pertamamu. Mereka sudah menunggu di taman.']], () => { enterPick(); });
+  } else if (S.stage === 1) {
+    dialog([[P, 'Selesaikan latihan dasarnya dulu ya, {n}. Ikuti titik-titik kuning dan lihat TUJUAN di layar. Setelah itu baru kita tangkap Maimon liar!']]);
   } else if (S.stage === 2) {
     const n = commonsCaught();
     dialog([[P, n === 0 ? 'Aku butuh data Kucingko, Tikusil, dan Dombanyo. Mereka penghuni asli Depok.' : `Bagus sekali! Sudah ${n} dari 3 Maimon yang kuminta.`], [P, 'Ingat: menangkan battle dulu, lalu beri makanan favoritnya dari Tas. Belum punya? Cari di Kebun Warga, tepi Danau UI, atau mancing ikan. Kalau Maimon-mu lelah, bawa ke Klinik Maimon.'], [P, 'Oh ya, kalau kamu lihat Maimon berkilau ✨, itu SANGAT langka. Jangan sampai lepas!']]);
@@ -112,12 +166,12 @@ function renderHome() {
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
 $('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
 function talkHome() {
-  const K = 'Bu Wati';
+  const K = 'Bu Wati'; pendingFocus = npcs.find((n) => n.id === 'home');
   dialog([[K, 'Selamat datang di Rumah Kos, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
 }
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
 function talkNurse() {
-  const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
+  pendingFocus = npcs.find((n) => n.id === 'nurse'); const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
   dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
@@ -138,7 +192,7 @@ const INTRO_CAPS = [[0.6, 5.6, 'Pulau Jawa… tempat manusia dan Maimon hidup be
 const INTRO_END = 25; let intro = null;
 function startIntro(done) {
   mode = 'intro'; intro = { t: 0, done }; trainT = -4.5; $('intro').style.display = 'block'; $('ititle').style.opacity = 0; $('icap').style.opacity = 0; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
-  Music.play('pick'); requestAnimationFrame(() => $('intro').classList.add('go'));
+  Music.play('intro'); requestAnimationFrame(() => $('intro').classList.add('go'));
 }
 function endIntro() { if (!intro) return; const d = intro.done; intro = null; $('intro').style.display = 'none'; $('intro').classList.remove('go'); $('icap').style.opacity = 0; if (d) d(); }
 $('iskip').onclick = () => endIntro();
@@ -152,17 +206,27 @@ function introTick(dt) {
   if (t > INTRO_END) endIntro();
 }
 
-/* ---------- pilih karakter (layar sendiri, bukan di peta) ---------- */
+/* ---------- kenalan ala Pokemon: closeup Prof. Catherine, lalu pemain memperkenalkan diri ---------- */
+const PROF = 'Prof. Catherine';
 function enterCreate() {
-  mode = 'create'; Music.play('pick'); $('cbg').style.display = 'block'; $('joy').style.display = 'none';
-  const c = $('gcards'); c.innerHTML = '';
-  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<img src="${portraitHuman(g)}" alt=""><span>${label}</span>`; b.onclick = () => { gender = g; [...c.children].forEach((x, i) => x.classList.toggle('sel', i === (g === 'boy' ? 0 : 1))); $('gGo').disabled = false; $('gGo').textContent = 'Mulai Petualangan!'; Music.blip(g === 'boy' ? 440 : 600); }; c.appendChild(b); });
-  $('gGo').disabled = true; $('gGo').textContent = 'Pilih dulu ya'; $('create').style.display = 'flex';
+  creating = true; mode = 'create'; gender = null; Music.play('pick'); $('cbg').style.display = 'block'; $('cbg').classList.remove('two'); $('joy').style.display = 'none';
+  $('cprofImg').src = bustProf(); $('gcards').style.display = 'none'; $('nameBox').style.display = 'none'; $('create').style.display = 'flex'; $('nameIn').value = '';
+  setTimeout(() => dialog([[PROF, 'Halo! Selamat datang di dunia Maimon!'], [PROF, 'Aku Prof. Catherine, peneliti Maimon dari Universitas Indonesia.'], [PROF, 'Di sini manusia dan Maimon hidup berdampingan. Ada yang lucu, ada yang kuat, dan ada yang sangat langka!'], [PROF, 'Nah, sebelum petualanganmu dimulai, aku ingin mengenalmu dulu. Kamu laki-laki atau perempuan?']], () => { mode = 'create'; showGender(); }), 500);
+}
+function showGender() {
+  const c = $('gcards'); c.innerHTML = ''; c.style.display = 'flex';
+  [['boy', 'Cowok'], ['girl', 'Cewek']].forEach(([g, label]) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<img src="${portraitHuman(g)}" alt=""><span>${label}</span>`; b.onclick = () => pickGender(g); c.appendChild(b); });
+}
+function pickGender(g) {
+  gender = g; Music.unlock(); Music.blip(700); $('gcards').style.display = 'none'; $('cplayerImg').src = bustHuman(g); $('cbg').classList.add('two');
+  dialog([[PROF, 'Oh, begitu! Senang bertemu denganmu.'], [PROF, 'Lalu, siapa namamu?']], () => { mode = 'create'; $('nameBox').style.display = 'flex'; $('gGo').disabled = false; setTimeout(() => $('nameIn').focus(), 100); });
 }
 $('gGo').onclick = () => {
-  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {};
-  $('create').style.display = 'none'; $('cbg').style.display = 'none'; $('nameIn').blur();
-  setupPlayer(); beginStory();
+  if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {}; S.tut = 0;
+  $('nameBox').style.display = 'none'; $('nameIn').blur();
+  dialog([['{n}', 'Halo, Prof! Namaku {n}. Aku baru pindah ke Depok untuk kuliah di UI.'], [PROF, '{n}! Nama yang bagus. Selamat datang di Depok!'], [PROF, 'Aku menunggumu di Lab Maimon UI, di Depok Lama, dekat Taman Maimon. Sampai ketemu di sana!']], () => {
+    creating = false; $('create').style.display = 'none'; $('cbg').style.display = 'none'; setupPlayer(); beginStory();
+  });
 };
 function setupPlayer() { if (player.rig) world.remove(player.rig.root); player.rig = buildPlayer2(S.gender); castAll(player.rig.root); world.add(player.rig.root); player.rig.root.visible = true; player.rig.root.rotation.order = 'YXZ'; }
 function beginStory() {
@@ -170,7 +234,7 @@ function beginStory() {
   for (let a = 9.6; a <= 14; a += 0.4) for (let b = -3.6; b <= 4; b += 0.4) { if (blockedAt(a, b, 0.5)) continue; let md = 9; treeMeshes.forEach((t) => { md = Math.min(md, Math.hypot(t.userData.x - a, t.userData.z - b)); }); const sc = md - 0.05 * Math.hypot(a - 11.6, b + 3); if (sc > best) { best = sc; sx = a; sz = b; } } player.x = sx; player.z = sz; player.ang = -Math.PI / 2; trail.length = 0;
   yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; Music.play(CITY);
-  mode = 'dialog'; setTimeout(() => dialog([['_', 'Selamat datang di dunia Maimon! Makhluk-makhluk lucu hidup berdampingan dengan manusia di seluruh Pulau Jawa.'], ['_', '{n} baru saja pindah ke Kota Depok. Beberapa bulan lagi, {n} akan mulai kuliah di Universitas Indonesia (UI), dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Sebelum kuliah dimulai, aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan masuk dari Prof. Catherine: "Halo, {n}! Aku peneliti Maimon di UI. Mampir ke Lab Maimon di Depok Lama ya, aku tunggu di dekat Taman Maimon!"']], () => { saveGame(); }), 600);
+  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Mampir ke Lab Maimon di Depok Lama ya, {n}. Ikuti titik-titik kuning di jalan!"']], () => { saveGame(); }), 600);
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }

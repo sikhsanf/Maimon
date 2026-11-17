@@ -86,11 +86,12 @@ function colonial(x, z, ry, i, o = {}) {
     const tex = labelTex(o.sign[0], o.sign[1], '#ffffff', o.sign[2]), mat = new THREE.MeshBasicMaterial({ map: tex }), h = 1.4 * 1.3, sg = new THREE.Group(); sg.position.set(0, h + 0.8 + 0.5, 0);
     const mk = (ry2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 0.62), mat); m.rotation.y = ry2; m.position.z = ry2 ? -0.05 : 0.05; sg.add(m); };
     mk(0); mk(Math.PI); [-1.1, 1.1].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.5, 0.07), toon('#4a4f58')); p.position.set(px2, -0.3, 0); sg.add(p); }); g.add(sg);
+    if (o.board) { const bg = new THREE.Group(); bg.position.set(o.board[0], 0, o.board[1]); const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 0.5), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })); pl.position.y = 1.2; bg.add(pl); [-0.95, 0.95].forEach((px2) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.2, 0.07), toon('#4a4f58')); p.position.set(px2, 0.6, 0); bg.add(p); }); g.add(bg); }
   }
   return g;
 }
 
-const POI = { lab: [-9.9, 10.2], clinic: [-9.9, 10.2], prof: [-8.2, 10.3], nurse: [-11.6, 10.9], home: [-11.9, 3.3] };
+const POI = { lab: [-9.9, 10.2], clinic: [-15.0, 10.2], prof: [-8.2, 10.3], nurse: [-14.6, 10.45], home: [-11.9, 3.3] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -99,7 +100,7 @@ function buildBuildings() {
     for (const px2 of [-1.2, 0.8]) { const ac = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.6), toon('#b8bcc4')); ac.position.set(px2, 2.37, -0.6); ac.castShadow = true; g.add(ac); }
     const can = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 0.8), toon('#e0587a')); can.position.set(0.0, 1.0, 2.7); can.castShadow = true; g.add(can);
     for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), toon('#ffffff')); p.position.set(s * 0.8, 0.5, 3.05); g.add(p); }
-    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.9 + (i % 3) * 1.4, groundY(3, -3), -2.9 + Math.floor(i / 3) * 0.95); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); [-0.45, 0.45].forEach((o) => circles.push({ x: car.position.x + o, z: car.position.z, r: 0.42 })); });
+    ['#e84a4a', '#4a8ae8', '#f2c230', '#52b857', '#ffffff', '#9a6ad8'].forEach((c, i) => { const car = buildCar(c, false); car.position.set(2.7 + (i % 3) * 1.75, groundY(3, -3), -2.9 + Math.floor(i / 3) * 1.0); car.rotation.y = Math.PI / 2 * (i % 2 ? 1 : -1); castAll(car); world.add(car); [-0.5, 0.5].forEach((o) => circles.push({ x: car.position.x + o, z: car.position.z, r: 0.4 })); });
   }
   // STASIUN DEPOK BARU
   { const g = bldg(12.4, -7.0, 2.8, 2.4, 1.3, { ry: -Math.PI / 2, wall: '#f5f0e0', roof: '#e0587a', rh: 0.6, wins: [[0.7, 0.45, 6, 6], [2.1, 0.45, 6, 6]], door: '#4a6a8a', doorX: 1.4, seed: 5 });
@@ -114,8 +115,7 @@ function buildBuildings() {
     rects.pop(); rects.pop();
   }
   // DEPOK LAMA: rumah kolonial putih berpilar
-  colonial(-15.0, 8.4, 0, 0); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-15.0, 12.7, Math.PI, 2); colonial(-9.9, 12.7, Math.PI, 3, { sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } });
-  addTree(-12.5, 10.2, 'round', 1.5, 77);
+  colonial(-15.0, 8.4, 0, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-9.9, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-9.9, 12.7, Math.PI, 3);
   // KAMPUNG barat (menghadap Jl. Raya)
   [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['RUMAH KOS', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)
@@ -168,7 +168,9 @@ function updateTraffic(dt, px_, pz_) {
   vehicles.forEach((v) => {
     const [x, z, tx, tz] = polyAt(C.margonda.pts, v.s), rx = -tz, rz = tx, off = (C.margonda.w / 2 + 0.26) / 2 * 0.98, sgn = v.dir > 0 ? -1 : 1;
     const cx = x + rx * off * sgn, cz = z + rz * off * sgn, near = (mode === 'play' || mode === 'gather') && Math.hypot(cx - px_, cz - pz_) < 1.9;
-    if (!near) { v.s += v.dir * v.v * dt; if (v.s > v.len) v.s -= v.len; if (v.s < 0) v.s += v.len; }
+    let sp = v.v; if (near) sp = 0;
+    else vehicles.forEach((u) => { if (u === v || u.dir !== v.dir) return; let g = ((u.s - v.s) * v.dir) % v.len; if (g < 0) g += v.len; if (g < 2.3) sp = 0; else if (g < 3.4) sp = Math.min(sp, u.v * 0.8); });
+    v.s += v.dir * sp * dt; if (v.s > v.len) v.s -= v.len; if (v.s < 0) v.s += v.len;
     v.m.position.set(cx, 0, cz); v.m.rotation.y = Math.atan2(v.dir * tx, v.dir * tz); v.m.visible = !(battle && Math.hypot(cx - battle.cx, cz - battle.cz) < 3.6);
   });
 }

@@ -5,7 +5,7 @@
 const FOODWHERE = { timun: 'Petik di Kebun Warga (dekat Stasiun)', kangkung: 'Petik di tepi Danau UI', jagung: 'Petik di Kebun Warga (dekat Stasiun)', ikan: 'Mancing di Danau UI 🎣', kacang: 'Cabut di Kebun Warga (dekat Stasiun)', wortel: 'Cabut di Kebun Warga (dekat Stasiun)' };
 const BAGMAX = 99;
 const bagN = (id) => (S.bag && S.bag[id]) || 0;
-function addBag(id, n) { S.bag = S.bag || {}; S.bag[id] = Math.min(BAGMAX, bagN(id) + n); }
+function addBag(id, n) { if (S.stage === 1) S.tf[id === 'ikan' ? 'fish' : 'crop'] = 1; S.bag = S.bag || {}; S.bag[id] = Math.min(BAGMAX, bagN(id) + n); }
 function useBag(id) { if (bagN(id) > 0) { S.bag[id]--; return true; } return false; }
 
 const spots = [], toonM = {};
