@@ -91,7 +91,7 @@ function colonial(x, z, ry, i, o = {}) {
   return g;
 }
 
-const POI = { lab: [-9.9, 10.2], clinic: [-15.0, 10.2], prof: [-8.2, 10.3], nurse: [-14.6, 10.45], home: [-11.9, 3.3] };
+const POI = { lab: [-9.9, 10.2], clinic: [-15.0, 10.2], prof: [-3.7, 7.6], nurse: [-3.7, 12.3], home: [-11.9, 3.3] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });

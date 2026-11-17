@@ -64,7 +64,7 @@ const tutHit = (id) => { if (S.stage === 1) S.tf[id] = 1; };
 function leadLow() { const m = mates[0]; return m && m.hp < m.hpMax * 0.4; }
 function updateObjective() {
   let txt = '', tgt = null;
-  if (S.stage === 0) { txt = 'Temui Prof. Catherine di Lab Maimon UI (Depok Lama)'; tgt = npcs.find((n) => n.id === 'prof'); }
+  if (S.stage === 0) { txt = 'Temui Prof. Catherine di tepi Jl. Margonda (Depok Lama)'; tgt = npcs.find((n) => n.id === 'prof'); }
   else if (S.stage === 1) { while (S.tut < TUT.length && S.tf[TUT[S.tut].id]) { S.tut++; saveGame(); if (S.tut < TUT.length) { Music.jingle('catch'); toast('Bagus! Langkah berikutnya ✨', 2); } }
     if (S.tut >= TUT.length) { S.stage = 2; saveGame(); Music.jingle('win'); toast('Latihan selesai! Sekarang tangkap Maimon liar 🎉', 3.2); }
     else { const st = TUT[S.tut]; txt = `Latihan ${S.tut + 1}/${TUT.length}: ${st.txt}`; tgt = st.tgt ? st.tgt() : null; } }
@@ -84,7 +84,7 @@ function updateMarker(dt) {
 }
 
 /* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
-const PLABELS = [{ x: -15.0, z: 8.6, y: 3.4, t: '🏥 KLINIK MAIMON', c: '#e0507a' }, { x: -9.9, z: 8.6, y: 3.4, t: '🔬 LAB MAIMON UI', c: '#1d8f8a' }, { x: -13.4, z: 2.8, y: 2.6, t: '🏠 RUMAH KOS', c: '#8a5a2a' }];
+const PLABELS = [{ x: -3.7, z: 12.3, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -3.7, z: 7.6, y: 1.9, t: '🔬 Prof. Catherine · Lab', c: '#1d8f8a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Rumah Kos', c: '#8a5a2a' }];
 PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
 function updateLabels() {
   PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
@@ -224,7 +224,7 @@ function pickGender(g) {
 $('gGo').onclick = () => {
   if (!gender) return; Music.unlock(); S.gender = gender; S.name = ($('nameIn').value || '').trim() || 'Pelatih'; S.stage = 0; S.dex = {}; S.bag = {}; S.tut = 0;
   $('nameBox').style.display = 'none'; $('nameIn').blur();
-  dialog([['{n}', 'Halo, Prof! Namaku {n}. Aku baru pindah ke Depok untuk kuliah di UI.'], [PROF, '{n}! Nama yang bagus. Selamat datang di Depok!'], [PROF, 'Aku menunggumu di Lab Maimon UI, di Depok Lama, dekat Taman Maimon. Sampai ketemu di sana!']], () => {
+  dialog([['{n}', 'Halo, Prof! Namaku {n}. Aku baru pindah ke Depok untuk kuliah di UI.'], [PROF, '{n}! Nama yang bagus. Selamat datang di Depok!'], [PROF, 'Aku menunggumu di tepi Jl. Margonda, dekat Lab Maimon UI di Depok Lama. Sampai ketemu di sana!']], () => {
     creating = false; $('create').style.display = 'none'; $('cbg').style.display = 'none'; setupPlayer(); beginStory();
   });
 };
@@ -234,7 +234,7 @@ function beginStory() {
   for (let a = 9.6; a <= 14; a += 0.4) for (let b = -3.6; b <= 4; b += 0.4) { if (blockedAt(a, b, 0.5)) continue; let md = 9; treeMeshes.forEach((t) => { md = Math.min(md, Math.hypot(t.userData.x - a, t.userData.z - b)); }); const sc = md - 0.05 * Math.hypot(a - 11.6, b + 3); if (sc > best) { best = sc; sx = a; sz = b; } } player.x = sx; player.z = sz; player.ang = -Math.PI / 2; trail.length = 0;
   yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; Music.play(CITY);
-  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Mampir ke Lab Maimon di Depok Lama ya, {n}. Ikuti titik-titik kuning di jalan!"']], () => { saveGame(); }), 600);
+  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Temui aku di tepi Jl. Margonda, dekat Depok Lama ya, {n}. Ikuti titik-titik kuning di jalan!"']], () => { saveGame(); }), 600);
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }

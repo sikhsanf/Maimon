@@ -72,7 +72,7 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, -Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
 $('loading').style.display = 'none';
