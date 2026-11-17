@@ -72,7 +72,7 @@ function clearYaw(x, z, base) {
   let best = base, bs = 1e9;
   for (const off of [0, 0.45, -0.45, 0.9, -0.9, 1.4, -1.4, 2.0, -2.0, 3.14]) {
     const y = base + off; let sc = Math.abs(off) * 0.15;
-    for (let d = 0.9; d <= 3.4; d += 0.35) { const px = x + Math.sin(y) * d, pz = z + Math.cos(y) * d; for (const b of rects) if (px > b[0] && px < b[1] && pz > b[2] && pz < b[3]) sc += 3; if (d < 2.1) for (const c of circles) if (c.r > 0.34 && Math.hypot(px - c.x, pz - c.z) < c.r + 0.1) sc += 2; }
+    for (let d = 0.9; d <= 3.4; d += 0.35) { const px = x + Math.sin(y) * d, pz = z + Math.cos(y) * d; for (const b of rects) if (px > b[0] && px < b[1] && pz > b[2] && pz < b[3]) sc += 3; if (d < 2.6) for (const c of circles) if (c.r >= 0.3 && Math.hypot(px - c.x, pz - c.z) < c.r + 0.1) sc += 2; }
     if (sc < bs) { bs = sc; best = y; }
   }
   return best;

@@ -96,7 +96,7 @@ function updateMarker(dt) {
 }
 
 /* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
-const PLABELS = [{ x: -13.0, z: 10.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 9.75, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
+const PLABELS = [{ x: -13.0, z: 10.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 9.75, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: 8.0, z: 1.6, y: 1.9, t: '👨‍🌾 Pak Tani · Kebun Warga', c: '#5a9a4a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
 PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
 function updateLabels() {
   PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
@@ -144,7 +144,7 @@ function updateInteract() {
   if (on) { b.textContent = nearSpot ? nearSpot.label : '💬 Bicara: ' + nearNPC.name.split(' ').slice(-1)[0]; const t = nearSpot || nearNPC, [sx, sy] = toScreen(t.x, groundY(t.x, t.z) + (nearSpot ? (nearSpot.h || 1) + 0.35 : 2.0), t.z); b.style.left = Math.min(Math.max(sx, 90), innerWidth - 90) + 'px'; b.style.top = Math.min(Math.max(sy, 80), innerHeight - 130) + 'px'; }
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : talkNurse)(); }
+function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : talkNurse)(); }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
 
 /* ---------- Prof. Catherine ---------- */
@@ -182,6 +182,7 @@ function restAtHotel() {
   setTimeout(() => { mates.forEach((m) => { m.hp = m.hpMax; }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); renderChips(); Music.jingle('heal'); toast('Zzz… 😴 Kamu & Maimon tidur nyenyak', 2.6);
     setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
 }
+function talkTani() { pendingFocus = npcs.find((n) => n.id === 'tani'); dialog([['Pak Tani', gatherPermit ? 'Silakan petik lagi, Nak. Kebun ini buat warga sini!' : 'Selamat datang di kebun warga, Nak! Mau petik jagung atau sayur? Silakan, ambil secukupnya ya.']], () => { gatherPermit = true; }); }
 function talkHome() {
   const K = 'Bu Wati'; pendingFocus = npcs.find((n) => n.id === 'home');
   if (S.stage === 4) { dialog([[K, 'Selamat datang di Hotel Maimon, {n}! Wah, kelihatan capek ya. Kamarnya sudah Ibu siapkan.'], ['{n}', 'Terima kasih, Bu. Hari ini seru sekali… tapi capek juga.'], [K, 'Istirahat yang cukup ya. Maimon-mu juga ikut Ibu jaga. Selamat tidur!']], () => restAtHotel()); return; }

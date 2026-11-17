@@ -328,7 +328,13 @@ function feed(id) {
     toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
-$('skip').onclick = () => { if (!talk) return; const w = talk; w.hp = w.hpMax; w.state = 'wander'; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; leaveEncounter(5); };
+$('skip').onclick = () => { if (!talk) return; const w = talk; leaveEncounter(5); runAway(w); };
+async function runAway(w) {
+  const i = wilds.indexOf(w); if (i >= 0) wilds.splice(i, 1); w.hp = w.hpMax; w.state = 'gone'; w.walk = true; w.pop = 1;
+  const dx = w.x - player.x, dz = w.z - player.z, d = Math.hypot(dx, dz) || 1, x0 = w.x, z0 = w.z; w.ang = Math.atan2(dx, dz);
+  await tween(1000, (k) => { w.x = x0 + dx / d * 4 * k; w.z = z0 + dz / d * 4 * k; w.fade = Math.max(0.01, 1 - k * k); placeEnt(w, 0.016); });
+  world.remove(w.rig.root); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz });
+}
 
 /* =====================================================================
    INPUT: joystick, keyboard, geser untuk putar kamera
