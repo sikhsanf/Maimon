@@ -113,6 +113,7 @@ const HGX = HX * 4 + 1, HGZ = HZ * 4 + 1; let HGRID = new Float32Array(HGX * HGZ
     if (pass) HGRID = dst; }
 }
 function groundY(x, z) {
+  if (x > HX + 2) return 0;
   const fx = clamp((x + HX) * 2, 0, HGX - 1.001), fz = clamp((z + HZ) * 2, 0, HGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
   const a = HGRID[j * HGX + i], b = HGRID[j * HGX + i + 1], c = HGRID[(j + 1) * HGX + i], d = HGRID[(j + 1) * HGX + i + 1];
   const h = lerp(lerp(a, b, tx), lerp(c, d, tx), tz);
@@ -120,9 +121,10 @@ function groundY(x, z) {
 }
 
 /* tumbukan */
-const circles = [], rects = [], vehicles = [];
+const LAB_PROF = [33.6, 31.0]; const circles = [], rects = [], vehicles = []; let inside = false; const INB = { x0: 0, x1: 0, z0: 0, z1: 0 };
 function waterAt(x, z) { const k = kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
+  if (inside) { if (x < INB.x0 + 0.5 || x > INB.x1 - 0.5 || z < INB.z0 + 0.45 || z > INB.z1 - 0.5) return true; for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; } for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true; return false; }
   if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8 || z > HZ - 0.8) return true;
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }

@@ -58,10 +58,13 @@ const GATHERDBG = {};
 buildGatherWorld();
 
 const FCOL = { jagung: '#f4cf3a', timun: '#2f8a38', wortel: '#f08a24', kacang: '#c8a064', kangkung: '#58b43c' };
+let gatherSpot = null;
+let gatherPermit = false;
 async function gatherAt(s) {
   if (s.kind === 'fish') return startFish(s);
   if (!s.ripe || mode !== 'play') return;
-  mode = 'gather'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; player.walk = false; player.ang = Math.atan2(s.x - player.x, s.z - player.z);
+  if (s.kind === 'crop' && !gatherPermit) { pendingFocus = null; dialog([['{n}', 'Permisi, Pak. Boleh saya petik sedikit hasil kebunnya?'], ['Pak Tani', 'Boleh, Nak! Silakan, ambil secukupnya ya.'], ['{n}', 'Terima kasih banyak, Pak! 🙏']], () => { gatherPermit = true; gatherAt(s); }); return; }
+  gatherSpot = s; forceYaw(clearYaw(s.x, s.z, yaw)); mode = 'gather'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; player.walk = false; player.ang = Math.atan2(s.x - player.x, s.z - player.z);
   const root = player.rig.root, P = s.g, n = s.food === 'jagung' ? 2 : 1 + (R0() < 0.35 ? 1 : 0), items = []; for (let i = 0; i < n; i++) items.push(fxCube(FCOL[s.food] || '#fff', 0.16));
   const base = [s.x, groundY(s.x, s.z), s.z]; let popped = false;
   await tween(1150, (k) => {

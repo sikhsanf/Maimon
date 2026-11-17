@@ -5,7 +5,7 @@ const CITY = 'depok';
    ===================================================================== */
 const TCOL = { Air: '#3b8fd6', Api: '#e8582a', Daun: '#4fae4f', Batu: '#9a8a70', Es: '#6cc4e0', Suara: '#b07ad8', Petarung: '#c85a3a', Cahaya: '#e0b020', Besi: '#8a95a6', Biasa: '#9a9a9a' };
 const BEATS = { Air: ['Api', 'Cahaya'], Api: ['Daun', 'Besi'], Daun: ['Batu', 'Air'], Batu: ['Es', 'Api'], Es: ['Suara', 'Daun'], Suara: ['Petarung', 'Batu'], Petarung: ['Cahaya', 'Es'], Cahaya: ['Besi', 'Suara'], Besi: ['Air', 'Petarung'] };
-const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[att].includes(def) ? 2 : BEATS[def].includes(att) ? 0.5 : 1;
+const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[att].includes(def) ? 1.6 : BEATS[def].includes(att) ? 0.7 : 1;
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
@@ -114,7 +114,7 @@ $('go').onclick = () => {
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
   S.stage = 1; S.tut = 0; S.tf = {}; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik kuning di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']], null, npcs.find((n) => n.id === 'prof'));
+  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik merah muda di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']]);
 };
 function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name + ' Lv' + m.lv; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
 const addChip = () => renderChips();
@@ -176,7 +176,7 @@ function buildMoveButtons() {
   $('flee').onclick = flee; setMovesEnabled(true);
 }
 function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); $('flee').style.pointerEvents = on ? 'auto' : 'none'; $('flee').style.opacity = on ? 1 : 0.5; }
-function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def.type), stab = mv[2] === att.type ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF / 7 * (0.9 + R0() * 0.2))), mult }; }
+function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def.type), stab = mv[2] === att.type ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
 /* ---------- animasi jurus (tiap jurus punya gerakan sendiri) ---------- */
 const fxList = [], fxMats = {}, cubeGeo = new THREE.BoxGeometry(1, 1, 1);
 const fxMat = (c) => fxMats[c] || (fxMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -325,7 +325,7 @@ function feed(id) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
     markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
-    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Rumah Kos 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; w.hp = w.hpMax; w.state = 'wander'; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; leaveEncounter(5); };

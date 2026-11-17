@@ -128,6 +128,9 @@ const Music = (() => {
     tak(t, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.001, 0.3 * v, 0.07, 0.01, 0.01, 0.04); g.connect(dest); noiseSrc(t, t + 0.12, g, 'bandpass', 3200, 4, 1); O('sine', 340, t, t + 0.08, g, 0.3); },
     wood(t, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.001, 0.2 * v, 0.05, 0.01, 0.005, 0.03); g.connect(dest); O('sine', 880, t, t + 0.1, g, 1); O('sine', 1320, t, t + 0.06, g, 0.4); },
     shake(t, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.012, 0.11 * v, 0.06, 0.01, 0.01, 0.04); g.connect(dest); noiseSrc(t, t + 0.18, g, 'highpass', 5500, 0.5, 1); },
+    timp(t, f, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.004, 0.9 * v, 0.5, 0.01, 0.05, 0.3); g.connect(dest); const o = O('sine', f * 1.35, t, t + 0.9, g, 1); o.o.frequency.setValueAtTime(f * 1.35, t); o.o.frequency.exponentialRampToValueAtTime(f, t + 0.12); O('triangle', f * 2, t, t + 0.3, g, 0.25); noiseSrc(t, t + 0.05, g, 'lowpass', 900, 0.7, 0.3); },
+    riser(t, dur, v, dest) { const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.16 * v, t + dur); g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.25); g.connect(dest); const n = noiseSrc(t, t + dur + 0.3, g, 'bandpass', 700, 0.9, 1); n.f.frequency.setValueAtTime(600, t); n.f.frequency.exponentialRampToValueAtTime(7000, t + dur); },
+    crash(t, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.002, 0.3 * v, 2.2, 0.0001, 0.05, 0.5); g.connect(dest); noiseSrc(t, t + 3, g, 'highpass', 4500, 0.6, 1); },
     gong(t, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.01, 0.28 * v, 4, 0.0001, 0.02, 1.5); g.connect(dest); [[1, 1], [1.51, 0.6], [2.43, 0.35], [3.2, 0.2]].forEach(([r, a]) => { const o = O('sine', 58 * r, t, t + 6, g, a); o.o.detune.setValueAtTime(18, t); o.o.detune.linearRampToValueAtTime(0, t + 1.5); }); noiseSrc(t, t + 0.3, g, 'lowpass', 600, 0.5, 0.3); },
   };
   const LEADV = { bell: 'bell', flute: 'flute', pluck: 'pluck', brass: 'brass', synth: 'synth' };
@@ -156,7 +159,40 @@ const Music = (() => {
   }
 
   /* ---------------- sequencer ---------------- */
+  /* ---------------- intro sinematik: partitur satu kali (±25 dtk) ---------------- */
+  function cine() {
+    const th = { rev: 0.9, dly: 0.12 }, bus = mkBus(th), t0 = ctx.currentTime + 0.12, V = VOICE, T = (x) => t0 + x, m = mtof;
+    const chord = (t, notes, dur, v) => notes.forEach((n, i) => V.pad(t, m(n), dur, v * (i === 0 ? 1.1 : 0.9), bus));
+    // 1) Pulau Jawa: drone, detak timpani pelan, lonceng jarang
+    chord(T(0), [38, 45], 6.4, 1.4); chord(T(0.4), [50, 57], 5.8, 0.8);
+    for (let i = 0; i < 4; i++) { V.timp(T(1.4 + i * 1.15), 38, 0.35 + i * 0.12, bus); V.timp(T(1.4 + i * 1.15 + 0.3), 38, 0.22 + i * 0.1, bus); }
+    [[1.0, 74], [2.6, 81], [4.1, 77], [5.3, 76]].forEach(([t, n]) => V.bell(T(t), m(n), 1.2, 0.9, bus)); V.riser(T(2.8), 3.4, 0.8, bus);
+    // 2) kereta tiba: ostinato menanjak + gulungan timpani
+    const arp = [50, 57, 62, 65, 69, 65, 62, 57]; let t = 6.0, k = 0; while (t < 10.45) { const st = 0.2 - 0.1 * ((t - 6) / 4.45); V.pluck(T(t), m(arp[k % 8] + (k > 14 ? 12 : 0)), st, 0.7 + 0.5 * ((t - 6) / 4.45), bus); if (k % 2 === 0) V.str(T(t), m(arp[k % 8] - 12), 0.35, 0.8, bus); t += st; k++; }
+    [[6, [50, 57, 62, 65]], [7.4, [46, 58, 62, 65]], [8.8, [48, 55, 60, 64]], [9.6, [45, 57, 61, 64]]].forEach(([tt, c]) => chord(T(tt), c, 1.6, 1.1));
+    for (let tt = 8.3; tt < 10.45; tt += 0.11) V.timp(T(tt), 38, 0.25 + 0.7 * ((tt - 8.3) / 2.15), bus); V.riser(T(7.0), 3.45, 1.1, bus);
+    // 3) HANTAMAN + tema pahlawan (brass)
+    V.gong(T(10.5), 1.4, bus); V.kick(T(10.5), 1.2, bus); V.crash(T(10.5), 0.9, bus); V.timp(T(10.5), 38, 1.2, bus); chord(T(10.5), [38, 50, 57, 62], 2.4, 1.3); [50, 57, 62].forEach((n) => V.brass(T(10.5), m(n), 1.5, 1.0, bus));
+    [[0.0, 62, .5], [0.62, 69, .5], [1.25, 74, 1.3], [2.7, 72, .45], [3.15, 70, .45], [3.6, 69, .9], [4.6, 65, .4], [5.0, 67, .45]].forEach(([d, n, l]) => { V.brass(T(10.5 + d + (d ? 0 : 0.0)), m(n), l, 1.15, bus); V.brass(T(10.5 + d), m(n - 12), l, 0.55, bus); });
+    chord(T(13.0), [34, 46, 53, 58], 1.6, 1.1); chord(T(14.6), [36, 48, 55, 60], 1.4, 1.1);
+    for (let i = 0; i < 9; i++) { const tt = 11.1 + i * 0.625; V.kick(T(tt), 0.9, bus); V.timp(T(tt), 38, 0.6, bus); if (i % 2) V.snare(T(tt), 0.9, bus); }
+    for (let i = 0; i < 20; i++) V.pluckB(T(10.5 + i * 0.3125), m([38, 38, 38, 38, 34, 34, 36, 36][i % 8]), 0.28, 0.9, bus);
+    // 4) tema naik ke D mayor, penuh
+    const b0 = 16.0; V.crash(T(b0), 0.6, bus); V.kick(T(b0), 1.1, bus);
+    [[0.0, 66, .5], [0.55, 69, .5], [1.1, 74, .6], [1.8, 78, .6], [2.5, 81, 1.4], [4.0, 78, .5], [4.55, 76, .5], [5.1, 74, .4]].forEach(([d, n, l]) => { V.brass(T(b0 + d), m(n), l, 1.2, bus); V.bell(T(b0 + d), m(n + 12), l, 0.8, bus); V.brass(T(b0 + d), m(n - 12), l, 0.5, bus); });
+    chord(T(16.0), [38, 50, 57, 62, 66], 2.6, 1.3); chord(T(18.5), [43, 55, 62, 67], 1.8, 1.2); chord(T(20.2), [45, 57, 61, 64], 1.6, 1.2);
+    const ar2 = [50, 54, 57, 62, 57, 54]; for (let i = 0, tt = 16; tt < 21.4; tt += 0.156, i++) V.pluck(T(tt), m(ar2[i % 6] + 12), 0.156, 0.9, bus);
+    for (let i = 0; i < 9; i++) { const tt = 16 + i * 0.625; V.kick(T(tt), 0.95, bus); V.timp(T(tt), 38, 0.5, bus); if (i % 2) V.snare(T(tt), 1, bus); }
+    for (let tt = 19.6; tt < 21.55; tt += 0.104) V.snare(T(tt), 0.35 + 0.8 * ((tt - 19.6) / 1.95), bus); V.riser(T(19.0), 2.5, 1.2, bus);
+    // 5) judul: akor besar + kilau lonceng
+    const f0 = 21.6; V.gong(T(f0), 1.6, bus); V.kick(T(f0), 1.3, bus); V.snare(T(f0), 1, bus); V.crash(T(f0), 1.1, bus); V.timp(T(f0), 38, 1.3, bus); V.timp(T(f0 + 0.3), 43, 1.0, bus);
+    [38, 50, 57, 62, 66, 69, 74].forEach((n) => V.brass(T(f0), m(n), 2.6, 1.1, bus)); chord(T(f0), [38, 50, 57, 62, 66], 3.4, 1.5);
+    [[0.0, 86], [0.14, 81], [0.28, 78], [0.42, 74], [1.6, 93], [2.1, 88], [2.6, 86]].forEach(([d, n]) => V.bell(T(f0 + d), m(n), 1.6, 1.0, bus));
+    bus.gain.setValueAtTime(0.0001, ctx.currentTime); bus.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.4);
+    return { name: 'intro', th, bus, step: 0, nextT: Infinity, sd: 1, ev: [], song: 1, dead: false };
+  }
   function start(name) {
+    if (name === 'intro') return cine();
     const th = TH[name]; if (!th) return null;
     const bus = mkBus(th), st = { name, th, bus, step: 0, nextT: ctx.currentTime + 0.08, sd: 60 / th.bpm / 4 * (th.spb === 12 ? 1.33 : 1), ev: compose(th, name.length * 977 + th.bpm), song: th.ch.length * 2, dead: false };
     return st;

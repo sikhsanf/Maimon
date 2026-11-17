@@ -24,7 +24,7 @@ function updateNPCs(dt) {
 
 /* ---------- dialog ---------- */
 const dlgEl = $('dlg'); let dq = null, creating = false, camFocus = null, camBack = null;
-function focusOn(n) { if (!n) return; camBack = null; camFocus = { n, yaw0: yaw, zoom0: zoomGoal }; }
+function focusOn(n) { if (!n) return; camBack = null; camFocus = { n, yaw0: yaw, zoom0: zoomGoal, yawT: clearYaw(n.x, n.z, Math.atan2(player.x - n.x, player.z - n.z) + 0.55) }; }
 let pendingFocus = null;
 function dialog(lines, done, focus) {
   focus = focus || pendingFocus; pendingFocus = null; if (focus) focusOn(focus);
@@ -42,7 +42,7 @@ dlgEl.addEventListener('pointerdown', (e) => { e.stopPropagation(); dlgAdvance()
 addEventListener('keydown', (e) => { if (!dq && mode === 'play' && (e.key === 'e' || e.key === 'Enter' || e.key === ' ')) interact(); else if (dq && (e.key === 'Enter' || e.key === ' ' || e.key === 'e')) dlgAdvance(); });
 
 /* ---------- kartu bab ---------- */
-function chapter(t, p, btn, cb) { $('chapT').textContent = t; $('chapP').textContent = p; $('chapB').textContent = btn || 'Lanjut'; $('chap').style.display = 'flex'; $('chapB').onclick = () => { $('chap').style.display = 'none'; if (cb) cb(); }; }
+function chapter(t, p, btn, cb) { forceYaw(yaw + 1.1); $('chapT').textContent = t; $('chapP').textContent = p; $('chapB').textContent = btn || 'Lanjut'; $('chap').style.display = 'flex'; $('chapB').onclick = () => { $('chap').style.display = 'none'; if (cb) cb(); }; }
 function flashScreen() { const f = $('flash'); f.style.opacity = 1; setTimeout(() => { f.style.opacity = 0; }, 260); }
 
 /* ---------- Maimondex (ala pokedex) ---------- */
@@ -55,25 +55,37 @@ const mk = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.45, 4).rotateX(Math.PI)
 let objTarget = null;
 const nearestSpot = (pred) => { let b = null, bd = 1e9; spots.forEach((p) => { if (pred(p)) { const d = Math.hypot(p.x - player.x, p.z - player.z); if (d < bd) { bd = d; b = p; } } }); return b; };
 const TUT = [
-  { id: 'menu', hint: 'team', txt: 'Tekan ☰ di kanan atas, lalu pilih 🐾 Tim Saya untuk melihat Maimon-mu' },
+  { id: 'menu', hint: 'team', txt: 'Tekan tombol ☰ di kanan bawah, lalu pilih 🐾 Tim Saya untuk melihat Maimon-mu' },
   { id: 'fish', txt: 'Pergi ke tepi Danau UI, tekan 🎣 Mancing, lalu TARIK saat ikan menggigit', tgt: () => spots.find((p) => p.kind === 'fish') },
   { id: 'crop', txt: 'Di Kebun Warga, dekati 🌽 jagung dan tekan tombol Petik', tgt: () => nearestSpot((p) => p.kind === 'crop' && p.food === 'jagung' && p.ripe) },
-  { id: 'bag', hint: 'bag', txt: 'Tekan ☰ lalu pilih 🎒 Tas — semua hasil panenmu ada di sana' },
+  { id: 'bag', hint: 'bag', txt: 'Tekan tombol ☰ di kanan bawah, lalu pilih 🎒 Tas — semua hasil panenmu ada di sana' },
 ];
 const tutHit = (id) => { if (S.stage === 1) S.tf[id] = 1; };
+const labTgt = () => inside ? npcs.find((n) => n.id === 'prof') : LABDOOR;
 function leadLow() { const m = mates[0]; return m && m.hp < m.hpMax * 0.4; }
 function updateObjective() {
   let txt = '', tgt = null;
-  if (S.stage === 0) { txt = 'Temui Prof. Catherine di tepi Jl. Margonda (Depok Lama)'; tgt = npcs.find((n) => n.id === 'prof'); }
+  if (S.stage === 0) { txt = inside ? 'Temui Prof. Catherine di dalam lab' : 'Masuk ke Lab Maimon UI (Depok Lama) — temui Prof. Catherine'; tgt = labTgt(); }
   else if (S.stage === 1) { while (S.tut < TUT.length && S.tf[TUT[S.tut].id]) { S.tut++; saveGame(); if (S.tut < TUT.length) { Music.jingle('catch'); toast('Bagus! Langkah berikutnya ✨', 2); } }
     if (S.tut >= TUT.length) { S.stage = 2; saveGame(); Music.jingle('win'); toast('Latihan selesai! Sekarang tangkap Maimon liar 🎉', 3.2); }
     else { const st = TUT[S.tut]; txt = `Latihan ${S.tut + 1}/${TUT.length}: ${st.txt}`; tgt = st.tgt ? st.tgt() : null; } }
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  else if (S.stage === 3) { txt = 'Lapor hasil penelitian ke Prof. Catherine'; tgt = npcs.find((n) => n.id === 'prof'); }
-  else if (S.stage === 4) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 3) { txt = inside ? 'Lapor hasil penelitian ke Prof. Catherine' : 'Lapor ke Prof. Catherine di Lab Maimon UI'; tgt = labTgt(); }
+  else if (S.stage === 4) { txt = 'Capek seharian — istirahat dulu di Hotel Maimon 🏨'; tgt = npcs.find((n) => n.id === 'home'); }
+  else if (S.stage >= 5) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
   const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
+  let spEl = null, spTxt = '👆 Tap di sini!'; const menuOpen = getComputedStyle($('menu')).display !== 'none';
+  if (S.stage === 1 && mode === 'menu') { const scr = ['team', 'bag', 'dex'].find((k) => $(k).style.display === 'flex'); if (scr) { spEl = document.querySelector(`#${scr} button[data-x]`); spTxt = '👆 Tutup di sini'; } else if (menuOpen) { if (hs) spEl = document.querySelector(`#menu button[data-s=${hs}]`); else { spEl = $('dexb'); spTxt = '👆 Tutup menu'; } } }
+  else if (hs && mode === 'play') spEl = $('dexb');
+  spotEl.firstChild.textContent = spTxt; updateSpot(spEl);
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
+}
+const spotEl = document.createElement('div'); spotEl.id = 'spot'; spotEl.className = 'ui'; spotEl.innerHTML = '<b>👆 Tap di sini!</b>'; document.body.appendChild(spotEl);
+function updateSpot(el) {
+  if (!el) { spotEl.style.display = 'none'; return; } const r = el.getBoundingClientRect(); if (!r.width) { spotEl.style.display = 'none'; return; }
+  spotEl.style.display = 'block'; spotEl.style.left = r.left - 6 + 'px'; spotEl.style.top = r.top - 6 + 'px'; spotEl.style.width = r.width + 12 + 'px'; spotEl.style.height = r.height + 12 + 'px';
+  spotEl.firstChild.style.cssText = r.top > innerHeight / 2 ? 'bottom:calc(100% + 12px)' : 'top:calc(100% + 12px)'; spotEl.firstChild.style.right = '0';
 }
 function updateMarker(dt) {
   const ar = $('arrow');
@@ -84,13 +96,13 @@ function updateMarker(dt) {
 }
 
 /* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
-const PLABELS = [{ x: -3.7, z: 12.3, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -3.7, z: 7.6, y: 1.9, t: '🔬 Prof. Catherine · Lab', c: '#1d8f8a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Rumah Kos', c: '#8a5a2a' }];
+const PLABELS = [{ x: -13.0, z: 10.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 9.75, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
 PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
 function updateLabels() {
   PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
 }
 /* ---------- jalur penunjuk (titik-titik kuning di tanah, dicari lewat A*) ---------- */
-const PATH_N = 110, pathM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 0.06, 0.3).rotateY(Math.PI / 4), glow('#ffe14a'), PATH_N); pathM.visible = false; pathM.frustumCulled = false; scene.add(pathM);
+const PATH_N = 110, pathM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.4, 0.08, 0.4).rotateY(Math.PI / 4), glow('#ff2e93'), PATH_N); pathM.visible = false; pathM.frustumCulled = false; scene.add(pathM);
 let pathPts = [], pathFor = null, pathX = 1e9, pathZ = 1e9, pathT = 0; const _pd = new THREE.Object3D();
 function findPath(sx, sz, tx, tz) {
   const CS = 0.5, NX = Math.round(HX * 2 / CS), NZ = Math.round(HZ * 2 / CS), cx = (i) => -HX + (i + 0.5) * CS, cz = (j) => -HZ + (j + 0.5) * CS, idx = (i, j) => j * NX + i;
@@ -111,7 +123,7 @@ function findPath(sx, sz, tx, tz) {
 }
 function updatePath(dt) {
   pathT -= dt;
-  if (!objTarget || mode !== 'play') { pathM.visible = false; pathFor = null; return; }
+  if (!objTarget || mode !== 'play' || inside) { pathM.visible = false; pathFor = null; return; }
   if (objTarget !== pathFor || Math.hypot(player.x - pathX, player.z - pathZ) > 1.2 || pathT < -2.5) { pathFor = objTarget; pathX = player.x; pathZ = player.z; pathT = 0; pathPts = findPath(player.x, player.z, objTarget.x, objTarget.z); pathPts.push([objTarget.x, objTarget.z]); }
   const dots = []; let carry = 0.2;
   for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
@@ -139,22 +151,22 @@ function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs
 function talkProf() {
   const P = 'Prof. Catherine'; pendingFocus = npcs.find((n) => n.id === 'prof');
   if (S.stage === 0) {
-    dialog([[P, 'Ah, kamu pasti {n}! Selamat datang di Depok.'], [P, 'Aku Prof. Catherine. Aku meneliti SEMUA Maimon di Pulau Jawa. Tapi Maimon liar itu lincah sekali, aku tidak bisa mengejarnya sendirian.'], [P, 'Maukah kamu membantuku? Latih Maimon, tangkap sebanyak mungkin, dan isi Maimondex ini!'], ['{n}', 'Siap, Prof! Aku mau jadi Pelatih Maimon terbaik di dunia!'], [P, 'Semangat yang bagus! Pertama, pilih teman pertamamu. Mereka sudah menunggu di taman.']], () => { enterPick(); });
+    dialog([[P, 'Ah, kamu pasti {n}! Selamat datang di Depok.'], [P, 'Aku Prof. Catherine. Aku meneliti SEMUA Maimon di Pulau Jawa. Tapi Maimon liar itu lincah sekali, aku tidak bisa mengejarnya sendirian.'], [P, 'Maukah kamu membantuku? Latih Maimon, tangkap sebanyak mungkin, dan isi Maimondex ini!'], ['{n}', 'Siap, Prof! Aku mau jadi Pelatih Maimon terbaik di dunia!'], [P, 'Semangat yang bagus! Pertama, pilih teman pertamamu. Mereka sudah menunggu di taman, tepat di depan lab. Ayo keluar!']], () => { goLab(false, () => enterPick()); });
   } else if (S.stage === 1) {
-    dialog([[P, 'Selesaikan latihan dasarnya dulu ya, {n}. Ikuti titik-titik kuning dan lihat TUJUAN di layar. Setelah itu baru kita tangkap Maimon liar!']]);
+    dialog([[P, 'Selesaikan latihan dasarnya dulu ya, {n}. Ikuti titik-titik merah muda dan lihat TUJUAN di layar. Setelah itu baru kita tangkap Maimon liar!']]);
   } else if (S.stage === 2) {
     const n = commonsCaught();
     dialog([[P, n === 0 ? 'Aku butuh data Kucingko, Tikusil, dan Dombanyo. Mereka penghuni asli Depok.' : `Bagus sekali! Sudah ${n} dari 3 Maimon yang kuminta.`], [P, 'Ingat: menangkan battle dulu, lalu beri makanan favoritnya dari Tas. Belum punya? Cari di Kebun Warga, tepi Danau UI, atau mancing ikan. Kalau Maimon-mu lelah, bawa ke Klinik Maimon.'], [P, 'Oh ya, kalau kamu lihat Maimon berkilau ✨, itu SANGAT langka. Jangan sampai lepas!']]);
   } else if (S.stage === 3) {
     dialog([[P, 'Kucingko, Tikusil, Dombanyo… datanya lengkap! Kamu hebat, {n}!'], [P, 'Penelitianku di Depok berjalan lancar berkat kamu. Tapi Pulau Jawa itu luas. Ada Jakarta, Bogor, Bandung, Yogyakarta, Surabaya…'], ['{n}', 'Masih banyak Maimon yang belum kutemui! Aku siap, Prof!'], [P, 'Kuliahmu di UI juga akan segera mulai, jadi jaga keseimbangan ya. Tapi gelar Pelatih Maimon terbaik di dunia menunggumu!']], () => {
-      S.stage = 4; saveGame(); Music.jingle('catch'); chapter('BAB 1 SELESAI', `Selamat, ${S.name}! Petualanganmu di Depok baru permulaan. Kota berikutnya menanti…`, 'Lanjut jelajah Depok');
+      S.stage = 4; saveGame(); Music.jingle('catch'); chapter('HARI PERTAMA SELESAI', `Kerja bagus, ${S.name}! Hari pertama di Depok padat sekali. Istirahat dulu di Hotel Maimon ya.`, 'Keluar lab', () => goLab(false));
     });
   } else {
     dialog([[P, 'Penelitianku butuh banyak data. Cari Maimon berkilau ✨ ya, {n}! Kalau ketemu, kabari aku.']]);
   }
 }
 
-/* ---------- Rumah Kos: titipan Maimon (tim maks. 3) ---------- */
+/* ---------- Hotel Maimon: titipan Maimon (tim maks. 3) ---------- */
 function renderHome() {
   const P = $('homeP'), B = $('homeB'); P.innerHTML = ''; B.innerHTML = '';
   $('homeH1').textContent = `Ikut denganmu (${mates.length}/${MAXP})`; $('homeH2').textContent = `Dititip di rumah (${stash.length})`;
@@ -165,16 +177,22 @@ function renderHome() {
 }
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
 $('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
+function restAtHotel() {
+  mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; fadeTo(1); forceYaw(1.5);
+  setTimeout(() => { mates.forEach((m) => { m.hp = m.hpMax; }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); renderChips(); Music.jingle('heal'); toast('Zzz… 😴 Kamu & Maimon tidur nyenyak', 2.6);
+    setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
+}
 function talkHome() {
   const K = 'Bu Wati'; pendingFocus = npcs.find((n) => n.id === 'home');
-  dialog([[K, 'Selamat datang di Rumah Kos, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
+  if (S.stage === 4) { dialog([[K, 'Selamat datang di Hotel Maimon, {n}! Wah, kelihatan capek ya. Kamarnya sudah Ibu siapkan.'], ['{n}', 'Terima kasih, Bu. Hari ini seru sekali… tapi capek juga.'], [K, 'Istirahat yang cukup ya. Maimon-mu juga ikut Ibu jaga. Selamat tidur!']], () => restAtHotel()); return; }
+  dialog([[K, 'Selamat datang di Hotel Maimon, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
 }
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
 function talkNurse() {
   pendingFocus = npcs.find((n) => n.id === 'nurse'); const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
-  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => { flashScreen(); Music.jingle('heal'); mates.forEach((m) => { m.hp = m.hpMax; burst(m.x, 0.5, m.z, '#ff9ac0', 14); }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame(); setTimeout(() => dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]), 700); });
+  dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => healScene());
 }
 
 /* ---------- title + buat karakter ---------- */
@@ -230,11 +248,11 @@ $('gGo').onclick = () => {
 };
 function setupPlayer() { if (player.rig) world.remove(player.rig.root); player.rig = buildPlayer2(S.gender); castAll(player.rig.root); world.add(player.rig.root); player.rig.root.visible = true; player.rig.root.rotation.order = 'YXZ'; }
 function beginStory() {
-  let sx = 11.6, sz = -3.0, best = -1;
-  for (let a = 9.6; a <= 14; a += 0.4) for (let b = -3.6; b <= 4; b += 0.4) { if (blockedAt(a, b, 0.5)) continue; let md = 9; treeMeshes.forEach((t) => { md = Math.min(md, Math.hypot(t.userData.x - a, t.userData.z - b)); }); const sc = md - 0.05 * Math.hypot(a - 11.6, b + 3); if (sc > best) { best = sc; sx = a; sz = b; } } player.x = sx; player.z = sz; player.ang = -Math.PI / 2; trail.length = 0;
-  yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
+  let sx = 10.0, sz = -5.6; for (const [a, b] of [[10.0, -5.6], [10.0, -5.2], [10.1, -6.0], [9.9, -5.0], [10.2, -5.5]]) if (!blockedAt(a, b, 0.3)) { sx = a; sz = b; break; }
+  player.x = sx; player.z = sz; player.ang = 0; trail.length = 0;
+  yaw = -1.3; pitch = 0.66; zoom = 0.6; zoomGoal = 1; yawGoal = null; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; Music.play(CITY);
-  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Temui aku di tepi Jl. Margonda, dekat Depok Lama ya, {n}. Ikuti titik-titik kuning di jalan!"']], () => { saveGame(); }), 600);
+  mode = 'dialog'; setTimeout(() => dialog([['_', '{n} turun dari kereta di Stasiun Depok Baru. Beberapa bulan lagi kuliah di Universitas Indonesia (UI) dimulai, dan sekarang waktunya bersiap.'], ['{n}', 'Jadi ini Depok! Ramai sekali… dan ada Maimon di mana-mana!'], ['{n}', 'Aku punya mimpi: menjadi Pelatih Maimon terbaik di dunia!'], ['_', '📱 Pesan dari Prof. Catherine: "Temui aku di Lab Maimon UI, Depok Lama ya, {n}. Ikuti titik-titik merah muda di jalan!"']], () => { forceYaw(0.62); saveGame(); }), 600);
 }
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
@@ -243,4 +261,27 @@ function loadGame() {
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;
+}
+
+/* ---------- animasi pengobatan di klinik ---------- */
+async function healScene() {
+  const D = 'Dokter Sari', nurse = npcs.find((n) => n.id === 'nurse'); mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none';
+  const list = mates.filter((m) => m.hp < m.hpMax); Music.jingle('heal');
+  const base = camGoal.clone(); const zb = zoomGoal; forceYaw(clearYaw(mates[0].x, mates[0].z, 0.3));
+  for (const m of list) {
+    camGoal.set(m.x, 0.4, m.z); zoomGoal = 0.34; toast('💊 Dokter Sari memberi obat untuk ' + m.name, 1.6);
+    const cross = [fxCube('#ffffff', 0.5, 0.14, 0.14), fxCube('#ffffff', 0.14, 0.5, 0.14)], pill = fxCube('#ff7aa8', 0.16, 0.1, 0.1), pill2 = fxCube('#ffffff', 0.16, 0.1, 0.1);
+    floatText('💊', m.x, 1.5, m.z, '#e0507a');
+    await tween(1500, (k) => {
+      const y = 0.9 + k * 0.5 + Math.sin(k * 12) * 0.04;
+      cross.forEach((c) => { c.position.set(m.x, y, m.z); c.rotation.y = k * 10; c.scale.multiplyScalar(1); });
+      const a = k * 14; pill.position.set(m.x + Math.cos(a) * 0.55, 0.9 + Math.sin(k * Math.PI) * 0.4, m.z + Math.sin(a) * 0.55); pill2.position.set(m.x - Math.cos(a) * 0.55, 0.9 + Math.sin(k * Math.PI) * 0.4, m.z - Math.sin(a) * 0.55); pill.rotation.y = pill2.rotation.y = a;
+      if (((k * 100) | 0) % 6 === 0) burst(m.x + (R0() - 0.5) * 0.6, 0.3 + k * 0.9, m.z + (R0() - 0.5) * 0.6, k > 0.5 ? '#8dffb0' : '#ffb3cc', 2);
+      m.hp = Math.round(m.hp + (m.hpMax - m.hp) * Math.min(1, k * 0.12)); m.jump = k < 0.9 ? 0 : 0.2;
+    });
+    fxClear(); m.hp = m.hpMax; m.jump = 0; burst(m.x, 0.6, m.z, '#8dffb0', 18); floatText('+HP ❤️', m.x, 1.3, m.z, '#2fae5a'); flashScreen(); Music.blip(880); renderChips(); await sleep(450);
+  }
+  stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame();
+  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; $('joy').style.display = '';
+  dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }

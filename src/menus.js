@@ -11,8 +11,9 @@ function portraitRig(key, build, rot = 0.75, bust = false) {
       PR.s = new THREE.Scene(); PR.s.add(new THREE.HemisphereLight('#ffffff', '#9a8a6a', 2.1)); const dl = new THREE.DirectionalLight('#ffffff', 2.6); dl.position.set(2.5, 4, 3.5); PR.s.add(dl);
       PR.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
     }
-    PR.r.setSize(bust ? 384 : 160, bust ? 384 : 160, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
+    PR.r.setSize(bust === 'full' ? 320 : bust ? 384 : 160, bust === 'full' ? 512 : bust ? 384 : 160, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(rig.root), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.y * 1.05, sz.z) * 0.62;
+    if (bust === 'full') { const rh = sz.y * 0.56, rw = rh * 320 / 512, cy = bb.min.y + sz.y * 0.5; PR.cam.left = -rw; PR.cam.right = rw; PR.cam.top = rh; PR.cam.bottom = -rh; PR.cam.updateProjectionMatrix(); c.y = cy; const sh = new THREE.Mesh(new THREE.CircleGeometry(sz.y * 0.3, 20), new THREE.MeshBasicMaterial({ color: 0x103a3f, transparent: true, opacity: 0.4 })); sh.rotation.x = -Math.PI / 2; sh.position.set(c.x, bb.min.y + 0.01, c.z); sh.scale.set(1, 0.9, 1); PR.s.add(sh); PR.cam.position.set(c.x + 1.5, cy + 1.6, c.z + 5); PR.cam.lookAt(c); PR.r.render(PR.s, PR.cam); const url0 = PR.r.domElement.toDataURL('image/png'); PR.s.remove(sh); PR.s.remove(rig.root); PR.cache[key] = url0; return url0; }
     if (bust) { const cy = bb.max.y - sz.y * 0.36, rb = sz.y * 0.44; PR.cam.left = -rb; PR.cam.right = rb; PR.cam.top = rb; PR.cam.bottom = -rb; PR.cam.updateProjectionMatrix(); c.y = cy; PR.cam.position.set(c.x + 1.3, cy + 0.7, c.z + 5); PR.cam.lookAt(c); }
     else { PR.cam.left = -r; PR.cam.right = r; PR.cam.top = r; PR.cam.bottom = -r; PR.cam.updateProjectionMatrix();
     PR.cam.position.set(c.x + 3.2, c.y + 2.6, c.z + 4.2); PR.cam.lookAt(c); }
@@ -21,8 +22,8 @@ function portraitRig(key, build, rot = 0.75, bust = false) {
 }
 const portrait = (sp, st = 1) => portraitRig(sp + st, () => MAI[sp].build(st));
 const portraitHuman = (g) => portraitRig('h_' + g, () => buildPlayer2(g), 0.4);
-const bustHuman = (g) => portraitRig('hb_' + g, () => buildPlayer2(g), -0.15, true);
-const bustProf = () => portraitRig('hb_prof', () => buildHuman(LOOK.prof), 0.12, true);
+const bustHuman = (g) => portraitRig('hf_' + g, () => buildPlayer2(g), -0.15, 'full');
+const bustProf = () => portraitRig('hf_prof', () => buildHuman(LOOK.prof), 0.12, 'full');
 const pimg = (sp, st, cls = '') => { const u = portrait(sp, st); return u ? `<img class="${cls}" src="${u}" alt="">` : `<div class="q">${MAI[sp].info.emo}</div>`; };
 const chipT = (t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`;
 const pad3 = (n) => String(n).padStart(3, '0');
@@ -74,7 +75,7 @@ function renderTeam() {
     g.appendChild(c);
   });
   B.appendChild(g);
-  const sec = document.createElement('div'); sec.className = 'sec'; sec.innerHTML = `<h4>🏠 DITITIP DI RUMAH KOS (${stash.length}) · ATUR DI RUMAH KOS BU WATI</h4>`;
+  const sec = document.createElement('div'); sec.className = 'sec'; sec.innerHTML = `<h4>🏠 DITITIP DI HOTEL MAIMON (${stash.length}) · ATUR DI HOTEL MAIMON (BU WATI)</h4>`;
   if (!stash.length) sec.innerHTML += '<div class="hint2">Belum ada. Kalau timmu penuh (maks. 3), Maimon baru dititip di sini.</div>';
   else { const mi = document.createElement('div'); mi.className = 'mini'; stash.forEach((r) => { const lv = r.lv || 5; mi.innerHTML += `<div class="mc">${pimg(r.sp, r.st)}<div><b>${nameOf(r.sp, r.st)}</b><br><small>Lv ${lv} · HP ${Math.ceil(r.hp)}/${hpMaxOf(r.sp, r.st, lv)}</small></div></div>`; }); sec.appendChild(mi); }
   B.appendChild(sec);
