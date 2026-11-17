@@ -137,7 +137,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
    ===================================================================== */
 const logEl = $('log'); let logT = 0;
 function say(msg, ms = 1100) { logEl.textContent = msg; logEl.style.opacity = 1; logT = ms / 1000; }
-function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small></span><span class="chip" style="background:${TCOL[e.type]}">${e.type}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
+const STAT = { burn: { tag: '🔥 Terbakar', em: '🔥', col: '#ff7a2a', dot: 0.08, msg: 'terbakar' }, poison: { tag: '☠️ Keracunan', em: '☠️', col: '#a35bd6', dot: 0.07, msg: 'keracunan' }, dizzy: { tag: '💫 Pusing', em: '💫', col: '#e0b020', dot: 0, msg: 'pusing' } }, STCHANCE = { Api: ['burn', 0.3, 4], Daun: ['poison', 0.3, 4], Suara: ['dizzy', 0.3, 2] };
+function statusFx(e) { if (!e.status || e.hp <= 0) return; const y = 0.45 + R0() * 0.5, ox = (R0() - 0.5) * 0.4; if (e.status === 'burn') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#ff7a2a' : '#ffd24a', 2); } else if (e.status === 'poison') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#a35bd6' : '#6bd36b', 2); } else { const a = T * 6; burst(e.x + Math.cos(a) * 0.35, 0.95, e.z + Math.sin(a) * 0.35, '#ffe14a', 1); } }
+setInterval(() => { if (typeof battle !== 'undefined' && battle) [battle.me, battle.w].forEach(statusFx); }, 260);
+function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small>${e.status ? ` <small class="stt ${e.status}">${STAT[e.status].tag}</small>` : ''}</span><span class="chip" style="background:${TCOL[e.type]}">${e.type}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
 let hidden = [];
 function clearArena(cx, cz, R) {
   treeMeshes.forEach((m) => { if (m.visible && Math.hypot(m.userData.x - cx, m.userData.z - cz) < R) { m.visible = false; hidden.push(m); burst(m.userData.x, 0.4, m.userData.z, '#8cc656', 4); } });
@@ -163,7 +166,7 @@ function startBattle(w) {
   battle.me.bx = w.x - rx * sgn * 2.0; battle.me.bz = w.z - rz * sgn * 2.0; battle.px = w.x - rx * sgn * 3.0; battle.pz = w.z - rz * sgn * 3.0;
   battle.cx = (w.x + me.bx) / 2; battle.cz = (w.z + me.bz) / 2;
   me.ang = Math.atan2(w.x - me.bx, w.z - me.bz); w.ang = Math.atan2(me.bx - w.x, me.bz - w.z); w.walk = false;
-  clearArena(battle.cx, battle.cz, 3.2); camGoal.set(battle.cx, 0.3, battle.cz); zoomGoal = 0.42; pitch = 0.9; $('hpL').classList.add('fl'); $('hpR').classList.add('fl');
+  clearArena(battle.cx, battle.cz, 3.2); camGoal.set(battle.cx, 0.3, battle.cz); zoomGoal = 0.42; pitch = 0.9; forceYaw(clearYaw(battle.cx, battle.cz, yaw)); $('hpL').classList.add('fl'); $('hpR').classList.add('fl');
   hpBar($('hpL'), me); hpBar($('hpR'), w); $('battle').style.display = 'block';
   buildMoveButtons(); say(w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
 }
@@ -240,7 +243,7 @@ async function runFx(att, tgt, mv, hit) {
       await tween(900, (k) => { const A = fxPos(att, 0.55), B = fxPos(tgt, 0.4); D.forEach((m, n) => { const kk = Math.min(1, Math.max(0, k * 1.6 - n * 0.05)), P = lerp3(A, B, kk); setAt(m, [P[0], P[1] + Math.sin(kk * Math.PI) * 0.35 + Math.sin(n) * 0.06, P[2] + Math.cos(n * 2) * 0.08]); m.visible = kk > 0 && kk < 1; }); if (k > 0.7) { doHit(); jig(0.05, k); } if (k > 0.7 && k < 0.73) burst(tgt.x, 0.5, tgt.z, '#bfe8ff', 10); });
       break; }
     case 'wave': {
-      const wv = fxCube(col, 2.6, 0.9, 0.55), fo = []; for (let n = 0; n < 8; n++) fo.push(fxCube('#e8f8ff', 0.22));
+      const wv = fxCube(col, 1.8, 0.6, 0.4), fo = []; for (let n = 0; n < 8; n++) fo.push(fxCube('#e8f8ff', 0.22));
       await tween(1300, (k) => { const A = fxPos(att, 0.1), B = fxPos(tgt, 0.1), kk = Math.min(1, Math.max(0, (k - 0.15) / 0.6)), P = lerp3(A, B, kk), h = 0.3 + 0.9 * Math.sin(Math.min(1, k * 1.2) * Math.PI * 0.8);
         setAt(wv, [P[0], P[1] + h * 0.5, P[2]]); wv.scale.set(2.6, h, 0.55); wv.rotation.y = Math.atan2(ux, uz) + Math.PI / 2; wv.visible = k > 0.1 && k < 0.92;
         fo.forEach((m, n) => { setAt(m, [P[0] + (n - 3.5) * 0.3 * Math.cos(Math.atan2(ux, uz)), P[1] + h + 0.05 + Math.sin(k * 20 + n) * 0.08, P[2] - (n - 3.5) * 0.3 * Math.sin(Math.atan2(ux, uz))]); m.visible = wv.visible; });
@@ -253,9 +256,9 @@ async function runFx(att, tgt, mv, hit) {
         if (k > 0.55) { doHit(); jig(0.08, k); } });
       att.rig.root.rotation.x = 0; break; }
     case 'fire': case 'fireblast': {
-      const big = kind === 'fireblast', F = []; for (let n = 0; n < (big ? 5 : 11); n++) F.push(fxCube(['#ff5a1a', '#ffb02a', '#fff1a0'][n % 3], big ? 0.55 - n * 0.06 : 0.22));
+      const big = kind === 'fireblast', F = []; for (let n = 0; n < (big ? 5 : 11); n++) F.push(fxCube(['#ff5a1a', '#ffb02a', '#fff1a0'][n % 3], big ? 0.3 - n * 0.035 : 0.14));
       await tween(big ? 1150 : 900, (k) => { const A = fxPos(att, 0.55), B = fxPos(tgt, 0.45); F.forEach((m, n) => { const kk = Math.min(1, Math.max(0, (big ? k * 1.35 : k * 1.6) - n * (big ? 0.07 : 0.05))), P = lerp3(A, B, kk); setAt(m, [P[0] + (R0() - 0.5) * 0.12, P[1] + Math.sin(kk * Math.PI) * 0.2 + (R0() - 0.5) * 0.1, P[2] + (R0() - 0.5) * 0.12]); m.rotation.set(R0() * 3, R0() * 3, R0() * 3); m.visible = kk > 0 && kk < 1; });
-        if (k > (big ? 0.72 : 0.68)) { doHit(); jig(0.06, k); } if (k > 0.68 && k < 0.72) { burst(tgt.x, 0.5, tgt.z, '#ff7a2a', big ? 26 : 12); if (big) shakeCam(550, 0.28); } });
+        if (k > (big ? 0.72 : 0.68)) { doHit(); jig(0.06, k); } if (k > 0.68 && k < 0.72) { burst(tgt.x, 0.5, tgt.z, '#ff7a2a', big ? 12 : 7); if (big) shakeCam(400, 0.12); } });
       break; }
     case 'fight': {
       const S = []; for (let n = 0; n < 5; n++) S.push(fxCube(n % 2 ? '#fff3a0' : col, 0.28));
@@ -288,18 +291,19 @@ async function round(i) {
   if (!battle || battle.busy) return; battle.busy = true; setMovesEnabled(false);
   const { w, me } = battle, mvA = curMoves(me)[i], wk = curMoves(w), mvB = wk[(R0() * wk.length) | 0];
   const a = calcDmg(me, mvA, w), b = calcDmg(w, mvB, me);
-  const mkHit = (def, mv, r) => () => { burst(def.x, 0.45, def.z, TCOL[mv[2]], 14); def.hp -= r.dmg; def.shake = 0.4; flash(def, 0.7); floatText(`-${r.dmg}`, def.x, 1.1, def.z, '#d8452e'); hpBar($('hpL'), me); hpBar($('hpR'), w); setTimeout(() => flash(def, 0), 260); if (r.mult > 1) floatText('⭐', def.x, 1.6, def.z); };
+  const mkHit = (def, mv, r) => () => { burst(def.x, 0.45, def.z, TCOL[mv[2]], 14); def.hp -= r.dmg; def.shake = 0.4; flash(def, 0.7); floatText(`-${r.dmg}`, def.x, 1.1, def.z, '#d8452e'); hpBar($('hpL'), me); hpBar($('hpR'), w); setTimeout(() => flash(def, 0), 260); if (r.mult > 1) floatText('⭐', def.x, 1.6, def.z); const sc = STCHANCE[mv[2]]; if (sc && def.hp > 0 && !def.status && R0() < sc[1]) { def.status = sc[0]; def.stT = sc[2]; floatText(STAT[sc[0]].tag + '!', def.x, 1.9, def.z, STAT[sc[0]].col); burst(def.x, 0.6, def.z, STAT[sc[0]].col, 16); hpBar($('hpL'), me); hpBar($('hpR'), w); } };
   const sA = speedOf(me), sB = speedOf(w), meFirst = sA === sB ? R0() < 0.5 : sA > sB;
-  const doMe = async () => { say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
-  const doFoe = async () => { say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
+  const doMe = async () => { if (me.status === 'dizzy' && R0() < 0.4) { say(`💫 ${me.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
+  const doFoe = async () => { if (w.status === 'dizzy' && R0() < 0.4) { say(`💫 ${w.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
   say(`⚡ ${meFirst ? me.name : w.name} lebih cepat!`, 900); await sleep(650);
   if (meFirst) { await doMe(); await sleep(250); await doFoe(); } else { await doFoe(); await sleep(250); await doMe(); }
+  for (const e of [me, w]) { if (!e.status || e.hp <= 0) continue; const st = STAT[e.status]; if (st.dot) { const d = Math.max(1, Math.round(e.hpMax * st.dot)); e.hp = e === me ? Math.max(1, e.hp - d) : e.hp - d; say(`${st.em} ${e.name} ${st.msg}! -${d}`, 1100); burst(e.x, 0.6, e.z, st.col, 14); floatText(`-${d}`, e.x, 1.3, e.z, st.col); flash(e, 0.5); setTimeout(() => flash(e, 0), 240); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(900); } if (--e.stT <= 0) { e.status = null; say(`${e.name} sudah pulih ✨`, 900); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(700); } }
   await sleep(750);
   if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return endBattle('lose');
   battle.busy = false; setMovesEnabled(true); say('Pilih jurus!', 900);
 }
 async function endBattle(res) {
-  const { w, me } = battle; $('battle').style.display = 'none'; logEl.style.opacity = 0;
+  const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
@@ -310,14 +314,16 @@ async function endBattle(res) {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
   }
 }
-function flee() { if (!battle || battle.busy) return; const { w, me } = battle; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
-function leaveEncounter(cd) { saveGame(); restoreArena(); pitch = 0.66; mode = 'play'; talk = null; cooldown = T + cd; zoomGoal = 1; $('joy').style.display = ''; $('panel').style.display = 'none'; if (mates[0]) mates[0].state = 'follow'; }
+function flee() { if (!battle || battle.busy) return; const { w, me } = battle; me.status = w.status = null; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
+let feedTimer = null; const stopFeedClock = () => { clearInterval(feedTimer); feedTimer = null; };
+function feedClock(w) { stopFeedClock(); let left = 20; const upd = () => { $('ptitle').textContent = `Kasih ${w.name} makan apa? ⏳ ${left}`; }; upd(); feedTimer = setInterval(() => { left--; if (mode !== 'feed' || talk !== w) { stopFeedClock(); return; } if (left <= 0) { stopFeedClock(); toast(`${w.name} sudah tidak sabar dan pergi… 💨`, 2); leaveEncounter(4); runAway(w); } else upd(); }, 1000); }
+function leaveEncounter(cd) { stopFeedClock(); saveGame(); restoreArena(); pitch = 0.66; mode = 'play'; talk = null; cooldown = T + cd; zoomGoal = 1; $('joy').style.display = ''; $('panel').style.display = 'none'; if (mates[0]) mates[0].state = 'follow'; }
 
 /* ---------- kasih makan setelah menang ---------- */
 const foodsEl = $('foods'), foodBtn = {};
 FOODS.forEach(([id, name, em]) => { const b = document.createElement('button'); b.onclick = () => feed(id); foodBtn[id] = b; foodsEl.appendChild(b); });
 function refreshFoods() { FOODS.forEach(([id, name, em]) => { const b = foodBtn[id], n = bagN(id); b.innerHTML = `<span class="e">${em}</span>${name}<small>x${n}</small>`; b.classList.toggle('none', n === 0); }); }
-function showFeed(w) { $('ptitle').textContent = `Kasih ${w.name} makan apa?`; refreshFoods(); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : ''; $('panel').style.display = 'block'; }
+function showFeed(w) { feedClock(w); refreshFoods(); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : ''; $('panel').style.display = 'block'; }
 function feed(id) {
   if (!talk || mode !== 'feed') return; const w = talk;
   if (bagN(id) === 0) { toast(`Belum punya ${FOOD[id][1]}. ${FOODWHERE[id]}`, 2.4); return; }
