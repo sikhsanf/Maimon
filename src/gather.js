@@ -74,7 +74,7 @@ async function gatherAt(s) {
     items.forEach((m, i) => { const kk = Math.min(1, Math.max(0, (k - 0.5 - i * 0.08) / 0.4)); m.visible = kk > 0 && kk < 1; const tx = player.x, tz = player.z; m.position.set(mix(base[0], tx, kk), base[1] + 0.3 + Math.sin(kk * Math.PI) * 1.1, mix(base[2], tz, kk)); m.rotation.y = kk * 8; });
   });
   fxClear(); root.rotation.x = 0; P.rotation.z = 0; addBag(s.food, n); const f = FOOD[s.food]; toast(`+${n} ${f[2]} ${f[1]}`, 1.6); floatText(`+${n} ${f[2]}`, player.x, 1.8, player.z, '#33241b'); Music.blip(660); setTimeout(() => Music.blip(880), 90); saveGame();
-  mode = 'play'; $('joy').style.display = '';
+  mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = '';
 }
 function updateGather(dt) {
   spots.forEach((s) => {
@@ -96,7 +96,7 @@ function startFish(s) {
   $('fishui').style.display = 'flex'; $('pullb').classList.remove('on'); $('fishmsg').textContent = 'Menunggu ikan menggigit… 🎣';
 }
 function endFish(ok) {
-  const f = fishSt; fishSt = null; world.remove(f.bob); world.remove(f.line); $('fishui').style.display = 'none'; mode = 'play'; $('joy').style.display = '';
+  const f = fishSt; fishSt = null; world.remove(f.bob); world.remove(f.line); $('fishui').style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = '';
   if (ok) { const n = 1 + (R0() < 0.3 ? 1 : 0); addBag('ikan', n); toast(`Dapat ${n} 🐟 Ikan!`, 2); burst(f.s.tx, 0.4, f.s.tz, '#bfe8ff', 18); Music.jingle('catch'); saveGame(); }
 }
 function updateFish(dt) {

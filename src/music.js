@@ -5,6 +5,7 @@
    reverb + delay + kompresor. Semua dibuat dari kode, tanpa file audio.
    ===================================================================== */
 const Music = (() => {
+  let lite = 0; // 0 penuh, 1 hemat (tanpa arp/perkusi halus), 2 sangat hemat (tanpa pad atas)
   const SC = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10], mix: [0, 2, 4, 5, 7, 9, 10], phr: [0, 1, 4, 5, 7, 8, 10], pent: [0, 2, 4, 7, 9], minp: [0, 3, 5, 7, 10], slen: [0, 2, 5, 7, 9], pel: [0, 1, 3, 7, 8] };
   const CH = { maj: [0, 4, 7, 12], min: [0, 3, 7, 12], m7: [0, 3, 7, 10], maj7: [0, 4, 7, 11], dom7: [0, 4, 7, 10], sus4: [0, 5, 7, 12], sus2: [0, 2, 7, 12], add9: [0, 4, 7, 14], m9: [0, 3, 7, 14], dim: [0, 3, 6, 12], pw: [0, 7, 12, 19] };
   const STR = { X: 1, x: 0.65, o: 0.3 };
@@ -95,7 +96,7 @@ const Music = (() => {
     comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.22;
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.5; master.connect(comp); comp.connect(ctx.destination);
     duck = ctx.createGain(); duck.gain.value = 1; duck.connect(master);
-    const rev = ctx.createConvolver(); rev.buffer = impulse(1.8, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
+    const rev = ctx.createConvolver(); rev.buffer = impulse(1.2, 2.2); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
     const dl = ctx.createDelay(1.5), fb = ctx.createGain(), dlf = ctx.createBiquadFilter(), dg = ctx.createGain(); dl.delayTime.value = 0.36; fb.gain.value = 0.38; dlf.type = 'lowpass'; dlf.frequency.value = 2600; dg.gain.value = 0.3; dlyIn = ctx.createGain();
     dlyIn.connect(dl); dl.connect(dlf); dlf.connect(fb); fb.connect(dl); dlf.connect(dg); dg.connect(duck); dg.connect(revIn);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -202,7 +203,7 @@ const Music = (() => {
     const [off, ty] = th.ch[bp], rootM = th.root + off, tones = CH[ty], bus = st.bus, V = VOICE;
     const bd = st.sd * spb, tt = t + (si % 2 ? th.swing * st.sd : 0);
     if (si === 0) {
-      tones.slice(0, th.pw ? 4 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
+      tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
       if (th.gong && bp % 4 === 0) V.gong(t, pass ? 1 : 0.8, bus);
     }
     const gp = (s, i) => (s && i < s.length ? s[i] : '.');
@@ -216,7 +217,7 @@ const Music = (() => {
     }
     // arp
     const ac = gp(th.arp, si);
-    if (ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
+    if (lite < 1 && ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
     // drum
     const D = th.dr, hit = (k) => STR[gp(D[k], si)] ?? 0;
     if (!(bs === 0 && false)) {
@@ -224,19 +225,19 @@ const Music = (() => {
       if ((v = hit('k'))) V.kick(tt, v, bus);
       if ((v = hit('s'))) V.snare(tt, v, bus);
       if ((v = hit('c'))) V.clap(tt, v, bus);
-      if ((v = hit('h')) && (bs >= 1)) V.hat(tt, v * (pass ? 1 : 0.8), bus, false);
-      if ((v = hit('o'))) V.hat(tt, v, bus, true);
+      if ((v = hit('h')) && (bs >= 1) && (lite < 1 || si % 4 === 0)) V.hat(tt, v * (pass ? 1 : 0.8), bus, false);
+      if (lite < 1 && (v = hit('o'))) V.hat(tt, v, bus, true);
       if ((v = hit('d'))) V.dung(tt, v, bus);
       if ((v = hit('t'))) V.tak(tt, v, bus);
       if ((v = hit('w'))) V.wood(tt, v, bus);
-      if ((v = hit('p'))) V.shake(tt, v, bus);
+      if (lite < 1 && (v = hit('p'))) V.shake(tt, v, bus);
     }
     // melodi
     const e = st.ev[st.step % (song * spb)];
     if (e && (bs >= 2 || pass)) {
       const f = mtof(e.m), dur = e.len * st.sd * (th.lead === 'bell' || th.lead === 'pluck' ? 1.2 : 0.95);
       VOICE[LEADV[pass ? th.lead2 : th.lead]](tt, f, dur, pass ? 0.9 : 1, bus);
-      if (pass && th.lead !== th.lead2) VOICE[LEADV[th.lead]](tt, f * 2, dur, 0.35, bus);
+      if (lite < 1 && pass && th.lead !== th.lead2) VOICE[LEADV[th.lead]](tt, f * 2, dur, 0.35, bus);
     }
   }
   function sched(until) {
@@ -247,7 +248,7 @@ const Music = (() => {
   function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (ctx && !document.hidden) ctx.resume(); }); }
 
   /* ---------------- API ---------------- */
-  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
+  function ensure() { if (!ctx) { try { build(window.__bootCtx || new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
   function play(name) {
     if (!ctx || ctx.state === 'suspended') { pending = name; return; } pending = null; if (cur && cur.name === name) return;
     const old = cur, nw = start(name); if (!nw) return;
@@ -275,5 +276,5 @@ const Music = (() => {
     const sr = 22050, oc = new OfflineAudioContext(2, sr * secs, sr), saved = ctx; build(oc); const th = TH[name]; cur = start(name); cur.bus.gain.value = 1; cur.nextT = 0; sched(secs);
     const buf = await oc.startRendering(); ctx = saved; cur = null; return buf;
   }
-  return { TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
+  return { set lite(v) { lite = v; }, get lite() { return lite; }, TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
 })();

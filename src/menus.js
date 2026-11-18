@@ -45,10 +45,10 @@ function renderDex() {
   if (!dexSel) { D.innerHTML = '<div class="hint2">Belum ada data. Temukan Maimon di Depok!</div>'; return; }
   const sp = dexSel, d = MAI[sp], v = S.dex[sp] || 0, i = DEXLIST.indexOf(sp), col = TCOL[d.type];
   if (!v) { D.innerHTML = `<div class="plate" style="background:linear-gradient(150deg,#6b6b6b,#3a3a3a)"><div class="t"><small>No.${pad3(i + 1)}</small><b>???</b></div></div><div class="hint2">Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
-  const weak = Object.keys(BEATS).filter((t) => BEATS[t].includes(d.type)), strong = BEATS[d.type];
+  const dty = tyOf(d), weak = [...new Set(Object.keys(BEATS).filter((t) => dty.some((x) => BEATS[t].includes(x))))], strong = [...new Set(dty.flatMap((x) => BEATS[x]))];
   const rare = RARE_SP.includes(sp) ? '<span class="rareb">✨ LANGKA</span>' : '';
   const evo = d.n.length > 1 ? `<div class="evo">${d.n.join(' → ')}</div>` : '';
-  let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${chipT(d.type)}${rare}</div></div>`;
+  let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${dty.map(chipT).join('')}${rare}</div></div>`;
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
   if (v > 1) {
     h += `<div class="sec"><h4>CATATAN PENELITI</h4><div class="quote">${d.info.desc}</div></div>`;
@@ -98,9 +98,9 @@ function renderBag() {
 const SCR = { dex: renderDex, team: renderTeam, bag: renderBag };
 const closeMenuPop = () => { $('menu').style.display = 'none'; };
 function openScr(id) { if (S.stage === 1) S.tf[id === 'bag' ? 'bag' : 'menu'] = 1; closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
-function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; $('joy').style.display = ''; }
+function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = ''; }
 $('dexb').onclick = () => {
-  if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; $('joy').style.display = ''; return; }
+  if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = ''; return; }
   if (mode !== 'play') return; mode = 'menu'; $('joy').style.display = 'none'; $('menu').style.display = 'flex';
 };
 document.querySelectorAll('#menu button').forEach((b) => { b.onclick = () => openScr(b.dataset.s); });

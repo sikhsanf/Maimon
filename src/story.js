@@ -31,7 +31,7 @@ function dialog(lines, done, focus) {
   mode = 'dialog'; dq = { lines, i: -1, done, txt: '', pos: 0 }; $('joy').style.display = 'none'; $('talk').style.display = 'none'; dlgEl.style.display = 'block'; nextLine();
 }
 function nextLine() {
-  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
+  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 2.5); if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
   const [who, txt] = dq.lines[dq.i]; dq.who = who; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
@@ -80,6 +80,11 @@ function updateObjective() {
   else if (hs && mode === 'play') spEl = $('dexb');
   spotEl.firstChild.textContent = spTxt; updateSpot(spEl);
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
+  if (o.style.display === 'block') { // jangan nabrak kotak lokasi/teman: turun di bawahnya kalau bertabrakan
+    o.style.top = ''; const r = o.getBoundingClientRect(); let ty = null;
+    [$('zone'), $('mates')].forEach((e) => { const q = e.getBoundingClientRect(); if (q.width && r.left < q.right + 4 && r.right > q.left - 4 && r.top < q.bottom + 4 && r.bottom > q.top - 4) ty = Math.max(ty || 0, q.bottom + 8); });
+    if (ty !== null) o.style.top = ty + 'px';
+  }
 }
 const spotEl = document.createElement('div'); spotEl.id = 'spot'; spotEl.className = 'ui'; spotEl.innerHTML = '<b>👆 Tap di sini!</b>'; document.body.appendChild(spotEl);
 function updateSpot(el) {
@@ -96,7 +101,7 @@ function updateMarker(dt) {
 }
 
 /* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
-const PLABELS = [{ x: -13.0, z: 10.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 9.75, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: 8.0, z: 1.6, y: 1.9, t: '👨‍🌾 Pak Tani · Kebun Warga', c: '#5a9a4a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
+const PLABELS = [{ x: -13.0, z: 7.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 7.55, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: 2.8, z: 3.8, y: 1.9, t: '👨‍🌾 Pak Tani · Kebun Warga', c: '#5a9a4a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
 PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
 function updateLabels() {
   PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
@@ -176,11 +181,11 @@ function renderHome() {
   stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st, r.lv || 5); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1] + ' Lv' + (r.lv || 5), r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z, q.lv || 5, q.xp || 0); m.hp = Math.min(q.hp, m.hpMax); m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
 }
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
-$('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
+$('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 2.5); $('joy').style.display = ''; };
 function restAtHotel() {
   mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; fadeTo(1); forceYaw(1.5);
   setTimeout(() => { mates.forEach((m) => { m.hp = m.hpMax; }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); renderChips(); Music.jingle('heal'); toast('Zzz… 😴 Kamu & Maimon tidur nyenyak', 2.6);
-    setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
+    setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; cooldown = Math.max(cooldown, T + 3); $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
 }
 function talkTani() { pendingFocus = npcs.find((n) => n.id === 'tani'); dialog([['Pak Tani', gatherPermit ? 'Silakan petik lagi, Nak. Kebun ini buat warga sini!' : 'Selamat datang di kebun warga, Nak! Mau petik jagung atau sayur? Silakan, ambil secukupnya ya.']], () => { gatherPermit = true; }); }
 function talkHome() {
@@ -283,6 +288,6 @@ async function healScene() {
     fxClear(); m.hp = m.hpMax; m.jump = 0; burst(m.x, 0.6, m.z, '#8dffb0', 18); floatText('+HP ❤️', m.x, 1.3, m.z, '#2fae5a'); flashScreen(); Music.blip(880); renderChips(); await sleep(450);
   }
   stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame();
-  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; $('joy').style.display = '';
+  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; cooldown = Math.max(cooldown, T + 2); $('joy').style.display = '';
   dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }

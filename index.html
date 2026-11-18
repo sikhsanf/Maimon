@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script>
+/* dipasang paling awal: ketukan pertama (kapan pun) membuka audio, supaya musik bisa jalan setelah loading */
+window.__boot = { tapped: false, ctx: null, unlock() {
+  this.tapped = true;
+  try { if (!this.ctx) { const AC = window.AudioContext || window.webkitAudioContext; this.ctx = new AC({ latencyHint: 'playback' }); window.__bootCtx = this.ctx; } if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (e) {}
+} };
+['pointerdown', 'touchend', 'click', 'keydown'].forEach((ev) => addEventListener(ev, () => { if (window.__boot && !window.__boot.noboot) window.__boot.unlock(); }, true));
+</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Maimon · Edisi Jawa</title>
@@ -259,15 +268,107 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 .plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
 #spot{display:none;position:fixed;z-index:8;border:4px solid #ffd84a;border-radius:10px;box-shadow:0 0 0 200vmax rgba(8,6,20,.62);pointer-events:none;animation:pls .7s ease-in-out infinite alternate}
 #spot b{position:absolute;white-space:nowrap;background:#ffd84a;color:var(--ink);border:3px solid var(--edge);padding:3px 10px;font:700 18px var(--font-display)}
-.stt{font-size:11px;padding:1px 5px;border-radius:6px;color:#fff;background:#d8452e;margin-left:4px;white-space:nowrap}.stt.poison{background:#8a4bc0}.stt.dizzy{background:#c99a10}
+.stt{font-size:11px;padding:1px 5px;border-radius:6px;color:#fff;background:#d8452e;margin-left:4px;white-space:nowrap}.stt.poison{background:#8a4bc0}.stt.dizzy{background:#c99a10}.stt.fear{background:#6b5b95}
+/* splash + loading */
+#boot{position:fixed;inset:0;z-index:100000;font-family:var(--font-display);transition:opacity .6s ease;touch-action:manipulation}
+#boot.out{opacity:0;pointer-events:none}
+#splash{position:absolute;inset:0;background:#fff;z-index:2;display:flex;align-items:center;justify-content:center;text-align:center;transition:opacity .5s ease}
+#splash.gone{opacity:0;pointer-events:none}
+#splash .sp{animation:spin 2.6s ease both}
+#splash small{display:block;font-family:var(--font-label);font-size:11px;letter-spacing:3px;color:#8a8478;margin-bottom:8px}
+#splash b{font-size:clamp(34px,9vw,56px);letter-spacing:1px;color:#33241b}
+#splash b i{font-style:normal;color:#e8582a}
+@keyframes spin{0%{opacity:0;transform:translateY(8px)}28%,70%{opacity:1;transform:none}100%{opacity:0}}
+#ld{position:absolute;inset:0;background:linear-gradient(#cfe4ea,#f3e9d2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px}
+#ld .tt{font-family:var(--font-label);font-size:12px;letter-spacing:2px;color:#33241b}
+#dino{width:min(92vw,520px);aspect-ratio:3/1;image-rendering:pixelated;background:#f8f1dc;border:3px solid #241912;box-shadow:0 4px 0 #241912;touch-action:manipulation}
+#ld .hint{font-size:14px;color:#33241b;min-height:20px}
+#ldbar{width:min(92vw,520px);height:14px;border:3px solid #241912;background:#fff;box-shadow:0 3px 0 #241912}
+#ldbar i{display:block;height:100%;width:0;background:#5cae3c;transition:width .25s}
+#ldtx{font-family:var(--font-label);font-size:11px;letter-spacing:1px;color:#33241b}
+#ldGo{display:none;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.06)}}
 </style>
 </head>
 <body>
+<div id="boot">
+  <div id="splash"><div class="sp"><small>PRESENTED BY</small><b>Learners<i>fam</i></b></div></div>
+  <div id="ld">
+    <div class="tt">MAIMON · EDISI JAWA</div>
+    <canvas id="dino" width="480" height="160"></canvas>
+    <div class="hint" id="ldhint">Ketuk layar untuk lompat! 🐥</div>
+    <div id="ldbar"><i></i></div>
+    <div id="ldtx">MENYIAPKAN MAIMON… 0%</div>
+    <button id="ldGo">▶ Ketuk untuk mulai 🔊</button>
+  </div>
+</div>
+<script>
+/* Splash Learnersfam + layar loading dengan mini game lompat. Ketukan pertama membuka audio (iOS/Chrome mensyaratkan sentuhan). */
+(() => {
+  const $ = (i) => document.getElementById(i), boot = $('boot');
+  const st = window.__boot; Object.assign(st, { ready: false, splashDone: false, step: 0, total: 1, score: 0 });
+  if (/[?&]noboot/.test(location.search)) { boot.remove(); st.noboot = true; st.step = async () => {}; st.done = () => {}; return; }
+  const unlockAudio = () => st.unlock();
+  /* --- splash --- */
+  const splash = $('splash');
+  const endSplash = () => { if (st.splashDone) return; st.splashDone = true; splash.classList.add('gone'); setTimeout(() => splash.remove(), 600); tryFinish(); };
+  setTimeout(endSplash, 2600);
+  splash.addEventListener('pointerdown', () => { unlockAudio(); endSplash(); });
+  /* --- progres --- */
+  const bar = $('ldbar').firstChild, tx = $('ldtx');
+  function setProg(p) { p = Math.min(100, Math.round(p)); bar.style.width = p + '%'; tx.textContent = (p >= 100 ? 'SIAP!' : 'MENYIAPKAN MAIMON… ' + p + '%'); }
+  st.step = (i, n) => { st.total = n; setProg(i / n * 100 * 0.98); return new Promise((r) => { let d = false; const f = () => { if (!d) { d = true; r(); } }; requestAnimationFrame(() => setTimeout(f, 0)); setTimeout(f, 90); }); };
+  st.done = () => { setProg(100); st.ready = true; tryFinish(); };
+  function finish() { if (finish.d) return; finish.d = true; boot.classList.add('out'); cancelAnimationFrame(raf); setTimeout(() => boot.remove(), 700); if (window.__bootAfter) window.__bootAfter(); }
+  function tryFinish() {
+    if (!st.ready || !st.splashDone) return;
+    if (st.tapped) { $('ldhint').textContent = 'Siap! ✨'; setTimeout(finish, 700); }
+    else { $('ldhint').textContent = 'Sudah siap! 🎉'; const b = $('ldGo'); b.style.display = 'block'; b.onclick = () => { unlockAudio(); finish(); }; }
+  }
+  /* --- mini game: Pioyo lompati batu, kumpulkan belimbing. Tidak ada game over (ramah anak). --- */
+  const cv = $('dino'), g = cv.getContext('2d'), W = 480, H = 160, GY = 128, U = 3;
+  const chick = ['..yyyy....', '.yyyyyy...', '.yyeyyyoo.', '.yyyyyy...', 'yyyyyyyy..', 'yyyyyyyy..', '.yyyyyy...', '..yyyy....'];
+  const col = { y: '#f6c63a', e: '#241912', o: '#e8742a' };
+  const P = { x: 56, y: GY - 8 * U - 6, vy: 0, on: true }, obs = [], stars = [], clouds = [{ x: 90, y: 22 }, { x: 300, y: 38 }, { x: 430, y: 16 }];
+  let speed = 170, sp = 1.1, spS = 0.6, hit = 0, last = performance.now(), dist = 0, raf = 0, bonk = 0;
+  const rects = (r) => r.forEach((a) => { g.fillStyle = a[0]; g.fillRect(a[1], a[2], a[3], a[4]); });
+  function jump() { unlockAudio(); if (P.on) { P.vy = -470; P.on = false; } }
+  cv.addEventListener('pointerdown', jump); $('ld').addEventListener('pointerdown', (e) => { if (e.target.id !== 'ldGo') jump(); });
+  addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); } });
+  function frame(now) {
+    const dt = Math.min(0.045, (now - last) / 1000); last = now; dist += speed * dt; speed = Math.min(300, 170 + dist / 40);
+    sp -= dt; spS -= dt;
+    if (sp <= 0) { const tall = Math.random() < 0.4; obs.push({ x: W + 10, w: tall ? 12 : 18, h: tall ? 30 : 18, tall }); sp = 0.95 + Math.random() * 1.0; }
+    if (spS <= 0) { stars.push({ x: W + 10, y: GY - 62 - Math.random() * 26 }); spS = 1.5 + Math.random() * 1.6; }
+    P.vy += 1500 * dt; P.y += P.vy * dt; const floor = GY - 8 * U - 2; if (P.y >= floor) { P.y = floor; P.vy = 0; P.on = true; }
+    obs.forEach((o) => o.x -= speed * dt); stars.forEach((s) => s.x -= speed * dt); clouds.forEach((c) => { c.x -= 20 * dt; if (c.x < -40) c.x = W + 30; });
+    hit = Math.max(0, hit - dt); bonk = Math.max(0, bonk - dt);
+    const px0 = P.x + 4, px1 = P.x + 10 * U - 6, py0 = P.y + 4, py1 = P.y + 8 * U;
+    for (let i = obs.length - 1; i >= 0; i--) { const o = obs[i]; if (o.x < -30) { obs.splice(i, 1); continue; } if (!hit && px1 > o.x + 2 && px0 < o.x + o.w - 2 && py1 > GY - o.h + 2) { hit = 1; bonk = 0.8; obs.splice(i, 1); } }
+    for (let i = stars.length - 1; i >= 0; i--) { const s = stars[i]; if (s.x < -20) { stars.splice(i, 1); continue; } if (px1 > s.x && px0 < s.x + 14 && py1 > s.y && py0 < s.y + 14) { stars.splice(i, 1); st.score++; } }
+    /* gambar */
+    g.fillStyle = '#f8f1dc'; g.fillRect(0, 0, W, H);
+    clouds.forEach((c) => rects([['#fff', c.x, c.y, 34, 8], ['#fff', c.x + 8, c.y - 6, 18, 8]]));
+    g.fillStyle = '#7a6b4d'; g.fillRect(0, GY, W, 3); g.fillStyle = '#b9a77a'; for (let x = -((dist | 0) % 40); x < W; x += 40) g.fillRect(x, GY + 10, 14, 2), g.fillRect(x + 22, GY + 20, 8, 2);
+    obs.forEach((o) => rects([['#241912', o.x - 1, GY - o.h - 1, o.w + 2, o.h + 1], [o.tall ? '#8a5a2b' : '#9a9a9a', o.x, GY - o.h, o.w, o.h], [o.tall ? '#b57a3d' : '#c8c8c8', o.x + 2, GY - o.h + 2, o.w - 6, 3]]));
+    stars.forEach((s) => rects([['#241912', s.x - 1, s.y - 1, 16, 16], ['#f6c63a', s.x, s.y, 14, 14], ['#fff3b0', s.x + 3, s.y + 3, 5, 5]]));
+    if (!(hit && ((now / 90) | 0) % 2)) {
+      const wob = P.on ? ((now / 110) | 0) % 2 : 0;
+      chick.forEach((row, ry) => [...row].forEach((c, rx) => { if (c !== '.') { g.fillStyle = col[c] || '#f6c63a'; g.fillRect(P.x + rx * U, P.y + ry * U, U, U); } }));
+      g.fillStyle = col.o; g.fillRect(P.x + 6, P.y + 8 * U, U, 5 - wob * 3 + (P.on ? 0 : 3)); g.fillRect(P.x + 15, P.y + 8 * U, U, 5 - (1 - wob) * 3 + (P.on ? 0 : 3));
+    }
+    g.fillStyle = '#241912'; g.font = '14px monospace'; g.fillText('⭐ ' + st.score, 10, 20); if (bonk > 0) g.fillText('aduh!', P.x + 4, P.y - 6);
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+})();
+</script>
+
 <div id="app"><canvas id="view"></canvas></div>
 <div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
 <div id="cbg"><i class="wall"></i><i class="panel l1"></i><i class="panel l2"></i><i class="wain"></i><i class="floor"></i><i class="wb">PENELITIAN MAIMON
 ● Dex: Depok 6 spesies
-● Tipe: Api > Daun > Air
+● Tipe: Air > Api > Daun > Air
 ● Beri makan favorit!</i><b class="jars">🧪⚗️🧫🧪</b><i class="cap c1"></i><i class="cap c2"></i><i class="bench"></i><b class="items">🔬🧪💻⚗️🧬</b><i class="plaque">LAB MAIMON UI</i><span class="spk k1"></span><span class="spk k2"></span><span class="spk k3"></span><span class="spk k4"></span><span class="spk k5"></span><div id="cprof"><img id="cprofImg" alt=""></div><div id="cplayer"><img id="cplayerImg" alt=""></div></div>
 <div id="create" class="ui"><div class="cards" id="gcards"></div><div id="nameBox" class="panel"><input id="nameIn" maxlength="10" placeholder="Nama kamu" autocomplete="off"><button id="gGo">Lanjut ▶</button></div></div>
 <div id="dlg" class="ui panel"><b id="dwho"></b><p id="dtxt"></p><span id="dnext">▶</span></div>
@@ -284,7 +385,6 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <div id="intro" class="ui"><div class="bar t"></div><div class="bar b"></div><div id="icap"></div><div id="ititle">MAI<b>MON</b></div><button id="iskip">Lewati ▶</button></div>
 <div id="flash" class="ui"></div>
 <div id="chap"><h2 id="chapT"></h2><p id="chapP"></p><button id="chapB">Lanjut</button></div>
-<div id="loading">MENYIAPKAN DEPOK…</div>
 <div id="zone" class="ui panel">Depok<small>EDISI JAWA</small></div>
 <div id="mates" class="ui panel"><span class="lb">TEMAN</span><div class="chips" id="mchips"></div></div>
 <div id="bubble" class="ui"></div>
@@ -515,6 +615,8 @@ sun.position.set(-18, 34, 14); sun.target.position.set(0, 0, 0);
 [hemi, sun, sun.target].forEach((l) => { l.layers.enable(1); scene.add(l); });
 const toon = (c, o = {}) => toonA({ color: c, ...o });
 const glow = (c) => new THREE.MeshBasicMaterial({ color: c });
+
+await __boot.step(1, 17);
 /* ---------- bahan: toon 3 tingkat + garis tepi ---------- */
 
 function pixTex(w, h, fn) {
@@ -773,6 +875,8 @@ function buildPioyo(st) {
 }
 
 
+await __boot.step(2, 17);
+
 /* =====================================================================
    KOTA: layout Depok (diorama kecil, data-driven — tiap kota punya layout sendiri)
    Margonda Raya bertrotoar tengah, kampus UI berhutan + danau + perpustakaan kaca,
@@ -796,7 +900,7 @@ const C = {
   paths: [{ pts: [[-2.8, -2.5], [-6, -3], [-10.5, -3.0]], w: 0.9 }, { pts: [[-10.5, -3.0], [-13, -5], [-12.5, -8.5], [-9, -9.6], [-5.8, -8], [-6, -4.5], [-8, -3.5]], w: 0.8 }],
   forest: [-17.5, -3.6, -13.5, 0.6], plaza: [-10.5, -3.0, 3.6, 2.0],
   mall: [2.2, 6.8, -9.5, -1.6], station: [9.3, 13.8, -9.8, -4.4], platform: [9.3, 10.7, -9, -4.8],
-  lama: [-17.5, -7.5, 7.2, 13.5], orchard: [2.2, 7.4, 7.4, 13.5], kamW: [-17.5, -3.6, 0.8, 3.9], kamE: [10, 13.6, 7.4, 13.5],
+  lama: [-17.5, -7.5, 6.2, 13.5], orchard: [2.2, 7.4, 7.4, 13.5], kamW: [-17.5, -3.6, 0.8, 3.9], kamE: [10, 13.6, 7.4, 13.5],
   dais: [-5, 10.4, 1.9, 1.9], garden: [3.2, 7.8, -0.8, 3.4],
 };
 
@@ -826,7 +930,7 @@ function kindAt(x, z) {
   if (inRect(C.station, x, z)) return 'stationfloor';
   if (inRect(C.garden, x, z)) return 'garden';
   if (inEll(C.dais, x, z)) return 'dais';
-  if (inRect(C.lama, x, z)) return (Math.abs(z - 10.2) < 0.4 || Math.abs(x + 12.5) < 0.4) ? 'brick' : 'lawn';
+  if (inRect(C.lama, x, z)) return Math.abs(z - 6.5) < 0.35 ? 'brick' : 'lawn';
   if (inRect(C.orchard, x, z)) return 'orchard';
   if (inRect(C.kamE, x, z) && Math.abs(x - 11.9) < 0.3) return 'lane';
   if (inRect(C.forest, x, z)) return 'forest';
@@ -951,6 +1055,8 @@ const terrainMat = { m: null };
 }
 function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); }
 
+await __boot.step(3, 17);
+
 /* =====================================================================
    POHON (faceted low-poly seperti Arena Piksel, digabung jadi 1 mesh), SEMAK, RUMPUT
    ===================================================================== */
@@ -1050,6 +1156,8 @@ function buildGrass() {
   const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; mesh.receiveShadow = true; mesh.layers.set(1); scene.add(mesh);
 }
 
+await __boot.step(4, 17);
+
 /* =====================================================================
    BANGUNAN: dinding bertekstur piksel (jendela, pintu), atap pelana bergenteng
    ===================================================================== */
@@ -1142,7 +1250,7 @@ function colonial(x, z, ry, i, o = {}) {
   return g;
 }
 
-const POI = { lab: [-8.2, 9.75], clinic: [-13.0, 10.2], prof: [LAB_PROF[0], LAB_PROF[1]], nurse: [-13.0, 10.15], home: [-11.9, 3.3] };
+const POI = { lab: [-8.2, 7.55], clinic: [-13.0, 7.15], prof: [LAB_PROF[0], LAB_PROF[1]], nurse: [-13.0, 7.15], home: [-11.9, 3.3], tani: [2.8, 3.8] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -1166,7 +1274,9 @@ function buildBuildings() {
     rects.pop(); rects.pop();
   }
   // DEPOK LAMA: rumah kolonial putih berpilar
-  colonial(-13.0, 8.4, 0, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-8.2, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-10.6, 12.9, Math.PI, 3);
+  colonial(-13.0, 8.9, Math.PI, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-8.2, 8.9, Math.PI, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-10.6, 12.9, Math.PI, 3);
+  // PONDOK PAK TANI: di tepi Jl. Raya, pintu menghadap jalan
+  bldg(2.8, 2.9, 1.3, 1.0, 0.8, { ry: 0, wall: '#d9b878', roof: '#8a5a2a', door: '#6a4a2a', doorX: 0.65, rh: 0.5, wins: [[0.25, 0.3, 5, 6]], seed: 11 });
   // KAMPUNG barat (menghadap Jl. Raya)
   [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['HOTEL MAIMON', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)
@@ -1233,6 +1343,8 @@ function buildTrain() {
 }
 let trainT = 0; function updateTrain(dt) { trainT += dt; train.position.z = Math.sin(trainT * 0.28) * 14 - 5.2; train.position.y = 0.04; }
 
+await __boot.step(5, 17);
+
 function populateWorld() {
   buildBuildings(); buildProps();
   // hutan kampus UI
@@ -1268,11 +1380,13 @@ function populateWorld() {
   }
   buildTrees(); buildGrass(); buildTraffic(); buildTrain();
 }
+
+await __boot.step(6, 17);
 /* =====================================================================
    INTERIOR LAB MAIMON UI — ruangan di luar peta, dimasuki lewat pintu Lab di Depok Lama
    ===================================================================== */
 const LAB = { x0: 28, z0: 28, W: 8, D: 6 };
-const LABDOOR = { x: -8.2, z: 9.75 }, LABEXIT = { x: LAB.x0 + 4, z: LAB.z0 + 0.8 }, LABSPAWN = { x: LAB.x0 + 4, z: LAB.z0 + 1.7 };
+const LABDOOR = { x: -8.2, z: 7.55 }, LABEXIT = { x: LAB.x0 + 4, z: LAB.z0 + 0.8 }, LABSPAWN = { x: LAB.x0 + 4, z: LAB.z0 + 1.7 };
 function labCanvasTex(w, h, fn) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); return toTex(c); }
 function buildLabInterior() {
   const g = new THREE.Group(); world.add(g); const X = LAB.x0, Z = LAB.z0, W = LAB.W, D = LAB.D, T = (c) => toon(c);
@@ -1329,9 +1443,9 @@ function goLab(into, after) {
   setTimeout(() => {
     inside = into;
     if (into) { player.x = LABSPAWN.x; player.z = LABSPAWN.z; player.ang = 0; zoomGoal = 0.78; yaw = 0.62; }
-    else { player.x = LABDOOR.x; player.z = LABDOOR.z + 1.5; player.ang = Math.PI; zoomGoal = 1; }
+    else { player.x = LABDOOR.x; player.z = LABDOOR.z - 0.9; player.ang = 0; zoomGoal = 1; }
     trail.length = 0; mates.forEach((m, i) => { m.x = player.x + 0.6 * (i + 1); m.z = player.z - 0.2; });
-    camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal); zoom = zoomGoal; doorCool = T + 1.6; fadeTo(0); mode = 'play'; $('joy').style.display = '';
+    camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal); zoom = zoomGoal; doorCool = T + 1.6; cooldown = Math.max(cooldown, T + 2); fadeTo(0); mode = 'play'; $('joy').style.display = '';
     if (after) after();
   }, 450);
 }
@@ -1347,6 +1461,8 @@ function clearYaw(x, z, base) {
   }
   return best;
 }
+
+await __boot.step(7, 17);
 
 function buildQuad(S) {
   const r = newRig(), g = r.root; r.size = 1; r.h = S.h || 0.8;
@@ -1415,6 +1531,8 @@ function buildPlayer() {
   return r;
 }
 
+await __boot.step(8, 17);
+
 /* =====================================================================
    KAMERA ORTOGRAFIS + RENDER (pipeline Arena Piksel: normal pass, color pass, outline pass, final)
    ===================================================================== */
@@ -1454,12 +1572,15 @@ function render(T) {
   renderer.render(finalScene, quadCam);
 }
 
+await __boot.step(9, 17);
+
 /* =====================================================================
    MUSIK PROSEDURAL (WebAudio) — tiap kota punya tema sendiri, battle punya tema sendiri.
    Lapisan: pad, bass, arpeggio, melodi (disusun dari motif A/B + variasi), drum/kendang/gong,
    reverb + delay + kompresor. Semua dibuat dari kode, tanpa file audio.
    ===================================================================== */
 const Music = (() => {
+  let lite = 0; // 0 penuh, 1 hemat (tanpa arp/perkusi halus), 2 sangat hemat (tanpa pad atas)
   const SC = { maj: [0, 2, 4, 5, 7, 9, 11], min: [0, 2, 3, 5, 7, 8, 10], dor: [0, 2, 3, 5, 7, 9, 10], mix: [0, 2, 4, 5, 7, 9, 10], phr: [0, 1, 4, 5, 7, 8, 10], pent: [0, 2, 4, 7, 9], minp: [0, 3, 5, 7, 10], slen: [0, 2, 5, 7, 9], pel: [0, 1, 3, 7, 8] };
   const CH = { maj: [0, 4, 7, 12], min: [0, 3, 7, 12], m7: [0, 3, 7, 10], maj7: [0, 4, 7, 11], dom7: [0, 4, 7, 10], sus4: [0, 5, 7, 12], sus2: [0, 2, 7, 12], add9: [0, 4, 7, 14], m9: [0, 3, 7, 14], dim: [0, 3, 6, 12], pw: [0, 7, 12, 19] };
   const STR = { X: 1, x: 0.65, o: 0.3 };
@@ -1550,7 +1671,7 @@ const Music = (() => {
     comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.008; comp.release.value = 0.22;
     master = ctx.createGain(); master.gain.value = muted ? 0 : 0.5; master.connect(comp); comp.connect(ctx.destination);
     duck = ctx.createGain(); duck.gain.value = 1; duck.connect(master);
-    const rev = ctx.createConvolver(); rev.buffer = impulse(1.8, 2.4); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
+    const rev = ctx.createConvolver(); rev.buffer = impulse(1.2, 2.2); const rg = ctx.createGain(); rg.gain.value = 0.34; revIn = ctx.createGain(); revIn.connect(rev); rev.connect(rg); rg.connect(duck);
     const dl = ctx.createDelay(1.5), fb = ctx.createGain(), dlf = ctx.createBiquadFilter(), dg = ctx.createGain(); dl.delayTime.value = 0.36; fb.gain.value = 0.38; dlf.type = 'lowpass'; dlf.frequency.value = 2600; dg.gain.value = 0.3; dlyIn = ctx.createGain();
     dlyIn.connect(dl); dl.connect(dlf); dlf.connect(fb); fb.connect(dl); dlf.connect(dg); dg.connect(duck); dg.connect(revIn);
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
@@ -1657,7 +1778,7 @@ const Music = (() => {
     const [off, ty] = th.ch[bp], rootM = th.root + off, tones = CH[ty], bus = st.bus, V = VOICE;
     const bd = st.sd * spb, tt = t + (si % 2 ? th.swing * st.sd : 0);
     if (si === 0) {
-      tones.slice(0, th.pw ? 4 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
+      tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
       if (th.gong && bp % 4 === 0) V.gong(t, pass ? 1 : 0.8, bus);
     }
     const gp = (s, i) => (s && i < s.length ? s[i] : '.');
@@ -1671,7 +1792,7 @@ const Music = (() => {
     }
     // arp
     const ac = gp(th.arp, si);
-    if (ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
+    if (lite < 1 && ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
     // drum
     const D = th.dr, hit = (k) => STR[gp(D[k], si)] ?? 0;
     if (!(bs === 0 && false)) {
@@ -1679,19 +1800,19 @@ const Music = (() => {
       if ((v = hit('k'))) V.kick(tt, v, bus);
       if ((v = hit('s'))) V.snare(tt, v, bus);
       if ((v = hit('c'))) V.clap(tt, v, bus);
-      if ((v = hit('h')) && (bs >= 1)) V.hat(tt, v * (pass ? 1 : 0.8), bus, false);
-      if ((v = hit('o'))) V.hat(tt, v, bus, true);
+      if ((v = hit('h')) && (bs >= 1) && (lite < 1 || si % 4 === 0)) V.hat(tt, v * (pass ? 1 : 0.8), bus, false);
+      if (lite < 1 && (v = hit('o'))) V.hat(tt, v, bus, true);
       if ((v = hit('d'))) V.dung(tt, v, bus);
       if ((v = hit('t'))) V.tak(tt, v, bus);
       if ((v = hit('w'))) V.wood(tt, v, bus);
-      if ((v = hit('p'))) V.shake(tt, v, bus);
+      if (lite < 1 && (v = hit('p'))) V.shake(tt, v, bus);
     }
     // melodi
     const e = st.ev[st.step % (song * spb)];
     if (e && (bs >= 2 || pass)) {
       const f = mtof(e.m), dur = e.len * st.sd * (th.lead === 'bell' || th.lead === 'pluck' ? 1.2 : 0.95);
       VOICE[LEADV[pass ? th.lead2 : th.lead]](tt, f, dur, pass ? 0.9 : 1, bus);
-      if (pass && th.lead !== th.lead2) VOICE[LEADV[th.lead]](tt, f * 2, dur, 0.35, bus);
+      if (lite < 1 && pass && th.lead !== th.lead2) VOICE[LEADV[th.lead]](tt, f * 2, dur, 0.35, bus);
     }
   }
   function sched(until) {
@@ -1702,7 +1823,7 @@ const Music = (() => {
   function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (ctx && !document.hidden) ctx.resume(); }); }
 
   /* ---------------- API ---------------- */
-  function ensure() { if (!ctx) { try { build(new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
+  function ensure() { if (!ctx) { try { build(window.__bootCtx || new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
   function play(name) {
     if (!ctx || ctx.state === 'suspended') { pending = name; return; } pending = null; if (cur && cur.name === name) return;
     const old = cur, nw = start(name); if (!nw) return;
@@ -1730,8 +1851,10 @@ const Music = (() => {
     const sr = 22050, oc = new OfflineAudioContext(2, sr * secs, sr), saved = ctx; build(oc); const th = TH[name]; cur = start(name); cur.bus.gain.value = 1; cur.nextT = 0; sched(secs);
     const buf = await oc.startRendering(); ctx = saved; cur = null; return buf;
   }
-  return { TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
+  return { set lite(v) { lite = v; }, get lite() { return lite; }, TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
 })();
+
+await __boot.step(10, 17);
 
 /* =====================================================================
    MANUSIA: pemain (cowok/cewek), Prof. Catherine, Dokter Klinik
@@ -1786,13 +1909,20 @@ const LOOK = {
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);
 
+await __boot.step(11, 17);
+
 const CITY = 'depok';
 /* =====================================================================
    DATA: tipe, jurus, spesies, makanan
    ===================================================================== */
-const TCOL = { Air: '#3b8fd6', Api: '#e8582a', Daun: '#4fae4f', Batu: '#9a8a70', Es: '#6cc4e0', Suara: '#b07ad8', Petarung: '#c85a3a', Cahaya: '#e0b020', Besi: '#8a95a6', Biasa: '#9a9a9a' };
-const BEATS = { Air: ['Api', 'Cahaya'], Api: ['Daun', 'Besi'], Daun: ['Batu', 'Air'], Batu: ['Es', 'Api'], Es: ['Suara', 'Daun'], Suara: ['Petarung', 'Batu'], Petarung: ['Cahaya', 'Es'], Cahaya: ['Besi', 'Suara'], Besi: ['Air', 'Petarung'] };
-const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[att].includes(def) ? 1.6 : BEATS[def].includes(att) ? 0.7 : 1;
+const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a' };
+/* 6 tipe: dua segitiga. Air>Api>Daun>Air · Suara>Batu>Bayangan>Suara · lintas segitiga netral */
+const BEATS = { Air: ['Api'], Api: ['Daun'], Daun: ['Air'], Suara: ['Batu'], Batu: ['Bayangan'], Bayangan: ['Suara'] };
+const tyOf = (e) => (e.type2 ? [e.type, e.type2] : [e.type]);
+const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : BEATS[a].includes(d) ? 1.6 : BEATS[d].includes(a) ? 0.7 : 1;
+/* def = Maimon (bisa tipe ganda): kalikan tiap tipe, batasi 0,5-2,0 */
+const typeMult = (att, def) => clamp(tyOf(def).reduce((m, t) => m * typeMult1(att, t), 1), 0.5, 2);
+const chips = (e) => tyOf(e).map((t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`).join('');
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
@@ -1801,7 +1931,7 @@ const MAI = {
   cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], spd: 50, type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
     ls: [[1,'Sundul','Biasa',40],[4,'Semprot Air','Air',55],[8,'Kuak Keras','Suara',55],[13,'Ombak Besar','Air',80]] },
   pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], spd: 70, type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
-    ls: [[1,'Patuk','Biasa',40],[4,'Kokok Api','Api',55],[8,'Cakar Jago','Petarung',55],[13,'Api Jago','Api',80]] },
+    ls: [[1,'Patuk','Biasa',40],[4,'Kokok Api','Api',55],[8,'Cakar Jago','Biasa',55],[13,'Api Jago','Api',80]] },
   kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], spd: 80, type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, ls: [[1,'Cakar','Biasa',40],[3,'Meong Keras','Suara',50],[8,'Loncat Lincah','Biasa',55],[13,'Mata Bersinar','Cahaya',60]] },
   tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], spd: 75, type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, ls: [[1,'Gigit','Biasa',40],[3,'Lempar Kerikil','Batu',50],[9,'Cicit Nyaring','Suara',55],[14,'Longsor Mini','Batu',75]] },
   dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], spd: 40, type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
@@ -1831,7 +1961,7 @@ function flash(ent, k) { ent.rig.root.traverse((m) => { if (m.isMesh && m.materi
 function mkMon(sp, st, x, z, lv = st === 2 ? 11 : 4, xp = 0) {
   const d = MAI[sp], rig = d.build(st); rig.off = R0() * 3; castAll(rig.root); world.add(rig.root);
   const hpMax = hpMaxOf(sp, st, lv);
-  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
+  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
 }
 function placeEnt(e, dt) {
   const k = e.pop < 0.5 ? 0.35 + 0.65 * easeOutBack(e.pop / 0.5) : 1;
@@ -1849,21 +1979,25 @@ const SPAWNS = [
   ['dombanyo', 1, 4.8, 9.2], ['dombanyo', 1, 6.4, 12.6], ['dombanyo', 1, -3.5, -9.5], ['dombanyo', 1, 11.8, 5.8],
 ];
 const isRare = (sp, st) => RARE_SP.includes(sp);
+/* ATURAN: Maimon liar tidak boleh mendekati NPC luar-ruang dalam radius NPC_SAFE petak */
+const NPC_SAFE = 5;
+const npcDist = (x, z) => { let d = 1e9, n0 = null; for (const n of npcs) { if (n.x > 20 && n.z > 20) continue; const q = Math.hypot(n.x - x, n.z - z); if (q < d) { d = q; n0 = n; } } return [d, n0]; };
+function pushFromNPC(x, z) { const [d, n] = npcDist(x, z); if (!n || d >= NPC_SAFE) return [x, z]; const k = d < 1e-3 ? 0 : 1 / d, ux = d < 1e-3 ? 1 : (x - n.x) * k, uz = d < 1e-3 ? 0 : (z - n.z) * k; return [n.x + ux * (NPC_SAFE + 0.4), n.z + uz * (NPC_SAFE + 0.4)]; }
 function trySpawn(sp, st, x, z) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z }); return null; } return spawnWild(sp, st, x, z); }
 function spawnWild(sp, st, hx, hz) {
-  const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
+  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
 }
 function updateWild(w, dt) {
   if (w.rare && (w.spark -= dt) < 0) { w.spark = 0.7; burst(w.x, 0.5 + R0() * 0.5, w.z, '#fff3a0', 3); }
   w.pop += dt; w.shake = Math.max(0, w.shake - dt); w.jump = Math.max(0, w.jump - dt);
   if (w.state === 'wander') {
     if (w.wait > 0) { w.wait -= dt; w.walk = false; }
-    else if (!w.tgt) { const a = R0() * 6.28, rr = R0() * w.rad; w.tgt = [w.hx + Math.cos(a) * rr, w.hz + Math.sin(a) * rr]; }
+    else if (!w.tgt) { const a = R0() * 6.28, rr = R0() * w.rad; w.tgt = pushFromNPC(w.hx + Math.cos(a) * rr, w.hz + Math.sin(a) * rr); }
     else {
       const dx = w.tgt[0] - w.x, dz = w.tgt[1] - w.z, d = Math.hypot(dx, dz);
       if (d < 0.2) { w.tgt = null; w.wait = 1 + R0() * 3; w.walk = false; }
       else { const sp = (w.sp === 'cebongi' ? 1.0 : 1.3) * dt, nx = w.x + dx / d * sp, nz = w.z + dz / d * sp;
-        if (blockedAt(nx, nz, 0.35)) { w.tgt = null; w.wait = 0.4; w.walk = false; } else { w.x = nx; w.z = nz; w.ang = lerpAng(w.ang, Math.atan2(dx, dz), Math.min(1, dt * 8)); w.walk = true; } }
+        if (blockedAt(nx, nz, 0.35) || (npcDist(nx, nz)[0] < NPC_SAFE && npcDist(nx, nz)[0] <= npcDist(w.x, w.z)[0] + 0.001)) { w.tgt = null; w.wait = 0.4; w.walk = false; } else { w.x = nx; w.z = nz; w.ang = lerpAng(w.ang, Math.atan2(dx, dz), Math.min(1, dt * 8)); w.walk = true; } }
     }
   } else if (w.state === 'face') { w.walk = false; w.ang = lerpAng(w.ang, Math.atan2(player.x - w.x, player.z - w.z), Math.min(1, dt * 8)); }
   placeEnt(w, dt); animRig(w.rig, T + w.rig.off, w.walk);
@@ -1880,7 +2014,7 @@ function enterPick() {
   $('pvig').style.display = 'block'; pickSel = null;
   yaw = 0.62; pitch = 0.6; camGoal.set(-5.2 + 1.0, 0.5, 10.4 + 1.5); camTarget.copy(camGoal); zoomGoal = zoom = 0.48;
   const cards = $('cards'); cards.innerHTML = '';
-  starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b><span class="chip" style="background:${TCOL[m.type]}">${m.type}</span><div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
+  starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b>${chips(m)}<div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
   $('go').textContent = 'Pilih satu dulu'; $('go').disabled = true; $('pick').style.display = 'flex'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
 }
 function updatePick(dt) {
@@ -1924,10 +2058,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
    ===================================================================== */
 const logEl = $('log'); let logT = 0;
 function say(msg, ms = 1100) { logEl.textContent = msg; logEl.style.opacity = 1; logT = ms / 1000; }
-const STAT = { burn: { tag: '🔥 Terbakar', em: '🔥', col: '#ff7a2a', dot: 0.08, msg: 'terbakar' }, poison: { tag: '☠️ Keracunan', em: '☠️', col: '#a35bd6', dot: 0.07, msg: 'keracunan' }, dizzy: { tag: '💫 Pusing', em: '💫', col: '#e0b020', dot: 0, msg: 'pusing' } }, STCHANCE = { Api: ['burn', 0.3, 4], Daun: ['poison', 0.3, 4], Suara: ['dizzy', 0.3, 2] };
+const STAT = { burn: { tag: '🔥 Terbakar', em: '🔥', col: '#ff7a2a', dot: 0.08, msg: 'terbakar' }, poison: { tag: '☠️ Keracunan', em: '☠️', col: '#a35bd6', dot: 0.07, msg: 'keracunan' }, dizzy: { tag: '💫 Pusing', em: '💫', col: '#e0b020', dot: 0, msg: 'pusing', fail: 0.4, fm: 'pusing' }, fear: { tag: '😨 Takut', em: '😨', col: '#7a6aa8', dot: 0, msg: 'takut', fail: 0.3, fm: 'ketakutan' } }, STCHANCE = { Api: ['burn', 0.3, 4], Daun: ['poison', 0.3, 4], Suara: ['dizzy', 0.3, 2], Bayangan: ['fear', 0.3, 3] };
 function statusFx(e) { if (!e.status || e.hp <= 0) return; const y = 0.45 + R0() * 0.5, ox = (R0() - 0.5) * 0.4; if (e.status === 'burn') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#ff7a2a' : '#ffd24a', 2); } else if (e.status === 'poison') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#a35bd6' : '#6bd36b', 2); } else { const a = T * 6; burst(e.x + Math.cos(a) * 0.35, 0.95, e.z + Math.sin(a) * 0.35, '#ffe14a', 1); } }
 setInterval(() => { if (typeof battle !== 'undefined' && battle) [battle.me, battle.w].forEach(statusFx); }, 260);
-function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small>${e.status ? ` <small class="stt ${e.status}">${STAT[e.status].tag}</small>` : ''}</span><span class="chip" style="background:${TCOL[e.type]}">${e.type}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
+function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small>${e.status ? ` <small class="stt ${e.status}">${STAT[e.status].tag}</small>` : ''}</span><span>${chips(e)}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
 let hidden = [];
 function clearArena(cx, cz, R) {
   treeMeshes.forEach((m) => { if (m.visible && Math.hypot(m.userData.x - cx, m.userData.z - cz) < R) { m.visible = false; hidden.push(m); burst(m.userData.x, 0.4, m.userData.z, '#8cc656', 4); } });
@@ -1945,7 +2079,7 @@ function bestBattleYaw(cx, cz) {
 function startBattle(w) {
   const me = mates[0]; if (!me) return;
   if (me.hp <= 0) me.hp = 1;
-  markDex(w.sp, 1); mode = 'battle'; Music.play(w.rare ? 'battleRare' : 'battle'); battle = { w, me, busy: false }; w.state = 'battle'; me.state = 'battle'; $('joy').style.display = 'none'; $('bubble').style.display = 'none';
+  markDex(w.sp, 1); camBack = null; camFocus = null; actZ = false; mode = 'battle'; Music.play(w.rare ? 'battleRare' : 'battle'); battle = { w, me, busy: false }; w.state = 'battle'; me.state = 'battle'; $('joy').style.display = 'none'; $('bubble').style.display = 'none';
   const by = bestBattleYaw(w.x, w.z); battle.yawG = by;
   const rx = Math.cos(by), rz = -Math.sin(by);
   let sgn = 1; const okSide = (s) => !blockedAt(w.x - rx * s * 2.0, w.z - rz * s * 2.0, 0.4);
@@ -1957,7 +2091,7 @@ function startBattle(w) {
   hpBar($('hpL'), me); hpBar($('hpR'), w); $('battle').style.display = 'block';
   buildMoveButtons(); say(w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
 }
-function effHint(mv, foe) { const m = typeMult(mv[2], foe.type); return m > 1 ? '⭐ ampuh' : m < 1 ? '💤 kurang' : ''; }
+function effHint(mv, foe) { const m = typeMult(mv[2], foe); return m > 1 ? '⭐ ampuh' : m < 1 ? '💤 kurang' : ''; }
 function curMoves(e) { return movesAt(e.sp, e.lv); }
 function buildMoveButtons() {
   const row = $('mvRow'); row.innerHTML = ''; const me = battle.me, kn = curMoves(me);
@@ -1966,7 +2100,7 @@ function buildMoveButtons() {
   $('flee').onclick = flee; setMovesEnabled(true);
 }
 function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); $('flee').style.pointerEvents = on ? 'auto' : 'none'; $('flee').style.opacity = on ? 1 : 0.5; }
-function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def.type), stab = mv[2] === att.type ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
+function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def), stab = tyOf(att).includes(mv[2]) ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
 /* ---------- animasi jurus (tiap jurus punya gerakan sendiri) ---------- */
 const fxList = [], fxMats = {}, cubeGeo = new THREE.BoxGeometry(1, 1, 1);
 const fxMat = (c) => fxMats[c] || (fxMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -2080,8 +2214,8 @@ async function round(i) {
   const a = calcDmg(me, mvA, w), b = calcDmg(w, mvB, me);
   const mkHit = (def, mv, r) => () => { burst(def.x, 0.45, def.z, TCOL[mv[2]], 14); def.hp -= r.dmg; def.shake = 0.4; flash(def, 0.7); floatText(`-${r.dmg}`, def.x, 1.1, def.z, '#d8452e'); hpBar($('hpL'), me); hpBar($('hpR'), w); setTimeout(() => flash(def, 0), 260); if (r.mult > 1) floatText('⭐', def.x, 1.6, def.z); const sc = STCHANCE[mv[2]]; if (sc && def.hp > 0 && !def.status && R0() < sc[1]) { def.status = sc[0]; def.stT = sc[2]; floatText(STAT[sc[0]].tag + '!', def.x, 1.9, def.z, STAT[sc[0]].col); burst(def.x, 0.6, def.z, STAT[sc[0]].col, 16); hpBar($('hpL'), me); hpBar($('hpR'), w); } };
   const sA = speedOf(me), sB = speedOf(w), meFirst = sA === sB ? R0() < 0.5 : sA > sB;
-  const doMe = async () => { if (me.status === 'dizzy' && R0() < 0.4) { say(`💫 ${me.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
-  const doFoe = async () => { if (w.status === 'dizzy' && R0() < 0.4) { say(`💫 ${w.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
+  const doMe = async () => { if (me.status && STAT[me.status].fail && R0() < STAT[me.status].fail) { say(`${STAT[me.status].em} ${me.name} ${STAT[me.status].fm}, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
+  const doFoe = async () => { if (w.status && STAT[w.status].fail && R0() < STAT[w.status].fail) { say(`${STAT[w.status].em} ${w.name} ${STAT[w.status].fm}, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
   say(`⚡ ${meFirst ? me.name : w.name} lebih cepat!`, 900); await sleep(650);
   if (meFirst) { await doMe(); await sleep(250); await doFoe(); } else { await doFoe(); await sleep(250); await doMe(); }
   for (const e of [me, w]) { if (!e.status || e.hp <= 0) continue; const st = STAT[e.status]; if (st.dot) { const d = Math.max(1, Math.round(e.hpMax * st.dot)); e.hp = e === me ? Math.max(1, e.hp - d) : e.hp - d; say(`${st.em} ${e.name} ${st.msg}! -${d}`, 1100); burst(e.x, 0.6, e.z, st.col, 14); floatText(`-${d}`, e.x, 1.3, e.z, st.col); flash(e, 0.5); setTimeout(() => flash(e, 0), 240); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(900); } if (--e.stT <= 0) { e.status = null; say(`${e.name} sudah pulih ✨`, 900); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(700); } }
@@ -2168,6 +2302,8 @@ function updateMates(dt) {
 }
 
 
+await __boot.step(12, 17);
+
 /* =====================================================================
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
    ===================================================================== */
@@ -2200,7 +2336,7 @@ function dialog(lines, done, focus) {
   mode = 'dialog'; dq = { lines, i: -1, done, txt: '', pos: 0 }; $('joy').style.display = 'none'; $('talk').style.display = 'none'; dlgEl.style.display = 'block'; nextLine();
 }
 function nextLine() {
-  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
+  dq.i++; if (dq.i >= dq.lines.length) { const d = dq.done; dq = null; dlgEl.style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 2.5); if (!creating) $('joy').style.display = ''; if (camFocus) { camBack = { yaw: camFocus.yaw0, zoom: 1 }; camFocus = null; } if (d) d(); return; }
   const [who, txt] = dq.lines[dq.i]; dq.who = who; $('dwho').textContent = who === '_' ? 'Narator' : nm(who); $('dwho').style.background = who === 'Prof. Catherine' ? '#1d8f8a' : who === 'Dokter Sari' ? '#d0406a' : who === 'Bu Wati' ? '#8a5a2a' : who === '_' ? '#241912' : '#3a5a9e';
   dq.txt = nm(txt); dq.pos = 0; $('dtxt').textContent = '';
 }
@@ -2249,6 +2385,11 @@ function updateObjective() {
   else if (hs && mode === 'play') spEl = $('dexb');
   spotEl.firstChild.textContent = spTxt; updateSpot(spEl);
   const o = $('obj'); o.style.display = mode === 'play' && txt ? 'block' : 'none'; o.innerHTML = `<small>TUJUAN</small>${txt}`; objTarget = mode === 'play' ? tgt : null;
+  if (o.style.display === 'block') { // jangan nabrak kotak lokasi/teman: turun di bawahnya kalau bertabrakan
+    o.style.top = ''; const r = o.getBoundingClientRect(); let ty = null;
+    [$('zone'), $('mates')].forEach((e) => { const q = e.getBoundingClientRect(); if (q.width && r.left < q.right + 4 && r.right > q.left - 4 && r.top < q.bottom + 4 && r.bottom > q.top - 4) ty = Math.max(ty || 0, q.bottom + 8); });
+    if (ty !== null) o.style.top = ty + 'px';
+  }
 }
 const spotEl = document.createElement('div'); spotEl.id = 'spot'; spotEl.className = 'ui'; spotEl.innerHTML = '<b>👆 Tap di sini!</b>'; document.body.appendChild(spotEl);
 function updateSpot(el) {
@@ -2265,7 +2406,7 @@ function updateMarker(dt) {
 }
 
 /* ---------- label gedung melayang (selalu terlihat walau tertutup pohon/atap) ---------- */
-const PLABELS = [{ x: -13.0, z: 10.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 9.75, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: 8.0, z: 1.6, y: 1.9, t: '👨‍🌾 Pak Tani · Kebun Warga', c: '#5a9a4a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
+const PLABELS = [{ x: -13.0, z: 7.15, y: 1.9, t: '🏥 Dokter Sari · Klinik', c: '#e0507a' }, { x: -8.2, z: 7.55, y: 1.9, t: '🔬 Lab Maimon UI (Prof. Catherine)', c: '#1d8f8a', out: 1 }, { x: 2.8, z: 3.8, y: 1.9, t: '👨‍🌾 Pak Tani · Kebun Warga', c: '#5a9a4a' }, { x: -11.9, z: 3.3, y: 1.9, t: '🏠 Bu Wati · Hotel Maimon', c: '#8a5a2a' }];
 PLABELS.forEach((l) => { const d = document.createElement('div'); d.className = 'plabel ui'; d.textContent = l.t; d.style.background = l.c; document.body.appendChild(d); l.el = d; });
 function updateLabels() {
   PLABELS.forEach((l) => { const dist = Math.hypot(player.x - l.x, player.z - l.z), on = mode === 'play' && dist < 9 && dist > 1.8; if (!on) { l.el.style.display = 'none'; return; } const [sx, sy] = toScreen(l.x, groundY(l.x, l.z) + l.y, l.z); if (sx < 80 || sx > innerWidth - 80 || sy < 110 || sy > innerHeight - 50) { l.el.style.display = 'none'; return; } l.el.style.display = 'block'; l.el.style.left = sx + 'px'; l.el.style.top = sy + 'px'; });
@@ -2345,11 +2486,11 @@ function renderHome() {
   stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st, r.lv || 5); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1] + ' Lv' + (r.lv || 5), r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z, q.lv || 5, q.xp || 0); m.hp = Math.min(q.hp, m.hpMax); m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
 }
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
-$('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; $('joy').style.display = ''; };
+$('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 2.5); $('joy').style.display = ''; };
 function restAtHotel() {
   mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; fadeTo(1); forceYaw(1.5);
   setTimeout(() => { mates.forEach((m) => { m.hp = m.hpMax; }); stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); renderChips(); Music.jingle('heal'); toast('Zzz… 😴 Kamu & Maimon tidur nyenyak', 2.6);
-    setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
+    setTimeout(() => { fadeTo(0); S.stage = 5; saveGame(); mode = 'play'; cooldown = Math.max(cooldown, T + 3); $('joy').style.display = ''; chapter('BAB 1 SELESAI', `Selamat pagi, ${S.name}! Semua Maimon segar kembali. Petualanganmu di Depok baru permulaan — kota berikutnya menanti…`, 'Lanjut jelajah Depok'); }, 2200); }, 600);
 }
 function talkTani() { pendingFocus = npcs.find((n) => n.id === 'tani'); dialog([['Pak Tani', gatherPermit ? 'Silakan petik lagi, Nak. Kebun ini buat warga sini!' : 'Selamat datang di kebun warga, Nak! Mau petik jagung atau sayur? Silakan, ambil secukupnya ya.']], () => { gatherPermit = true; }); }
 function talkHome() {
@@ -2452,9 +2593,11 @@ async function healScene() {
     fxClear(); m.hp = m.hpMax; m.jump = 0; burst(m.x, 0.6, m.z, '#8dffb0', 18); floatText('+HP ❤️', m.x, 1.3, m.z, '#2fae5a'); flashScreen(); Music.blip(880); renderChips(); await sleep(450);
   }
   stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame();
-  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; $('joy').style.display = '';
+  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; cooldown = Math.max(cooldown, T + 2); $('joy').style.display = '';
   dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }
+
+await __boot.step(13, 17);
 
 /* =====================================================================
    TAS + CARI MAKANAN: kebun warga (jagung/timun/wortel/kacang), kangkung di tepi danau, mancing ikan
@@ -2531,7 +2674,7 @@ async function gatherAt(s) {
     items.forEach((m, i) => { const kk = Math.min(1, Math.max(0, (k - 0.5 - i * 0.08) / 0.4)); m.visible = kk > 0 && kk < 1; const tx = player.x, tz = player.z; m.position.set(mix(base[0], tx, kk), base[1] + 0.3 + Math.sin(kk * Math.PI) * 1.1, mix(base[2], tz, kk)); m.rotation.y = kk * 8; });
   });
   fxClear(); root.rotation.x = 0; P.rotation.z = 0; addBag(s.food, n); const f = FOOD[s.food]; toast(`+${n} ${f[2]} ${f[1]}`, 1.6); floatText(`+${n} ${f[2]}`, player.x, 1.8, player.z, '#33241b'); Music.blip(660); setTimeout(() => Music.blip(880), 90); saveGame();
-  mode = 'play'; $('joy').style.display = '';
+  mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = '';
 }
 function updateGather(dt) {
   spots.forEach((s) => {
@@ -2553,7 +2696,7 @@ function startFish(s) {
   $('fishui').style.display = 'flex'; $('pullb').classList.remove('on'); $('fishmsg').textContent = 'Menunggu ikan menggigit… 🎣';
 }
 function endFish(ok) {
-  const f = fishSt; fishSt = null; world.remove(f.bob); world.remove(f.line); $('fishui').style.display = 'none'; mode = 'play'; $('joy').style.display = '';
+  const f = fishSt; fishSt = null; world.remove(f.bob); world.remove(f.line); $('fishui').style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = '';
   if (ok) { const n = 1 + (R0() < 0.3 ? 1 : 0); addBag('ikan', n); toast(`Dapat ${n} 🐟 Ikan!`, 2); burst(f.s.tx, 0.4, f.s.tz, '#bfe8ff', 18); Music.jingle('catch'); saveGame(); }
 }
 function updateFish(dt) {
@@ -2572,6 +2715,8 @@ $('pullb').onclick = () => {
   else if (f.t > 0.6) { toast('Sabar… tunggu ikannya menggigit 😄', 1.4); f.t = 0.6; f.wait = 1.4 + R0() * 2; }
 };
 $('fishx').onclick = () => { if (fishSt) endFish(false); };
+
+await __boot.step(14, 17);
 
 /* =====================================================================
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
@@ -2619,10 +2764,10 @@ function renderDex() {
   if (!dexSel) { D.innerHTML = '<div class="hint2">Belum ada data. Temukan Maimon di Depok!</div>'; return; }
   const sp = dexSel, d = MAI[sp], v = S.dex[sp] || 0, i = DEXLIST.indexOf(sp), col = TCOL[d.type];
   if (!v) { D.innerHTML = `<div class="plate" style="background:linear-gradient(150deg,#6b6b6b,#3a3a3a)"><div class="t"><small>No.${pad3(i + 1)}</small><b>???</b></div></div><div class="hint2">Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
-  const weak = Object.keys(BEATS).filter((t) => BEATS[t].includes(d.type)), strong = BEATS[d.type];
+  const dty = tyOf(d), weak = [...new Set(Object.keys(BEATS).filter((t) => dty.some((x) => BEATS[t].includes(x))))], strong = [...new Set(dty.flatMap((x) => BEATS[x]))];
   const rare = RARE_SP.includes(sp) ? '<span class="rareb">✨ LANGKA</span>' : '';
   const evo = d.n.length > 1 ? `<div class="evo">${d.n.join(' → ')}</div>` : '';
-  let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${chipT(d.type)}${rare}</div></div>`;
+  let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${dty.map(chipT).join('')}${rare}</div></div>`;
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
   if (v > 1) {
     h += `<div class="sec"><h4>CATATAN PENELITI</h4><div class="quote">${d.info.desc}</div></div>`;
@@ -2672,19 +2817,36 @@ function renderBag() {
 const SCR = { dex: renderDex, team: renderTeam, bag: renderBag };
 const closeMenuPop = () => { $('menu').style.display = 'none'; };
 function openScr(id) { if (S.stage === 1) S.tf[id === 'bag' ? 'bag' : 'menu'] = 1; closeMenuPop(); mode = 'menu'; $('joy').style.display = 'none'; SCR[id](); $(id).style.display = 'flex'; }
-function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; $('joy').style.display = ''; }
+function closeScr(id) { $(id).style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = ''; }
 $('dexb').onclick = () => {
-  if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; $('joy').style.display = ''; return; }
+  if (mode === 'menu' && $('menu').style.display === 'flex') { closeMenuPop(); mode = 'play'; cooldown = Math.max(cooldown, T + 1.5); $('joy').style.display = ''; return; }
   if (mode !== 'play') return; mode = 'menu'; $('joy').style.display = 'none'; $('menu').style.display = 'flex';
 };
 document.querySelectorAll('#menu button').forEach((b) => { b.onclick = () => openScr(b.dataset.s); });
 document.querySelectorAll('.scr [data-x]').forEach((b) => { b.onclick = () => closeScr(b.dataset.x); });
+
+await __boot.step(15, 17);
 /* =====================================================================
    LOOP UTAMA
    ===================================================================== */
+/* ---------- auto-hemat: kalau HP-nya berat, turunkan kualitas bertahap (sekali jalan, tidak balik naik) ---------- */
+let perfAvg = 0.016, perfLv = 0, perfNext = 6, shadowFlip = 0;
+const PERF_FORCE = +(new URLSearchParams(location.search).get('perf') || -1);
+function setPerf(l) {
+  perfLv = l;
+  if (l >= 1) { Music.lite = Math.min(2, l); sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } renderer.shadowMap.autoUpdate = false; }
+  if (l >= 2 && detail !== 'retro') { detail = 'retro'; resize(); }
+}
+function perfTick(raw) {
+  if (renderer.shadowMap.autoUpdate === false) { shadowFlip ^= 1; if (shadowFlip) renderer.shadowMap.needsUpdate = true; }
+  if (PERF_FORCE >= 0) { if (perfLv !== PERF_FORCE) setPerf(PERF_FORCE); return; }
+  if (mode === 'title' || document.hidden) return;
+  perfAvg += (Math.min(raw, 0.25) - perfAvg) * 0.04;
+  if (T > perfNext && perfAvg > 0.034 && perfLv < 2) { setPerf(perfLv + 1); perfNext = T + 6; perfAvg = 0.02; }
+}
 let actZ = false; const clk = new THREE.Clock(); let objT = 0;
 function frame() {
-  const dt = Math.min(clk.getDelta(), 0.05); T += dt;
+  const rawDt = clk.getDelta(), dt = Math.min(rawDt, 0.05); T += dt; perfTick(rawDt);
   // pemain
   if (mode === 'play') {
     let ix = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0) + joy.x;
@@ -2719,7 +2881,7 @@ function frame() {
   let near = null, nd = 1e9;
   if (mode === 'play') {
     wilds.forEach((w) => { const d = Math.hypot(w.x - player.x, w.z - player.z); if (d < nd) { nd = d; near = w; } });
-    if (near && nd < 2.2 && T > cooldown && mates[0] && S.stage !== 1) startBattle(near);
+    if (near && nd < 2.2 && T > cooldown && !camBack && !camFocus && !actZ && mates[0] && S.stage !== 1) startBattle(near);
   }
   const bub = $('bubble');
   if (mode === 'play' && near && nd < 6.5) { const [sx, sy] = toScreen(near.x, 1.1, near.z); bub.style.display = 'block'; bub.style.left = sx + 'px'; bub.style.top = sy + 'px'; bub.textContent = (near.rare ? '✨' : '') + FOOD[near.fav][2]; } else bub.style.display = 'none';
@@ -2743,7 +2905,7 @@ function frame() {
   { const af = mode === 'fish' && fishSt ? [fishSt.s.tx, fishSt.s.tz] : mode === 'gather' && gatherSpot ? [gatherSpot.x, gatherSpot.z] : null;
     if (af) { actZ = true; zoomGoal = 0.5; camGoal.set(player.x * 0.55 + af[0] * 0.45, 0.45, player.z * 0.55 + af[1] * 0.45); } else if (actZ && !camFocus) { actZ = false; zoomGoal = 1; } }
   if (camFocus) { const n = camFocus.n; yaw = lerpAng(yaw, camFocus.yawT, Math.min(1, dt * 3)); zoomGoal = 0.36; camGoal.set(n.x * 0.7 + player.x * 0.3, 0.75, n.z * 0.7 + player.z * 0.3); }
-  else if (camBack) { yaw = lerpAng(yaw, camBack.yaw, Math.min(1, dt * 3)); zoomGoal = camBack.zoom; if (Math.abs(Math.atan2(Math.sin(yaw - camBack.yaw), Math.cos(yaw - camBack.yaw))) < 0.03) camBack = null; }
+  else if (camBack) { if (camBack.t === undefined) camBack.t = T + 1.4; yaw = lerpAng(yaw, camBack.yaw, Math.min(1, dt * 3)); zoomGoal = camBack.zoom; if (T > camBack.t || Math.abs(Math.atan2(Math.sin(yaw - camBack.yaw), Math.cos(yaw - camBack.yaw))) < 0.03) camBack = null; }
 
   toastT -= dt; if (toastT < 0) toastEl.style.opacity = 0;
   logT -= dt; if (logT < 0 && mode !== 'battle') logEl.style.opacity = 0;
@@ -2757,14 +2919,24 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-{ const tp = freeSpot(8.0, 1.6, 0.3); addNPC('tani', 'Pak Tani', LOOK.tani, tp, Math.PI / 2 + 0.3); }
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
+addNPC('tani', 'Pak Tani', LOOK.tani, POI.tani, 0);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
-$('loading').style.display = 'none';
 enterTitle();
-window.__g = { vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+// ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
+const RULE = { road: 1.5, bld: 1.5 };
+function npcRule() {
+  return npcs.filter((n) => !(n.x > 20 && n.z > 20)).map((n) => {
+    const rd = Math.min(poly(C.margonda.pts, n.x, n.z).d - C.margonda.w / 2, poly(C.raya.pts, n.x, n.z).d - C.raya.w / 2);
+    const bd = Math.min(...rects.map((b) => Math.hypot(Math.max(b[0] - n.x, 0, n.x - b[1]), Math.max(b[2] - n.z, 0, n.z - b[3]))));
+    return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
+  });
+}
+window.__g = { npcRule, rects, get dbg() { const ri = renderer.info.render; return { calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
+if (__boot.tapped) Music.unlock();
+__boot.done();
 ['visibilitychange', 'pagehide'].forEach((ev) => addEventListener(ev, () => { if (mode !== 'title' && mode !== 'create' && player.rig) saveGame(); }));
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script></body></html>

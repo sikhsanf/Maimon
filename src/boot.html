@@ -1,0 +1,72 @@
+<div id="boot">
+  <div id="splash"><div class="sp"><small>PRESENTED BY</small><b>Learners<i>fam</i></b></div></div>
+  <div id="ld">
+    <div class="tt">MAIMON · EDISI JAWA</div>
+    <canvas id="dino" width="480" height="160"></canvas>
+    <div class="hint" id="ldhint">Ketuk layar untuk lompat! 🐥</div>
+    <div id="ldbar"><i></i></div>
+    <div id="ldtx">MENYIAPKAN MAIMON… 0%</div>
+    <button id="ldGo">▶ Ketuk untuk mulai 🔊</button>
+  </div>
+</div>
+<script>
+/* Splash Learnersfam + layar loading dengan mini game lompat. Ketukan pertama membuka audio (iOS/Chrome mensyaratkan sentuhan). */
+(() => {
+  const $ = (i) => document.getElementById(i), boot = $('boot');
+  const st = window.__boot; Object.assign(st, { ready: false, splashDone: false, step: 0, total: 1, score: 0 });
+  if (/[?&]noboot/.test(location.search)) { boot.remove(); st.noboot = true; st.step = async () => {}; st.done = () => {}; return; }
+  const unlockAudio = () => st.unlock();
+  /* --- splash --- */
+  const splash = $('splash');
+  const endSplash = () => { if (st.splashDone) return; st.splashDone = true; splash.classList.add('gone'); setTimeout(() => splash.remove(), 600); tryFinish(); };
+  setTimeout(endSplash, 2600);
+  splash.addEventListener('pointerdown', () => { unlockAudio(); endSplash(); });
+  /* --- progres --- */
+  const bar = $('ldbar').firstChild, tx = $('ldtx');
+  function setProg(p) { p = Math.min(100, Math.round(p)); bar.style.width = p + '%'; tx.textContent = (p >= 100 ? 'SIAP!' : 'MENYIAPKAN MAIMON… ' + p + '%'); }
+  st.step = (i, n) => { st.total = n; setProg(i / n * 100 * 0.98); return new Promise((r) => { let d = false; const f = () => { if (!d) { d = true; r(); } }; requestAnimationFrame(() => setTimeout(f, 0)); setTimeout(f, 90); }); };
+  st.done = () => { setProg(100); st.ready = true; tryFinish(); };
+  function finish() { if (finish.d) return; finish.d = true; boot.classList.add('out'); cancelAnimationFrame(raf); setTimeout(() => boot.remove(), 700); if (window.__bootAfter) window.__bootAfter(); }
+  function tryFinish() {
+    if (!st.ready || !st.splashDone) return;
+    if (st.tapped) { $('ldhint').textContent = 'Siap! ✨'; setTimeout(finish, 700); }
+    else { $('ldhint').textContent = 'Sudah siap! 🎉'; const b = $('ldGo'); b.style.display = 'block'; b.onclick = () => { unlockAudio(); finish(); }; }
+  }
+  /* --- mini game: Pioyo lompati batu, kumpulkan belimbing. Tidak ada game over (ramah anak). --- */
+  const cv = $('dino'), g = cv.getContext('2d'), W = 480, H = 160, GY = 128, U = 3;
+  const chick = ['..yyyy....', '.yyyyyy...', '.yyeyyyoo.', '.yyyyyy...', 'yyyyyyyy..', 'yyyyyyyy..', '.yyyyyy...', '..yyyy....'];
+  const col = { y: '#f6c63a', e: '#241912', o: '#e8742a' };
+  const P = { x: 56, y: GY - 8 * U - 6, vy: 0, on: true }, obs = [], stars = [], clouds = [{ x: 90, y: 22 }, { x: 300, y: 38 }, { x: 430, y: 16 }];
+  let speed = 170, sp = 1.1, spS = 0.6, hit = 0, last = performance.now(), dist = 0, raf = 0, bonk = 0;
+  const rects = (r) => r.forEach((a) => { g.fillStyle = a[0]; g.fillRect(a[1], a[2], a[3], a[4]); });
+  function jump() { unlockAudio(); if (P.on) { P.vy = -470; P.on = false; } }
+  cv.addEventListener('pointerdown', jump); $('ld').addEventListener('pointerdown', (e) => { if (e.target.id !== 'ldGo') jump(); });
+  addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); jump(); } });
+  function frame(now) {
+    const dt = Math.min(0.045, (now - last) / 1000); last = now; dist += speed * dt; speed = Math.min(300, 170 + dist / 40);
+    sp -= dt; spS -= dt;
+    if (sp <= 0) { const tall = Math.random() < 0.4; obs.push({ x: W + 10, w: tall ? 12 : 18, h: tall ? 30 : 18, tall }); sp = 0.95 + Math.random() * 1.0; }
+    if (spS <= 0) { stars.push({ x: W + 10, y: GY - 62 - Math.random() * 26 }); spS = 1.5 + Math.random() * 1.6; }
+    P.vy += 1500 * dt; P.y += P.vy * dt; const floor = GY - 8 * U - 2; if (P.y >= floor) { P.y = floor; P.vy = 0; P.on = true; }
+    obs.forEach((o) => o.x -= speed * dt); stars.forEach((s) => s.x -= speed * dt); clouds.forEach((c) => { c.x -= 20 * dt; if (c.x < -40) c.x = W + 30; });
+    hit = Math.max(0, hit - dt); bonk = Math.max(0, bonk - dt);
+    const px0 = P.x + 4, px1 = P.x + 10 * U - 6, py0 = P.y + 4, py1 = P.y + 8 * U;
+    for (let i = obs.length - 1; i >= 0; i--) { const o = obs[i]; if (o.x < -30) { obs.splice(i, 1); continue; } if (!hit && px1 > o.x + 2 && px0 < o.x + o.w - 2 && py1 > GY - o.h + 2) { hit = 1; bonk = 0.8; obs.splice(i, 1); } }
+    for (let i = stars.length - 1; i >= 0; i--) { const s = stars[i]; if (s.x < -20) { stars.splice(i, 1); continue; } if (px1 > s.x && px0 < s.x + 14 && py1 > s.y && py0 < s.y + 14) { stars.splice(i, 1); st.score++; } }
+    /* gambar */
+    g.fillStyle = '#f8f1dc'; g.fillRect(0, 0, W, H);
+    clouds.forEach((c) => rects([['#fff', c.x, c.y, 34, 8], ['#fff', c.x + 8, c.y - 6, 18, 8]]));
+    g.fillStyle = '#7a6b4d'; g.fillRect(0, GY, W, 3); g.fillStyle = '#b9a77a'; for (let x = -((dist | 0) % 40); x < W; x += 40) g.fillRect(x, GY + 10, 14, 2), g.fillRect(x + 22, GY + 20, 8, 2);
+    obs.forEach((o) => rects([['#241912', o.x - 1, GY - o.h - 1, o.w + 2, o.h + 1], [o.tall ? '#8a5a2b' : '#9a9a9a', o.x, GY - o.h, o.w, o.h], [o.tall ? '#b57a3d' : '#c8c8c8', o.x + 2, GY - o.h + 2, o.w - 6, 3]]));
+    stars.forEach((s) => rects([['#241912', s.x - 1, s.y - 1, 16, 16], ['#f6c63a', s.x, s.y, 14, 14], ['#fff3b0', s.x + 3, s.y + 3, 5, 5]]));
+    if (!(hit && ((now / 90) | 0) % 2)) {
+      const wob = P.on ? ((now / 110) | 0) % 2 : 0;
+      chick.forEach((row, ry) => [...row].forEach((c, rx) => { if (c !== '.') { g.fillStyle = col[c] || '#f6c63a'; g.fillRect(P.x + rx * U, P.y + ry * U, U, U); } }));
+      g.fillStyle = col.o; g.fillRect(P.x + 6, P.y + 8 * U, U, 5 - wob * 3 + (P.on ? 0 : 3)); g.fillRect(P.x + 15, P.y + 8 * U, U, 5 - (1 - wob) * 3 + (P.on ? 0 : 3));
+    }
+    g.fillStyle = '#241912'; g.font = '14px monospace'; g.fillText('⭐ ' + st.score, 10, 20); if (bonk > 0) g.fillText('aduh!', P.x + 4, P.y - 6);
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+})();
+</script>

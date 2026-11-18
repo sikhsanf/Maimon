@@ -2,7 +2,7 @@
    INTERIOR LAB MAIMON UI — ruangan di luar peta, dimasuki lewat pintu Lab di Depok Lama
    ===================================================================== */
 const LAB = { x0: 28, z0: 28, W: 8, D: 6 };
-const LABDOOR = { x: -8.2, z: 9.75 }, LABEXIT = { x: LAB.x0 + 4, z: LAB.z0 + 0.8 }, LABSPAWN = { x: LAB.x0 + 4, z: LAB.z0 + 1.7 };
+const LABDOOR = { x: -8.2, z: 7.55 }, LABEXIT = { x: LAB.x0 + 4, z: LAB.z0 + 0.8 }, LABSPAWN = { x: LAB.x0 + 4, z: LAB.z0 + 1.7 };
 function labCanvasTex(w, h, fn) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); return toTex(c); }
 function buildLabInterior() {
   const g = new THREE.Group(); world.add(g); const X = LAB.x0, Z = LAB.z0, W = LAB.W, D = LAB.D, T = (c) => toon(c);
@@ -59,9 +59,9 @@ function goLab(into, after) {
   setTimeout(() => {
     inside = into;
     if (into) { player.x = LABSPAWN.x; player.z = LABSPAWN.z; player.ang = 0; zoomGoal = 0.78; yaw = 0.62; }
-    else { player.x = LABDOOR.x; player.z = LABDOOR.z + 1.5; player.ang = Math.PI; zoomGoal = 1; }
+    else { player.x = LABDOOR.x; player.z = LABDOOR.z - 0.9; player.ang = 0; zoomGoal = 1; }
     trail.length = 0; mates.forEach((m, i) => { m.x = player.x + 0.6 * (i + 1); m.z = player.z - 0.2; });
-    camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal); zoom = zoomGoal; doorCool = T + 1.6; fadeTo(0); mode = 'play'; $('joy').style.display = '';
+    camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal); zoom = zoomGoal; doorCool = T + 1.6; cooldown = Math.max(cooldown, T + 2); fadeTo(0); mode = 'play'; $('joy').style.display = '';
     if (after) after();
   }, 450);
 }

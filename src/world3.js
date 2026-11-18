@@ -91,7 +91,7 @@ function colonial(x, z, ry, i, o = {}) {
   return g;
 }
 
-const POI = { lab: [-8.2, 9.75], clinic: [-13.0, 10.2], prof: [LAB_PROF[0], LAB_PROF[1]], nurse: [-13.0, 10.15], home: [-11.9, 3.3] };
+const POI = { lab: [-8.2, 7.55], clinic: [-13.0, 7.15], prof: [LAB_PROF[0], LAB_PROF[1]], nurse: [-13.0, 7.15], home: [-11.9, 3.3], tani: [2.8, 3.8] };
 function buildBuildings() {
   // MARGO CITY (mal): fasad kaca + dinding merah muda, menghadap Margonda
   { const g = bldg(4.5, -6.95, 5.1, 4.6, 2.0, { flat: true, ry: -Math.PI / 2, wall: '#f2d6dc', frame: '#ffffff', wins: [0.5, 1.15, 1.8, 3.3, 4.0, 4.6].map((cx) => [cx, 0.62, 9, 9]), door: '#7fd3e8', doorX: 2.55, seed: 3 });
@@ -115,7 +115,9 @@ function buildBuildings() {
     rects.pop(); rects.pop();
   }
   // DEPOK LAMA: rumah kolonial putih berpilar
-  colonial(-13.0, 8.4, 0, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-8.2, 8.4, 0, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-10.6, 12.9, Math.PI, 3);
+  colonial(-13.0, 8.9, Math.PI, 0, { board: [-1.5, 1.95], sign: ['KLINIK MAIMON', '#e0507a', 'heart'], b: { roof: '#e0507a', door: '#e0507a', shutter: '#f08aa8' } }); colonial(-8.2, 8.9, Math.PI, 1, { sign: ['LAB MAIMON UI', '#1d8f8a', 'flask'], b: { roof: '#2a8f8a', door: '#1d6f8a', shutter: '#2a8f8a' } }); colonial(-10.6, 12.9, Math.PI, 3);
+  // PONDOK PAK TANI: di tepi Jl. Raya, pintu menghadap jalan
+  bldg(2.8, 2.9, 1.3, 1.0, 0.8, { ry: 0, wall: '#d9b878', roof: '#8a5a2a', door: '#6a4a2a', doorX: 0.65, rh: 0.5, wins: [[0.25, 0.3, 5, 6]], seed: 11 });
   // KAMPUNG barat (menghadap Jl. Raya)
   [-16.2, -13.4, -7.8, -5.0].forEach((x, i) => { const hg = house(x, 2.7, 0, i + 1); if (i === 1) addRoofSign(hg, ['HOTEL MAIMON', '#8a5a2a', 'heart'], 1.15 * 1.3, 0.7); });
   // KAMPUNG timur (menghadap gang)

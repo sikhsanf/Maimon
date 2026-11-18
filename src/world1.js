@@ -22,7 +22,7 @@ const C = {
   paths: [{ pts: [[-2.8, -2.5], [-6, -3], [-10.5, -3.0]], w: 0.9 }, { pts: [[-10.5, -3.0], [-13, -5], [-12.5, -8.5], [-9, -9.6], [-5.8, -8], [-6, -4.5], [-8, -3.5]], w: 0.8 }],
   forest: [-17.5, -3.6, -13.5, 0.6], plaza: [-10.5, -3.0, 3.6, 2.0],
   mall: [2.2, 6.8, -9.5, -1.6], station: [9.3, 13.8, -9.8, -4.4], platform: [9.3, 10.7, -9, -4.8],
-  lama: [-17.5, -7.5, 7.2, 13.5], orchard: [2.2, 7.4, 7.4, 13.5], kamW: [-17.5, -3.6, 0.8, 3.9], kamE: [10, 13.6, 7.4, 13.5],
+  lama: [-17.5, -7.5, 6.2, 13.5], orchard: [2.2, 7.4, 7.4, 13.5], kamW: [-17.5, -3.6, 0.8, 3.9], kamE: [10, 13.6, 7.4, 13.5],
   dais: [-5, 10.4, 1.9, 1.9], garden: [3.2, 7.8, -0.8, 3.4],
 };
 
@@ -52,7 +52,7 @@ function kindAt(x, z) {
   if (inRect(C.station, x, z)) return 'stationfloor';
   if (inRect(C.garden, x, z)) return 'garden';
   if (inEll(C.dais, x, z)) return 'dais';
-  if (inRect(C.lama, x, z)) return (Math.abs(z - 10.2) < 0.4 || Math.abs(x + 12.5) < 0.4) ? 'brick' : 'lawn';
+  if (inRect(C.lama, x, z)) return Math.abs(z - 6.5) < 0.35 ? 'brick' : 'lawn';
   if (inRect(C.orchard, x, z)) return 'orchard';
   if (inRect(C.kamE, x, z) && Math.abs(x - 11.9) < 0.3) return 'lane';
   if (inRect(C.forest, x, z)) return 'forest';

@@ -3,9 +3,14 @@ const CITY = 'depok';
 /* =====================================================================
    DATA: tipe, jurus, spesies, makanan
    ===================================================================== */
-const TCOL = { Air: '#3b8fd6', Api: '#e8582a', Daun: '#4fae4f', Batu: '#9a8a70', Es: '#6cc4e0', Suara: '#b07ad8', Petarung: '#c85a3a', Cahaya: '#e0b020', Besi: '#8a95a6', Biasa: '#9a9a9a' };
-const BEATS = { Air: ['Api', 'Cahaya'], Api: ['Daun', 'Besi'], Daun: ['Batu', 'Air'], Batu: ['Es', 'Api'], Es: ['Suara', 'Daun'], Suara: ['Petarung', 'Batu'], Petarung: ['Cahaya', 'Es'], Cahaya: ['Besi', 'Suara'], Besi: ['Air', 'Petarung'] };
-const typeMult = (att, def) => att === 'Biasa' || def === 'Biasa' ? 1 : BEATS[att].includes(def) ? 1.6 : BEATS[def].includes(att) ? 0.7 : 1;
+const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a' };
+/* 6 tipe: dua segitiga. Air>Api>Daun>Air · Suara>Batu>Bayangan>Suara · lintas segitiga netral */
+const BEATS = { Air: ['Api'], Api: ['Daun'], Daun: ['Air'], Suara: ['Batu'], Batu: ['Bayangan'], Bayangan: ['Suara'] };
+const tyOf = (e) => (e.type2 ? [e.type, e.type2] : [e.type]);
+const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : BEATS[a].includes(d) ? 1.6 : BEATS[d].includes(a) ? 0.7 : 1;
+/* def = Maimon (bisa tipe ganda): kalikan tiap tipe, batasi 0,5-2,0 */
+const typeMult = (att, def) => clamp(tyOf(def).reduce((m, t) => m * typeMult1(att, t), 1), 0.5, 2);
+const chips = (e) => tyOf(e).map((t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`).join('');
 const FOODS = [['timun', 'Timun', '🥒'], ['kangkung', 'Kangkung', '🥬'], ['jagung', 'Jagung', '🌽'], ['ikan', 'Ikan', '🐟'], ['kacang', 'Kacang', '🥜'], ['wortel', 'Wortel', '🥕']];
 const FOOD = Object.fromEntries(FOODS.map((f) => [f[0], f]));
 const MAI = {
@@ -14,7 +19,7 @@ const MAI = {
   cebongi: { info: { cat: 'Maimon Kecebong', desc: 'Kecebong ceria yang tinggal dekat Kali Ciliwung. Ia suka menyemprotkan air untuk menyapa teman.', hab: 'Tepi kali & danau UI', ht: '0,3 m', wt: '2 kg', emo: '🐸' }, n: ['Cebongi', 'Kodi'], spd: 50, type: 'Air', fav: 'kangkung', hp: [46, 74], animal: 'kecebong', build: (st) => buildCebongi(st), s: 0.66,
     ls: [[1,'Sundul','Biasa',40],[4,'Semprot Air','Air',55],[8,'Kuak Keras','Suara',55],[13,'Ombak Besar','Air',80]] },
   pioyo: { info: { cat: 'Maimon Anak Ayam', desc: 'Anak ayam pemberani. Kokoknya yang nyaring membangunkan seisi kampung di pagi hari.', hab: 'Kampung & Depok Lama', ht: '0,3 m', wt: '1 kg', emo: '🐥' }, n: ['Pioyo', 'Petokar'], spd: 70, type: 'Api', fav: 'jagung', hp: [46, 74], animal: 'anak ayam', build: (st) => buildPioyo(st), s: 0.66,
-    ls: [[1,'Patuk','Biasa',40],[4,'Kokok Api','Api',55],[8,'Cakar Jago','Petarung',55],[13,'Api Jago','Api',80]] },
+    ls: [[1,'Patuk','Biasa',40],[4,'Kokok Api','Api',55],[8,'Cakar Jago','Biasa',55],[13,'Api Jago','Api',80]] },
   kucingko: { info: { cat: 'Maimon Kucing', desc: 'Kucing santai yang suka berjemur di pinggir jalan. Meongnya keras sekali kalau sedang lapar.', hab: 'Pinggir Margonda', ht: '0,4 m', wt: '3 kg', emo: '🐱' }, n: ['Kucingko'], spd: 80, type: 'Suara', fav: 'ikan', hp: [34], animal: 'kucing', build: () => buildQuad(SPEC.kucingko), s: 0.66, ls: [[1,'Cakar','Biasa',40],[3,'Meong Keras','Suara',50],[8,'Loncat Lincah','Biasa',55],[13,'Mata Bersinar','Cahaya',60]] },
   tikusil: { info: { cat: 'Maimon Tikus', desc: 'Tikus mungil yang pandai menyembunyikan kacang. Giginya kuat mengerat batu kecil.', hab: 'Dekat Stasiun Depok Baru', ht: '0,2 m', wt: '1 kg', emo: '🐭' }, n: ['Tikusil'], spd: 75, type: 'Batu', fav: 'kacang', hp: [30], animal: 'tikus', build: () => buildQuad(SPEC.tikusil), s: 0.66, ls: [[1,'Gigit','Biasa',40],[3,'Lempar Kerikil','Batu',50],[9,'Cicit Nyaring','Suara',55],[14,'Longsor Mini','Batu',75]] },
   dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], spd: 40, type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
@@ -44,7 +49,7 @@ function flash(ent, k) { ent.rig.root.traverse((m) => { if (m.isMesh && m.materi
 function mkMon(sp, st, x, z, lv = st === 2 ? 11 : 4, xp = 0) {
   const d = MAI[sp], rig = d.build(st); rig.off = R0() * 3; castAll(rig.root); world.add(rig.root);
   const hpMax = hpMaxOf(sp, st, lv);
-  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
+  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
 }
 function placeEnt(e, dt) {
   const k = e.pop < 0.5 ? 0.35 + 0.65 * easeOutBack(e.pop / 0.5) : 1;
@@ -62,21 +67,25 @@ const SPAWNS = [
   ['dombanyo', 1, 4.8, 9.2], ['dombanyo', 1, 6.4, 12.6], ['dombanyo', 1, -3.5, -9.5], ['dombanyo', 1, 11.8, 5.8],
 ];
 const isRare = (sp, st) => RARE_SP.includes(sp);
+/* ATURAN: Maimon liar tidak boleh mendekati NPC luar-ruang dalam radius NPC_SAFE petak */
+const NPC_SAFE = 5;
+const npcDist = (x, z) => { let d = 1e9, n0 = null; for (const n of npcs) { if (n.x > 20 && n.z > 20) continue; const q = Math.hypot(n.x - x, n.z - z); if (q < d) { d = q; n0 = n; } } return [d, n0]; };
+function pushFromNPC(x, z) { const [d, n] = npcDist(x, z); if (!n || d >= NPC_SAFE) return [x, z]; const k = d < 1e-3 ? 0 : 1 / d, ux = d < 1e-3 ? 1 : (x - n.x) * k, uz = d < 1e-3 ? 0 : (z - n.z) * k; return [n.x + ux * (NPC_SAFE + 0.4), n.z + uz * (NPC_SAFE + 0.4)]; }
 function trySpawn(sp, st, x, z) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z }); return null; } return spawnWild(sp, st, x, z); }
 function spawnWild(sp, st, hx, hz) {
-  const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
+  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
 }
 function updateWild(w, dt) {
   if (w.rare && (w.spark -= dt) < 0) { w.spark = 0.7; burst(w.x, 0.5 + R0() * 0.5, w.z, '#fff3a0', 3); }
   w.pop += dt; w.shake = Math.max(0, w.shake - dt); w.jump = Math.max(0, w.jump - dt);
   if (w.state === 'wander') {
     if (w.wait > 0) { w.wait -= dt; w.walk = false; }
-    else if (!w.tgt) { const a = R0() * 6.28, rr = R0() * w.rad; w.tgt = [w.hx + Math.cos(a) * rr, w.hz + Math.sin(a) * rr]; }
+    else if (!w.tgt) { const a = R0() * 6.28, rr = R0() * w.rad; w.tgt = pushFromNPC(w.hx + Math.cos(a) * rr, w.hz + Math.sin(a) * rr); }
     else {
       const dx = w.tgt[0] - w.x, dz = w.tgt[1] - w.z, d = Math.hypot(dx, dz);
       if (d < 0.2) { w.tgt = null; w.wait = 1 + R0() * 3; w.walk = false; }
       else { const sp = (w.sp === 'cebongi' ? 1.0 : 1.3) * dt, nx = w.x + dx / d * sp, nz = w.z + dz / d * sp;
-        if (blockedAt(nx, nz, 0.35)) { w.tgt = null; w.wait = 0.4; w.walk = false; } else { w.x = nx; w.z = nz; w.ang = lerpAng(w.ang, Math.atan2(dx, dz), Math.min(1, dt * 8)); w.walk = true; } }
+        if (blockedAt(nx, nz, 0.35) || (npcDist(nx, nz)[0] < NPC_SAFE && npcDist(nx, nz)[0] <= npcDist(w.x, w.z)[0] + 0.001)) { w.tgt = null; w.wait = 0.4; w.walk = false; } else { w.x = nx; w.z = nz; w.ang = lerpAng(w.ang, Math.atan2(dx, dz), Math.min(1, dt * 8)); w.walk = true; } }
     }
   } else if (w.state === 'face') { w.walk = false; w.ang = lerpAng(w.ang, Math.atan2(player.x - w.x, player.z - w.z), Math.min(1, dt * 8)); }
   placeEnt(w, dt); animRig(w.rig, T + w.rig.off, w.walk);
@@ -93,7 +102,7 @@ function enterPick() {
   $('pvig').style.display = 'block'; pickSel = null;
   yaw = 0.62; pitch = 0.6; camGoal.set(-5.2 + 1.0, 0.5, 10.4 + 1.5); camTarget.copy(camGoal); zoomGoal = zoom = 0.48;
   const cards = $('cards'); cards.innerHTML = '';
-  starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b><span class="chip" style="background:${TCOL[m.type]}">${m.type}</span><div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
+  starters.forEach((m, i) => { const b = document.createElement('div'); b.className = 'card panel'; b.innerHTML = `<b>${m.name}</b>${chips(m)}<div class="fav">suka ${FOOD[m.fav][2]} ${FOOD[m.fav][1]}</div>`; b.onclick = () => selectStarter(i); cards.appendChild(b); });
   $('go').textContent = 'Pilih satu dulu'; $('go').disabled = true; $('pick').style.display = 'flex'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none';
 }
 function updatePick(dt) {
@@ -137,10 +146,10 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
    ===================================================================== */
 const logEl = $('log'); let logT = 0;
 function say(msg, ms = 1100) { logEl.textContent = msg; logEl.style.opacity = 1; logT = ms / 1000; }
-const STAT = { burn: { tag: '🔥 Terbakar', em: '🔥', col: '#ff7a2a', dot: 0.08, msg: 'terbakar' }, poison: { tag: '☠️ Keracunan', em: '☠️', col: '#a35bd6', dot: 0.07, msg: 'keracunan' }, dizzy: { tag: '💫 Pusing', em: '💫', col: '#e0b020', dot: 0, msg: 'pusing' } }, STCHANCE = { Api: ['burn', 0.3, 4], Daun: ['poison', 0.3, 4], Suara: ['dizzy', 0.3, 2] };
+const STAT = { burn: { tag: '🔥 Terbakar', em: '🔥', col: '#ff7a2a', dot: 0.08, msg: 'terbakar' }, poison: { tag: '☠️ Keracunan', em: '☠️', col: '#a35bd6', dot: 0.07, msg: 'keracunan' }, dizzy: { tag: '💫 Pusing', em: '💫', col: '#e0b020', dot: 0, msg: 'pusing', fail: 0.4, fm: 'pusing' }, fear: { tag: '😨 Takut', em: '😨', col: '#7a6aa8', dot: 0, msg: 'takut', fail: 0.3, fm: 'ketakutan' } }, STCHANCE = { Api: ['burn', 0.3, 4], Daun: ['poison', 0.3, 4], Suara: ['dizzy', 0.3, 2], Bayangan: ['fear', 0.3, 3] };
 function statusFx(e) { if (!e.status || e.hp <= 0) return; const y = 0.45 + R0() * 0.5, ox = (R0() - 0.5) * 0.4; if (e.status === 'burn') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#ff7a2a' : '#ffd24a', 2); } else if (e.status === 'poison') { burst(e.x + ox, y, e.z, R0() < 0.5 ? '#a35bd6' : '#6bd36b', 2); } else { const a = T * 6; burst(e.x + Math.cos(a) * 0.35, 0.95, e.z + Math.sin(a) * 0.35, '#ffe14a', 1); } }
 setInterval(() => { if (typeof battle !== 'undefined' && battle) [battle.me, battle.w].forEach(statusFx); }, 260);
-function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small>${e.status ? ` <small class="stt ${e.status}">${STAT[e.status].tag}</small>` : ''}</span><span class="chip" style="background:${TCOL[e.type]}">${e.type}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
+function hpBar(box, e) { const p = Math.max(0, e.hp) / e.hpMax; box.innerHTML = `<div class="n"><span>${e.name} <small class="l2">Lv${e.lv}</small>${e.status ? ` <small class="stt ${e.status}">${STAT[e.status].tag}</small>` : ''}</span><span>${chips(e)}</span></div><div class="bar"><i class="${p < 0.25 ? 'low' : p < 0.55 ? 'mid' : ''}" style="width:${Math.round(p * 100)}%"></i></div><span class="lv">${Math.max(0, Math.ceil(e.hp))} / ${e.hpMax}</span>`; }
 let hidden = [];
 function clearArena(cx, cz, R) {
   treeMeshes.forEach((m) => { if (m.visible && Math.hypot(m.userData.x - cx, m.userData.z - cz) < R) { m.visible = false; hidden.push(m); burst(m.userData.x, 0.4, m.userData.z, '#8cc656', 4); } });
@@ -158,7 +167,7 @@ function bestBattleYaw(cx, cz) {
 function startBattle(w) {
   const me = mates[0]; if (!me) return;
   if (me.hp <= 0) me.hp = 1;
-  markDex(w.sp, 1); mode = 'battle'; Music.play(w.rare ? 'battleRare' : 'battle'); battle = { w, me, busy: false }; w.state = 'battle'; me.state = 'battle'; $('joy').style.display = 'none'; $('bubble').style.display = 'none';
+  markDex(w.sp, 1); camBack = null; camFocus = null; actZ = false; mode = 'battle'; Music.play(w.rare ? 'battleRare' : 'battle'); battle = { w, me, busy: false }; w.state = 'battle'; me.state = 'battle'; $('joy').style.display = 'none'; $('bubble').style.display = 'none';
   const by = bestBattleYaw(w.x, w.z); battle.yawG = by;
   const rx = Math.cos(by), rz = -Math.sin(by);
   let sgn = 1; const okSide = (s) => !blockedAt(w.x - rx * s * 2.0, w.z - rz * s * 2.0, 0.4);
@@ -170,7 +179,7 @@ function startBattle(w) {
   hpBar($('hpL'), me); hpBar($('hpR'), w); $('battle').style.display = 'block';
   buildMoveButtons(); say(w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
 }
-function effHint(mv, foe) { const m = typeMult(mv[2], foe.type); return m > 1 ? '⭐ ampuh' : m < 1 ? '💤 kurang' : ''; }
+function effHint(mv, foe) { const m = typeMult(mv[2], foe); return m > 1 ? '⭐ ampuh' : m < 1 ? '💤 kurang' : ''; }
 function curMoves(e) { return movesAt(e.sp, e.lv); }
 function buildMoveButtons() {
   const row = $('mvRow'); row.innerHTML = ''; const me = battle.me, kn = curMoves(me);
@@ -179,7 +188,7 @@ function buildMoveButtons() {
   $('flee').onclick = flee; setMovesEnabled(true);
 }
 function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); $('flee').style.pointerEvents = on ? 'auto' : 'none'; $('flee').style.opacity = on ? 1 : 0.5; }
-function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def.type), stab = mv[2] === att.type ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
+function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def), stab = tyOf(att).includes(mv[2]) ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
 /* ---------- animasi jurus (tiap jurus punya gerakan sendiri) ---------- */
 const fxList = [], fxMats = {}, cubeGeo = new THREE.BoxGeometry(1, 1, 1);
 const fxMat = (c) => fxMats[c] || (fxMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -293,8 +302,8 @@ async function round(i) {
   const a = calcDmg(me, mvA, w), b = calcDmg(w, mvB, me);
   const mkHit = (def, mv, r) => () => { burst(def.x, 0.45, def.z, TCOL[mv[2]], 14); def.hp -= r.dmg; def.shake = 0.4; flash(def, 0.7); floatText(`-${r.dmg}`, def.x, 1.1, def.z, '#d8452e'); hpBar($('hpL'), me); hpBar($('hpR'), w); setTimeout(() => flash(def, 0), 260); if (r.mult > 1) floatText('⭐', def.x, 1.6, def.z); const sc = STCHANCE[mv[2]]; if (sc && def.hp > 0 && !def.status && R0() < sc[1]) { def.status = sc[0]; def.stT = sc[2]; floatText(STAT[sc[0]].tag + '!', def.x, 1.9, def.z, STAT[sc[0]].col); burst(def.x, 0.6, def.z, STAT[sc[0]].col, 16); hpBar($('hpL'), me); hpBar($('hpR'), w); } };
   const sA = speedOf(me), sB = speedOf(w), meFirst = sA === sB ? R0() < 0.5 : sA > sB;
-  const doMe = async () => { if (me.status === 'dizzy' && R0() < 0.4) { say(`💫 ${me.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
-  const doFoe = async () => { if (w.status === 'dizzy' && R0() < 0.4) { say(`💫 ${w.name} pusing, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
+  const doMe = async () => { if (me.status && STAT[me.status].fail && R0() < STAT[me.status].fail) { say(`${STAT[me.status].em} ${me.name} ${STAT[me.status].fm}, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${me.name} pakai ${mvA[1]}!`, 1300); await sleep(220); await runFx(me, w, mvA, mkHit(w, mvA, a)); fxClear(); if (a.mult > 1) say('Ampuh banget! ⭐', 700); else if (a.mult < 1) say('Kurang ampuh… 💤', 700); };
+  const doFoe = async () => { if (w.status && STAT[w.status].fail && R0() < STAT[w.status].fail) { say(`${STAT[w.status].em} ${w.name} ${STAT[w.status].fm}, gagal menyerang!`, 1200); await sleep(1100); return; } say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220); await runFx(w, me, mvB, mkHit(me, mvB, b)); fxClear(); if (b.mult > 1) say('Aduh, ampuh! ⭐', 700); else if (b.mult < 1) say('Tidak terlalu sakit 💤', 700); };
   say(`⚡ ${meFirst ? me.name : w.name} lebih cepat!`, 900); await sleep(650);
   if (meFirst) { await doMe(); await sleep(250); await doFoe(); } else { await doFoe(); await sleep(250); await doMe(); }
   for (const e of [me, w]) { if (!e.status || e.hp <= 0) continue; const st = STAT[e.status]; if (st.dot) { const d = Math.max(1, Math.round(e.hpMax * st.dot)); e.hp = e === me ? Math.max(1, e.hp - d) : e.hp - d; say(`${st.em} ${e.name} ${st.msg}! -${d}`, 1100); burst(e.x, 0.6, e.z, st.col, 14); floatText(`-${d}`, e.x, 1.3, e.z, st.col); flash(e, 0.5); setTimeout(() => flash(e, 0), 240); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(900); } if (--e.stT <= 0) { e.status = null; say(`${e.name} sudah pulih ✨`, 900); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(700); } }

@@ -1,9 +1,24 @@
 /* =====================================================================
    LOOP UTAMA
    ===================================================================== */
+/* ---------- auto-hemat: kalau HP-nya berat, turunkan kualitas bertahap (sekali jalan, tidak balik naik) ---------- */
+let perfAvg = 0.016, perfLv = 0, perfNext = 6, shadowFlip = 0;
+const PERF_FORCE = +(new URLSearchParams(location.search).get('perf') || -1);
+function setPerf(l) {
+  perfLv = l;
+  if (l >= 1) { Music.lite = Math.min(2, l); sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } renderer.shadowMap.autoUpdate = false; }
+  if (l >= 2 && detail !== 'retro') { detail = 'retro'; resize(); }
+}
+function perfTick(raw) {
+  if (renderer.shadowMap.autoUpdate === false) { shadowFlip ^= 1; if (shadowFlip) renderer.shadowMap.needsUpdate = true; }
+  if (PERF_FORCE >= 0) { if (perfLv !== PERF_FORCE) setPerf(PERF_FORCE); return; }
+  if (mode === 'title' || document.hidden) return;
+  perfAvg += (Math.min(raw, 0.25) - perfAvg) * 0.04;
+  if (T > perfNext && perfAvg > 0.034 && perfLv < 2) { setPerf(perfLv + 1); perfNext = T + 6; perfAvg = 0.02; }
+}
 let actZ = false; const clk = new THREE.Clock(); let objT = 0;
 function frame() {
-  const dt = Math.min(clk.getDelta(), 0.05); T += dt;
+  const rawDt = clk.getDelta(), dt = Math.min(rawDt, 0.05); T += dt; perfTick(rawDt);
   // pemain
   if (mode === 'play') {
     let ix = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0) + joy.x;
@@ -38,7 +53,7 @@ function frame() {
   let near = null, nd = 1e9;
   if (mode === 'play') {
     wilds.forEach((w) => { const d = Math.hypot(w.x - player.x, w.z - player.z); if (d < nd) { nd = d; near = w; } });
-    if (near && nd < 2.2 && T > cooldown && mates[0] && S.stage !== 1) startBattle(near);
+    if (near && nd < 2.2 && T > cooldown && !camBack && !camFocus && !actZ && mates[0] && S.stage !== 1) startBattle(near);
   }
   const bub = $('bubble');
   if (mode === 'play' && near && nd < 6.5) { const [sx, sy] = toScreen(near.x, 1.1, near.z); bub.style.display = 'block'; bub.style.left = sx + 'px'; bub.style.top = sy + 'px'; bub.textContent = (near.rare ? '✨' : '') + FOOD[near.fav][2]; } else bub.style.display = 'none';
@@ -62,7 +77,7 @@ function frame() {
   { const af = mode === 'fish' && fishSt ? [fishSt.s.tx, fishSt.s.tz] : mode === 'gather' && gatherSpot ? [gatherSpot.x, gatherSpot.z] : null;
     if (af) { actZ = true; zoomGoal = 0.5; camGoal.set(player.x * 0.55 + af[0] * 0.45, 0.45, player.z * 0.55 + af[1] * 0.45); } else if (actZ && !camFocus) { actZ = false; zoomGoal = 1; } }
   if (camFocus) { const n = camFocus.n; yaw = lerpAng(yaw, camFocus.yawT, Math.min(1, dt * 3)); zoomGoal = 0.36; camGoal.set(n.x * 0.7 + player.x * 0.3, 0.75, n.z * 0.7 + player.z * 0.3); }
-  else if (camBack) { yaw = lerpAng(yaw, camBack.yaw, Math.min(1, dt * 3)); zoomGoal = camBack.zoom; if (Math.abs(Math.atan2(Math.sin(yaw - camBack.yaw), Math.cos(yaw - camBack.yaw))) < 0.03) camBack = null; }
+  else if (camBack) { if (camBack.t === undefined) camBack.t = T + 1.4; yaw = lerpAng(yaw, camBack.yaw, Math.min(1, dt * 3)); zoomGoal = camBack.zoom; if (T > camBack.t || Math.abs(Math.atan2(Math.sin(yaw - camBack.yaw), Math.cos(yaw - camBack.yaw))) < 0.03) camBack = null; }
 
   toastT -= dt; if (toastT < 0) toastEl.style.opacity = 0;
   logT -= dt; if (logT < 0 && mode !== 'battle') logEl.style.opacity = 0;
@@ -76,14 +91,24 @@ function frame() {
 ['pointerdown', 'keydown'].forEach((ev) => addEventListener(ev, () => Music.unlock()));
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
-{ const tp = freeSpot(8.0, 1.6, 0.3); addNPC('tani', 'Pak Tani', LOOK.tani, tp, Math.PI / 2 + 0.3); }
-addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, Math.PI / 2);
+addNPC('tani', 'Pak Tani', LOOK.tani, POI.tani, 0);
+addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 resize(); addEventListener('resize', resize);
-$('loading').style.display = 'none';
 enterTitle();
-window.__g = { vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+// ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
+const RULE = { road: 1.5, bld: 1.5 };
+function npcRule() {
+  return npcs.filter((n) => !(n.x > 20 && n.z > 20)).map((n) => {
+    const rd = Math.min(poly(C.margonda.pts, n.x, n.z).d - C.margonda.w / 2, poly(C.raya.pts, n.x, n.z).d - C.raya.w / 2);
+    const bd = Math.min(...rects.map((b) => Math.hypot(Math.max(b[0] - n.x, 0, n.x - b[1]), Math.max(b[2] - n.z, 0, n.z - b[3]))));
+    return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
+  });
+}
+window.__g = { npcRule, rects, get dbg() { const ri = renderer.info.render; return { calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
+if (__boot.tapped) Music.unlock();
+__boot.done();
 ['visibilitychange', 'pagehide'].forEach((ev) => addEventListener(ev, () => { if (mode !== 'title' && mode !== 'create' && player.rig) saveGame(); }));
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script></body></html>
