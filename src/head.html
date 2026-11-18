@@ -95,10 +95,11 @@ button .e{font-size:24px;display:block;line-height:1}
 #cbg{position:fixed;inset:0;display:none;z-index:4;background:linear-gradient(#7fc4e6 0%,#bfe4f0 55%,#f1e7c9 55.2%,#8ec65a 55.4%,#5f9a3a 100%)}
 #intro{inset:0;display:none;z-index:9;background:transparent}
 #intro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.4s ease-out}
-#intro .bar.t{top:0}#intro .bar.b{bottom:0}#intro.go .bar{height:13vh}
-#icap{position:absolute;left:50%;bottom:calc(13vh + 18px);transform:translateX(-50%);width:min(90vw,760px);text-align:center;color:#fff;font-size:min(6vw,30px);line-height:1.3;text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,0 3px 0 #000;opacity:0;transition:opacity .5s}
+#intro .bar.t{top:-2px;box-shadow:0 -60px 0 #000}#intro .bar.b{bottom:-2px;box-shadow:0 60px 0 #000}#intro.go .bar{height:16vh}
+body[data-mode=intro] #snd,body[data-mode=intro] #dexb,body[data-mode=intro] #talk{display:none!important}
+#icap{position:absolute;left:50%;bottom:2.2vh;transform:translateX(-50%);width:min(92vw,760px);text-align:center;color:#fff;font-size:min(4.8vw,28px);line-height:1.3;text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,0 3px 0 #000;opacity:0;transition:opacity .5s}
 #ititle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,130px);font-weight:700;letter-spacing:4px;color:#fff;text-shadow:-5px 0 var(--edge),5px 0 var(--edge),0 -5px var(--edge),0 5px var(--edge),0 9px 0 var(--edge);opacity:0;transition:opacity 1s;background:rgba(0,0,0,.35)}#ititle b{color:var(--gold)}
-#iskip{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(13vh + 12px);pointer-events:auto;min-height:38px;font-size:15px;padding:2px 14px;z-index:2}
+#iskip{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(env(safe-area-inset-top,0px) + 1.2vh);pointer-events:auto;min-height:38px;font-size:15px;padding:2px 14px;z-index:2}
 #create .card.sel{background:#ffe9a8;transform:translateY(-6px)}
 #nameIn{width:min(300px,90%);font:inherit;font-size:22px;text-align:center;padding:6px;border:3px solid var(--edge);background:#fff;color:var(--ink);pointer-events:auto;-webkit-user-select:text;user-select:text}
 #gGo{min-width:240px;font-size:20px;background:var(--gold)}
@@ -239,7 +240,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 #cbg .spk{width:8px;height:8px;background:#fff6b0;box-shadow:0 0 8px #fff6b0;animation:spk 4s linear infinite}
 #cbg .k1{left:20%;top:70%}#cbg .k2{left:44%;top:78%;animation-delay:-1s}#cbg .k3{left:66%;top:72%;animation-delay:-2s}#cbg .k4{left:82%;top:80%;animation-delay:-3s}#cbg .k5{left:33%;top:84%;animation-delay:-1.5s}
 @keyframes spk{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-50vh) scale(1);opacity:0}}
-#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 285px);height:min(46vh,86vw);aspect-ratio:5/8;transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
+#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 285px);height:min(31vh,58vw);aspect-ratio:5/8;transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
 #cprof{left:50%;transform:translateX(-50%)}
 #cplayer{left:70%;transform:translateX(-50%) translateY(30px);opacity:0}
 #cbg.two #cprof{left:28%}#cbg.two #cplayer{opacity:1;transform:translateX(-50%);left:72%}

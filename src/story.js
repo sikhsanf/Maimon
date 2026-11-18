@@ -126,12 +126,20 @@ function findPath(sx, sz, tx, tz) {
   if (found < 0) return [];
   const pts = []; for (let k = found; k >= 0; k = par[k]) pts.push([cx(k % NX), cz((k / NX) | 0)]); return pts.reverse();
 }
+/* rapikan jalur A*: tarik garis lurus selama tidak ada yang menghalangi (hilangkan zig-zag tangga) */
+function smoothPath(pts) {
+  if (pts.length < 3) return pts; const clear = (a, b) => { const L = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d <= L; d += 0.25) { const t = L ? d / L : 0; if (blockedAt(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0.28)) return false; } return true; };
+  const out = [pts[0]]; let i = 0; while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !clear(pts[i], pts[j])) j--; out.push(pts[j]); i = j; } return out;
+}
 function updatePath(dt) {
   pathT -= dt;
   if (!objTarget || mode !== 'play' || inside) { pathM.visible = false; pathFor = null; return; }
-  if (objTarget !== pathFor || Math.hypot(player.x - pathX, player.z - pathZ) > 1.2 || pathT < -2.5) { pathFor = objTarget; pathX = player.x; pathZ = player.z; pathT = 0; pathPts = findPath(player.x, player.z, objTarget.x, objTarget.z); pathPts.push([objTarget.x, objTarget.z]); }
+  let near = 1e9, ni = 1;
+  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((player.x - ax) * dx + (player.z - az) * dz) / L2)), d = Math.hypot(ax + dx * t - player.x, az + dz * t - player.z); if (d < near) { near = d; ni = i; } }
+  if (objTarget !== pathFor || pathPts.length < 2 || near > 1.6 || pathT < -6) { pathFor = objTarget; pathT = 0; pathPts = smoothPath(findPath(player.x, player.z, objTarget.x, objTarget.z)); pathPts.push([objTarget.x, objTarget.z]); ni = 1; }
+  const route = [[player.x, player.z], ...pathPts.slice(ni)];
   const dots = []; let carry = 0.2;
-  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
+  for (let i = 1; i < route.length; i++) { const [ax, az] = route[i - 1], [bx, bz] = route[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
   const n = Math.min(dots.length, PATH_N); pathM.visible = n > 0; pathM.count = n;
   for (let i = 0; i < n; i++) { const [x, z] = dots[i], k = 0.55 + 0.6 * Math.max(0, Math.sin(T * 5 - i * 0.55)); _pd.position.set(x, groundY(x, z) + 0.07, z); _pd.scale.set(k, 1, k); _pd.rotation.y = 0; _pd.updateMatrix(); pathM.setMatrixAt(i, _pd.matrix); }
   pathM.instanceMatrix.needsUpdate = true;

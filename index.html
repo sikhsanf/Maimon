@@ -104,10 +104,11 @@ button .e{font-size:24px;display:block;line-height:1}
 #cbg{position:fixed;inset:0;display:none;z-index:4;background:linear-gradient(#7fc4e6 0%,#bfe4f0 55%,#f1e7c9 55.2%,#8ec65a 55.4%,#5f9a3a 100%)}
 #intro{inset:0;display:none;z-index:9;background:transparent}
 #intro .bar{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.4s ease-out}
-#intro .bar.t{top:0}#intro .bar.b{bottom:0}#intro.go .bar{height:13vh}
-#icap{position:absolute;left:50%;bottom:calc(13vh + 18px);transform:translateX(-50%);width:min(90vw,760px);text-align:center;color:#fff;font-size:min(6vw,30px);line-height:1.3;text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,0 3px 0 #000;opacity:0;transition:opacity .5s}
+#intro .bar.t{top:-2px;box-shadow:0 -60px 0 #000}#intro .bar.b{bottom:-2px;box-shadow:0 60px 0 #000}#intro.go .bar{height:16vh}
+body[data-mode=intro] #snd,body[data-mode=intro] #dexb,body[data-mode=intro] #talk{display:none!important}
+#icap{position:absolute;left:50%;bottom:2.2vh;transform:translateX(-50%);width:min(92vw,760px);text-align:center;color:#fff;font-size:min(4.8vw,28px);line-height:1.3;text-shadow:-2px 0 #000,2px 0 #000,0 -2px #000,0 2px #000,0 3px 0 #000;opacity:0;transition:opacity .5s}
 #ititle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,130px);font-weight:700;letter-spacing:4px;color:#fff;text-shadow:-5px 0 var(--edge),5px 0 var(--edge),0 -5px var(--edge),0 5px var(--edge),0 9px 0 var(--edge);opacity:0;transition:opacity 1s;background:rgba(0,0,0,.35)}#ititle b{color:var(--gold)}
-#iskip{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(13vh + 12px);pointer-events:auto;min-height:38px;font-size:15px;padding:2px 14px;z-index:2}
+#iskip{position:absolute;right:max(14px,env(safe-area-inset-right));top:calc(env(safe-area-inset-top,0px) + 1.2vh);pointer-events:auto;min-height:38px;font-size:15px;padding:2px 14px;z-index:2}
 #create .card.sel{background:#ffe9a8;transform:translateY(-6px)}
 #nameIn{width:min(300px,90%);font:inherit;font-size:22px;text-align:center;padding:6px;border:3px solid var(--edge);background:#fff;color:var(--ink);pointer-events:auto;-webkit-user-select:text;user-select:text}
 #gGo{min-width:240px;font-size:20px;background:var(--gold)}
@@ -248,7 +249,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 #cbg .spk{width:8px;height:8px;background:#fff6b0;box-shadow:0 0 8px #fff6b0;animation:spk 4s linear infinite}
 #cbg .k1{left:20%;top:70%}#cbg .k2{left:44%;top:78%;animation-delay:-1s}#cbg .k3{left:66%;top:72%;animation-delay:-2s}#cbg .k4{left:82%;top:80%;animation-delay:-3s}#cbg .k5{left:33%;top:84%;animation-delay:-1.5s}
 @keyframes spk{0%{transform:translateY(0) scale(.4);opacity:0}20%{opacity:1}100%{transform:translateY(-50vh) scale(1);opacity:0}}
-#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 285px);height:min(46vh,86vw);aspect-ratio:5/8;transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
+#cprof,#cplayer{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 285px);height:min(31vh,58vw);aspect-ratio:5/8;transition:left .6s,opacity .5s,transform .5s;pointer-events:none}
 #cprof{left:50%;transform:translateX(-50%)}
 #cplayer{left:70%;transform:translateX(-50%) translateY(30px);opacity:0}
 #cbg.two #cprof{left:28%}#cbg.two #cplayer{opacity:1;transform:translateX(-50%);left:72%}
@@ -309,19 +310,21 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
   const st = window.__boot; Object.assign(st, { ready: false, splashDone: false, step: 0, total: 1, score: 0 });
   if (/[?&]noboot/.test(location.search)) { boot.remove(); st.noboot = true; st.step = async () => {}; st.done = () => {}; return; }
   const unlockAudio = () => st.unlock();
+  const LD_MS = 7000; let t0 = 0, realP = 0, shown = 0; // loading berdurasi tetap 7 detik (minimal), progres = min(progres asli, progres waktu)
   /* --- splash --- */
   const splash = $('splash');
-  const endSplash = () => { if (st.splashDone) return; st.splashDone = true; splash.classList.add('gone'); setTimeout(() => splash.remove(), 600); tryFinish(); };
+  const endSplash = () => { if (st.splashDone) return; st.splashDone = true; t0 = performance.now(); splash.classList.add('gone'); setTimeout(() => splash.remove(), 600); tryFinish(); };
   setTimeout(endSplash, 2600);
   splash.addEventListener('pointerdown', () => { unlockAudio(); endSplash(); });
   /* --- progres --- */
   const bar = $('ldbar').firstChild, tx = $('ldtx');
-  function setProg(p) { p = Math.min(100, Math.round(p)); bar.style.width = p + '%'; tx.textContent = (p >= 100 ? 'SIAP!' : 'MENYIAPKAN MAIMON… ' + p + '%'); }
+  function setProg(p) { realP = p; draw(); }
+  function draw() { const tp = t0 ? Math.min(100, (performance.now() - t0) / LD_MS * 100) : 0, p = Math.min(100, Math.round(Math.min(realP, tp))); if (p <= shown && p < 100) return; shown = p; bar.style.width = p + '%'; tx.textContent = (p >= 100 ? 'SIAP!' : 'MENYIAPKAN MAIMON… ' + p + '%'); if (p >= 100) tryFinish(); }
   st.step = (i, n) => { st.total = n; setProg(i / n * 100 * 0.98); return new Promise((r) => { let d = false; const f = () => { if (!d) { d = true; r(); } }; requestAnimationFrame(() => setTimeout(f, 0)); setTimeout(f, 90); }); };
-  st.done = () => { setProg(100); st.ready = true; tryFinish(); };
+  st.done = () => { realP = 100; st.ready = true; draw(); tryFinish(); };
   function finish() { if (finish.d) return; finish.d = true; boot.classList.add('out'); cancelAnimationFrame(raf); setTimeout(() => boot.remove(), 700); if (window.__bootAfter) window.__bootAfter(); }
   function tryFinish() {
-    if (!st.ready || !st.splashDone) return;
+    if (!st.ready || !st.splashDone || shown < 100) return;
     if (st.tapped) { $('ldhint').textContent = 'Siap! ✨'; setTimeout(finish, 700); }
     else { $('ldhint').textContent = 'Sudah siap! 🎉'; const b = $('ldGo'); b.style.display = 'block'; b.onclick = () => { unlockAudio(); finish(); }; }
   }
@@ -358,7 +361,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
       g.fillStyle = col.o; g.fillRect(P.x + 6, P.y + 8 * U, U, 5 - wob * 3 + (P.on ? 0 : 3)); g.fillRect(P.x + 15, P.y + 8 * U, U, 5 - (1 - wob) * 3 + (P.on ? 0 : 3));
     }
     g.fillStyle = '#241912'; g.font = '14px monospace'; g.fillText('⭐ ' + st.score, 10, 20); if (bonk > 0) g.fillText('aduh!', P.x + 4, P.y - 6);
-    raf = requestAnimationFrame(frame);
+    draw(); raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
 })();
@@ -2244,10 +2247,18 @@ function leaveEncounter(cd) { stopFeedClock(); saveGame(); restoreArena(); pitch
 const foodsEl = $('foods'), foodBtn = {};
 FOODS.forEach(([id, name, em]) => { const b = document.createElement('button'); b.onclick = () => feed(id); foodBtn[id] = b; foodsEl.appendChild(b); });
 function refreshFoods() { FOODS.forEach(([id, name, em]) => { const b = foodBtn[id], n = bagN(id); b.innerHTML = `<span class="e">${em}</span>${name}<small>x${n}</small>`; b.classList.toggle('none', n === 0); }); }
-function showFeed(w) { feedClock(w); refreshFoods(); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : ''; $('panel').style.display = 'block'; }
+function showFeed(w) { feedClock(w); refreshFoods(); const rr = rarityOf(w); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : `${rr.star} ${rr.n} · peluang ikut ±${Math.round(catchP(w) * 100)}%`; $('panel').style.display = 'block'; }
+/* ---------- KELANGKAAN + peluang tangkap (makanan favorit tidak lagi 100%) ---------- */
+const TIERS = ['umum', 'jarang', 'langka', 'epik'];
+const RARITY = { umum: { n: 'Umum', p: 0.8, star: '★' }, jarang: { n: 'Jarang', p: 0.6, star: '★★' }, langka: { n: 'Langka', p: 0.4, star: '★★★' }, epik: { n: 'Epik', p: 0.25, star: '★★★★' } };
+const RARITY_OF = { kucingko: 'umum', tikusil: 'umum', dombanyo: 'umum', kancik: 'langka', cebongi: 'langka', pioyo: 'langka' };
+function rarityOf(w) { let i = TIERS.indexOf(RARITY_OF[w.sp] || 'umum'); if (w.st === 2) i = Math.min(TIERS.length - 1, i + 1); return RARITY[TIERS[i]]; }
+const firstCatch = () => !Object.values(S.dex || {}).some((v) => v >= 2);
+const catchP = (w) => (firstCatch() ? 1 : rarityOf(w).p);
 function feed(id) {
   if (!talk || mode !== 'feed') return; const w = talk;
   if (bagN(id) === 0) { toast(`Belum punya ${FOOD[id][1]}. ${FOODWHERE[id]}`, 2.4); return; }
+  if (id === w.fav && R0() >= catchP(w)) { useBag(id); w.shake = 0.8; refreshFoods(); toast(`${w.name} makan ${FOOD[id][2]} tapi belum mau ikut 😋 coba lagi!`, 2); $('phint').textContent = bagN(w.fav) === 0 ? `Makanan favorit habis. ${FOODWHERE[w.fav]}.` : ''; return; }
   if (id === w.fav) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
@@ -2431,12 +2442,20 @@ function findPath(sx, sz, tx, tz) {
   if (found < 0) return [];
   const pts = []; for (let k = found; k >= 0; k = par[k]) pts.push([cx(k % NX), cz((k / NX) | 0)]); return pts.reverse();
 }
+/* rapikan jalur A*: tarik garis lurus selama tidak ada yang menghalangi (hilangkan zig-zag tangga) */
+function smoothPath(pts) {
+  if (pts.length < 3) return pts; const clear = (a, b) => { const L = Math.hypot(b[0] - a[0], b[1] - a[1]); for (let d = 0; d <= L; d += 0.25) { const t = L ? d / L : 0; if (blockedAt(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0.28)) return false; } return true; };
+  const out = [pts[0]]; let i = 0; while (i < pts.length - 1) { let j = pts.length - 1; while (j > i + 1 && !clear(pts[i], pts[j])) j--; out.push(pts[j]); i = j; } return out;
+}
 function updatePath(dt) {
   pathT -= dt;
   if (!objTarget || mode !== 'play' || inside) { pathM.visible = false; pathFor = null; return; }
-  if (objTarget !== pathFor || Math.hypot(player.x - pathX, player.z - pathZ) > 1.2 || pathT < -2.5) { pathFor = objTarget; pathX = player.x; pathZ = player.z; pathT = 0; pathPts = findPath(player.x, player.z, objTarget.x, objTarget.z); pathPts.push([objTarget.x, objTarget.z]); }
+  let near = 1e9, ni = 1;
+  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((player.x - ax) * dx + (player.z - az) * dz) / L2)), d = Math.hypot(ax + dx * t - player.x, az + dz * t - player.z); if (d < near) { near = d; ni = i; } }
+  if (objTarget !== pathFor || pathPts.length < 2 || near > 1.6 || pathT < -6) { pathFor = objTarget; pathT = 0; pathPts = smoothPath(findPath(player.x, player.z, objTarget.x, objTarget.z)); pathPts.push([objTarget.x, objTarget.z]); ni = 1; }
+  const route = [[player.x, player.z], ...pathPts.slice(ni)];
   const dots = []; let carry = 0.2;
-  for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
+  for (let i = 1; i < route.length; i++) { const [ax, az] = route[i - 1], [bx, bz] = route[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
   const n = Math.min(dots.length, PATH_N); pathM.visible = n > 0; pathM.count = n;
   for (let i = 0; i < n; i++) { const [x, z] = dots[i], k = 0.55 + 0.6 * Math.max(0, Math.sin(T * 5 - i * 0.55)); _pd.position.set(x, groundY(x, z) + 0.07, z); _pd.scale.set(k, 1, k); _pd.rotation.y = 0; _pd.updateMatrix(); pathM.setMatrixAt(i, _pd.matrix); }
   pathM.instanceMatrix.needsUpdate = true;
@@ -2765,7 +2784,7 @@ function renderDex() {
   const sp = dexSel, d = MAI[sp], v = S.dex[sp] || 0, i = DEXLIST.indexOf(sp), col = TCOL[d.type];
   if (!v) { D.innerHTML = `<div class="plate" style="background:linear-gradient(150deg,#6b6b6b,#3a3a3a)"><div class="t"><small>No.${pad3(i + 1)}</small><b>???</b></div></div><div class="hint2">Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
   const dty = tyOf(d), weak = [...new Set(Object.keys(BEATS).filter((t) => dty.some((x) => BEATS[t].includes(x))))], strong = [...new Set(dty.flatMap((x) => BEATS[x]))];
-  const rare = RARE_SP.includes(sp) ? '<span class="rareb">✨ LANGKA</span>' : '';
+  const rr = RARITY[RARITY_OF[sp] || 'umum'], rare = `<span class="rareb">${rr.star} ${rr.n}</span>`;
   const evo = d.n.length > 1 ? `<div class="evo">${d.n.join(' → ')}</div>` : '';
   let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${dty.map(chipT).join('')}${rare}</div></div>`;
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
@@ -2933,7 +2952,7 @@ function npcRule() {
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
   });
 }
-window.__g = { npcRule, rects, get dbg() { const ri = renderer.info.render; return { calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();

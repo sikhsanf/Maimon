@@ -332,10 +332,18 @@ function leaveEncounter(cd) { stopFeedClock(); saveGame(); restoreArena(); pitch
 const foodsEl = $('foods'), foodBtn = {};
 FOODS.forEach(([id, name, em]) => { const b = document.createElement('button'); b.onclick = () => feed(id); foodBtn[id] = b; foodsEl.appendChild(b); });
 function refreshFoods() { FOODS.forEach(([id, name, em]) => { const b = foodBtn[id], n = bagN(id); b.innerHTML = `<span class="e">${em}</span>${name}<small>x${n}</small>`; b.classList.toggle('none', n === 0); }); }
-function showFeed(w) { feedClock(w); refreshFoods(); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : ''; $('panel').style.display = 'block'; }
+function showFeed(w) { feedClock(w); refreshFoods(); const rr = rarityOf(w); $('phint').textContent = bagN(w.fav) === 0 ? `Tasmu belum ada makanan favorit ${w.name} (${FOOD[w.fav][2]}). ${FOODWHERE[w.fav]}, lalu ajak ${w.name} battle lagi.` : `${rr.star} ${rr.n} · peluang ikut ±${Math.round(catchP(w) * 100)}%`; $('panel').style.display = 'block'; }
+/* ---------- KELANGKAAN + peluang tangkap (makanan favorit tidak lagi 100%) ---------- */
+const TIERS = ['umum', 'jarang', 'langka', 'epik'];
+const RARITY = { umum: { n: 'Umum', p: 0.8, star: '★' }, jarang: { n: 'Jarang', p: 0.6, star: '★★' }, langka: { n: 'Langka', p: 0.4, star: '★★★' }, epik: { n: 'Epik', p: 0.25, star: '★★★★' } };
+const RARITY_OF = { kucingko: 'umum', tikusil: 'umum', dombanyo: 'umum', kancik: 'langka', cebongi: 'langka', pioyo: 'langka' };
+function rarityOf(w) { let i = TIERS.indexOf(RARITY_OF[w.sp] || 'umum'); if (w.st === 2) i = Math.min(TIERS.length - 1, i + 1); return RARITY[TIERS[i]]; }
+const firstCatch = () => !Object.values(S.dex || {}).some((v) => v >= 2);
+const catchP = (w) => (firstCatch() ? 1 : rarityOf(w).p);
 function feed(id) {
   if (!talk || mode !== 'feed') return; const w = talk;
   if (bagN(id) === 0) { toast(`Belum punya ${FOOD[id][1]}. ${FOODWHERE[id]}`, 2.4); return; }
+  if (id === w.fav && R0() >= catchP(w)) { useBag(id); w.shake = 0.8; refreshFoods(); toast(`${w.name} makan ${FOOD[id][2]} tapi belum mau ikut 😋 coba lagi!`, 2); $('phint').textContent = bagN(w.fav) === 0 ? `Makanan favorit habis. ${FOODWHERE[w.fav]}.` : ''; return; }
   if (id === w.fav) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
