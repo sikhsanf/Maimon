@@ -185,9 +185,9 @@ function buildMoveButtons() {
   const row = $('mvRow'); row.innerHTML = ''; const me = battle.me, kn = curMoves(me);
   kn.forEach((mv, i) => { const b = document.createElement('button'); b.className = 'mv'; b.innerHTML = `${mv[1]}<small><span class="chip" style="background:${TCOL[mv[2]]}">${mv[2]}</span> ${effHint(mv, battle.w)}</small>`; b.onclick = () => round(i); row.appendChild(b); });
   me.d.ls.filter((m) => m[0] > me.lv).slice(0, 4 - kn.length).forEach((m) => { const b = document.createElement('button'); b.className = 'mv lock'; b.innerHTML = `🔒<small>Lv ${m[0]}</small>`; row.appendChild(b); });
-  $('flee').onclick = flee; setMovesEnabled(true);
+  $('flee').onclick = flee; $('swapB').onclick = () => openSwap(false); setMovesEnabled(true);
 }
-function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); $('flee').style.pointerEvents = on ? 'auto' : 'none'; $('flee').style.opacity = on ? 1 : 0.5; }
+function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); [$('flee'), $('swapB')].forEach((b) => { b.style.pointerEvents = on ? 'auto' : 'none'; b.style.opacity = on ? 1 : 0.5; }); }
 function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def), stab = tyOf(att).includes(mv[2]) ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
 /* ---------- animasi jurus (tiap jurus punya gerakan sendiri) ---------- */
 const fxList = [], fxMats = {}, cubeGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -296,6 +296,43 @@ function gainXp(m, amt) {
   while (m.lv < LVCAP && m.xp >= xpNeed(m.lv)) { m.xp -= xpNeed(m.lv); m.lv++; const old = m.hpMax; m.hpMax = hpMaxOf(m.sp, m.st, m.lv); m.hp = Math.min(m.hpMax, m.hp + m.hpMax - old); ups.push(m.lv); MAI[m.sp].ls.filter((x) => x[0] === m.lv).forEach((x) => learned.push(x[1])); }
   return { ups, learned };
 }
+
+/* ---------- GANTI MAIMON saat battle (makan 1 giliran; kalau pingsan wajib ganti) ---------- */
+const swapCands = () => mates.filter((m) => m !== battle.me && m.hp > 0);
+function openSwap(forced) {
+  if (!battle || battle.busy && !forced) return; const c = swapCands(); const L = $('swapL'); L.innerHTML = '';
+  if (!c.length) { toast('Tidak ada teman lain yang masih kuat.', 1.6); return; }
+  $('swapT').textContent = forced ? `${battle.me.name} pingsan! Pilih penggantinya:` : 'Ganti pakai siapa? (habis 1 giliran)';
+  $('swapX').style.display = forced ? 'none' : '';
+  c.forEach((m) => { const b = document.createElement('button'); b.innerHTML = `<span>${m.name} <small>Lv${m.lv}</small> ${chips(m)}</span><small>${Math.ceil(m.hp)}/${m.hpMax}</small>`; b.onclick = () => { $('swapP').style.display = 'none'; doSwap(m, forced); }; L.appendChild(b); });
+  $('swapX').onclick = () => { $('swapP').style.display = 'none'; };
+  $('swapP').style.display = 'block'; $('moves').style.display = 'none';
+}
+function closeSwapUI() { $('swapP').style.display = 'none'; $('moves').style.display = ''; }
+async function doSwap(nm, forced) {
+  if (!battle) return; const old = battle.me, w = battle.w; battle.busy = true; setMovesEnabled(false); closeSwapUI();
+  old.status = null; old.ox = old.oz = 0; old.state = 'follow';
+  nm.x = old.x; nm.z = old.z; nm.bx = old.bx; nm.bz = old.bz; nm.ang = old.ang; nm.state = 'battle'; nm.pop = 0; nm.ox = nm.oz = 0; nm.hidden = false;
+  mates.unshift(mates.splice(mates.indexOf(nm), 1)[0]); battle.me = nm; renderChips();
+  burst(nm.x, 0.5, nm.z, '#ffffff', 16); hpBar($('hpL'), nm);
+  say(forced ? `Ayo, ${nm.name}!` : `Kembali ${old.name}! Ayo, ${nm.name}!`, 1300); await sleep(1250);
+  if (!forced) { // musuh menyerang saat kita ganti
+    const wk = curMoves(w), mvB = wk[(R0() * wk.length) | 0];
+    if (w.status && STAT[w.status].fail && R0() < STAT[w.status].fail) { say(`${STAT[w.status].em} ${w.name} ${STAT[w.status].fm}, gagal menyerang!`, 1200); await sleep(1100); }
+    else {
+      const b = calcDmg(w, mvB, nm); say(`${w.name} pakai ${mvB[1]}!`, 1300); await sleep(220);
+      await runFx(w, nm, mvB, () => { burst(nm.x, 0.45, nm.z, TCOL[mvB[2]], 14); nm.hp -= b.dmg; nm.shake = 0.4; flash(nm, 0.7); floatText(`-${b.dmg}`, nm.x, 1.1, nm.z, '#d8452e'); hpBar($('hpL'), nm); setTimeout(() => flash(nm, 0), 260); });
+      await sleep(500);
+    }
+    if (nm.hp <= 0) return faintFlow();
+  }
+  battle.busy = false; setMovesEnabled(true); buildMoveButtons(); say('Pilih jurus!', 900);
+}
+async function faintFlow() {
+  const me = battle.me; me.hp = 0; hpBar($('hpL'), me);
+  if (!swapCands().length) return endBattle('lose');
+  say(`${me.name} pingsan!`, 1300); await sleep(1300); battle.busy = true; setMovesEnabled(false); openSwap(true);
+}
 async function round(i) {
   if (!battle || battle.busy) return; battle.busy = true; setMovesEnabled(false);
   const { w, me } = battle, mvA = curMoves(me)[i], wk = curMoves(w), mvB = wk[(R0() * wk.length) | 0];
@@ -308,11 +345,11 @@ async function round(i) {
   if (meFirst) { await doMe(); await sleep(250); await doFoe(); } else { await doFoe(); await sleep(250); await doMe(); }
   for (const e of [me, w]) { if (!e.status || e.hp <= 0) continue; const st = STAT[e.status]; if (st.dot) { const d = Math.max(1, Math.round(e.hpMax * st.dot)); e.hp = e === me ? Math.max(1, e.hp - d) : e.hp - d; say(`${st.em} ${e.name} ${st.msg}! -${d}`, 1100); burst(e.x, 0.6, e.z, st.col, 14); floatText(`-${d}`, e.x, 1.3, e.z, st.col); flash(e, 0.5); setTimeout(() => flash(e, 0), 240); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(900); } if (--e.stT <= 0) { e.status = null; say(`${e.name} sudah pulih ✨`, 900); hpBar($('hpL'), me); hpBar($('hpR'), w); await sleep(700); } }
   await sleep(750);
-  if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return endBattle('lose');
+  if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return faintFlow();
   battle.busy = false; setMovesEnabled(true); say('Pilih jurus!', 900);
 }
 async function endBattle(res) {
-  const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
+  closeSwapUI(); const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
@@ -323,7 +360,7 @@ async function endBattle(res) {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
   }
 }
-function flee() { if (!battle || battle.busy) return; const { w, me } = battle; me.status = w.status = null; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
+function flee() { if (!battle || battle.busy) return; closeSwapUI(); const { w, me } = battle; me.status = w.status = null; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
 let feedTimer = null; const stopFeedClock = () => { clearInterval(feedTimer); feedTimer = null; };
 function feedClock(w) { stopFeedClock(); let left = 20; const upd = () => { $('ptitle').textContent = `Kasih ${w.name} makan apa? ⏳ ${left}`; }; upd(); feedTimer = setInterval(() => { left--; if (mode !== 'feed' || talk !== w) { stopFeedClock(); return; } if (left <= 0) { stopFeedClock(); toast(`${w.name} sudah tidak sabar dan pergi… 💨`, 2); leaveEncounter(4); runAway(w); } else upd(); }, 1000); }
 function leaveEncounter(cd) { stopFeedClock(); saveGame(); restoreArena(); pitch = 0.66; mode = 'play'; talk = null; cooldown = T + cd; zoomGoal = 1; $('joy').style.display = ''; $('panel').style.display = 'none'; if (mates[0]) mates[0].state = 'follow'; }
