@@ -161,7 +161,13 @@ function updateInteract() {
   if (on) { b.textContent = nearSpot ? nearSpot.label : '💬 Bicara: ' + nearNPC.name.split(' ').slice(-1)[0]; const t = nearSpot || nearNPC, [sx, sy] = toScreen(t.x, groundY(t.x, t.z) + (nearSpot ? (nearSpot.h || 1) + 0.35 : 2.0), t.z); b.style.left = Math.min(Math.max(sx, 90), innerWidth - 90) + 'px'; b.style.top = Math.min(Math.max(sy, 80), innerHeight - 130) + 'px'; }
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : talkNurse)(); }
+function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : nearNPC.id === 'polisi' ? talkPolisi : talkNurse)(); }
+let polisiT = 0;
+function talkPolisi() {
+  const n = npcs.find((q) => q.id === 'polisi'); pendingFocus = n; polisiT = T + 25; const P = 'Pak Polisi';
+  dialog([[P, 'Selamat siang, Dik! Maaf, jalan ke Kota Bogor ditutup dulu ya.'], [P, 'Lagi ada acara besar di sana, jadi Bogor belum dibuka untuk umum.'], ['{n}', 'Oh, begitu ya, Pak…'], [P, 'Sabar ya. Nanti kalau acaranya sudah selesai, Bapak kabari. Sementara itu, boleh jalan-jalan dan cari Maimon di sekitar sini!']]);
+}
+function autoMeetPolisi() { if (mode === 'play' && !inside && T > polisiT && player.z > FD.z1 - 5.2) { const n = npcs.find((q) => q.id === 'polisi'); if (n && Math.hypot(player.x - n.x, player.z - n.z) < 4.2) talkPolisi(); } }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
 
 /* ---------- Prof. Catherine ---------- */

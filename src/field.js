@@ -102,5 +102,5 @@ const FSPAWNS = [['kucingko', 1, -5.5, 24], ['tikusil', 1, 3.8, 20.4], ['dombany
 let fToastT = 0;
 function updateField(dt) {
   FWATER.tex.offset.set(T * 0.03, T * 0.02);
-  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Gerbang Kota Bogor belum dibuka. Segera hadir!', 2.6); }
+  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Ada Pak Polisi menjaga gerbang Bogor 👮', 2.6); }
 }

@@ -48,6 +48,7 @@ const LOOK = {
   prof: { skin: '#f0c19a', shirt: '#e8708f', pants: '#3a3f58', coat: '#f4f6fa', style: 'longbun', hair: '#3a2418', glasses: true, belt: '#ffffff', shoe: '#33405a', skirt: '#3a3f58', lips: true },
   kos: { skin: '#e8b890', shirt: '#9a4a8a', pants: '#6a4a3a', style: 'bun', hair: '#2a1a14', belt: '#f2c230', shoe: '#6a4a3a' },
   tani: { skin: '#c98f66', shirt: '#5a9a4a', pants: '#6a5a3a', cap: '#e0c060', hair: '#2a1a14', belt: '#8a5a2a', shoe: '#4a3a2a' },
+  polisi: { skin: '#d9a47a', shirt: '#2f5fa8', pants: '#1f2a44', cap: '#1f2a44', hair: '#1a1210', belt: '#222222', shoe: '#1a1a1a' },
   nurse: { skin: '#f0c19a', shirt: '#ffffff', pants: '#e8708f', coat: '#ffd6e5', style: 'long', hair: '#1d1612', hat: true, belt: '#ffffff', shoe: '#ffffff' },
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);

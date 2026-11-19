@@ -1524,7 +1524,7 @@ const FSPAWNS = [['kucingko', 1, -5.5, 24], ['tikusil', 1, 3.8, 20.4], ['dombany
 let fToastT = 0;
 function updateField(dt) {
   FWATER.tex.offset.set(T * 0.03, T * 0.02);
-  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Gerbang Kota Bogor belum dibuka. Segera hadir!', 2.6); }
+  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Ada Pak Polisi menjaga gerbang Bogor 👮', 2.6); }
 }
 
 await __boot.step(7, 18);
@@ -2045,6 +2045,7 @@ const LOOK = {
   prof: { skin: '#f0c19a', shirt: '#e8708f', pants: '#3a3f58', coat: '#f4f6fa', style: 'longbun', hair: '#3a2418', glasses: true, belt: '#ffffff', shoe: '#33405a', skirt: '#3a3f58', lips: true },
   kos: { skin: '#e8b890', shirt: '#9a4a8a', pants: '#6a4a3a', style: 'bun', hair: '#2a1a14', belt: '#f2c230', shoe: '#6a4a3a' },
   tani: { skin: '#c98f66', shirt: '#5a9a4a', pants: '#6a5a3a', cap: '#e0c060', hair: '#2a1a14', belt: '#8a5a2a', shoe: '#4a3a2a' },
+  polisi: { skin: '#d9a47a', shirt: '#2f5fa8', pants: '#1f2a44', cap: '#1f2a44', hair: '#1a1210', belt: '#222222', shoe: '#1a1a1a' },
   nurse: { skin: '#f0c19a', shirt: '#ffffff', pants: '#e8708f', coat: '#ffd6e5', style: 'long', hair: '#1d1612', hat: true, belt: '#ffffff', shoe: '#ffffff' },
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);
@@ -2700,7 +2701,13 @@ function updateInteract() {
   if (on) { b.textContent = nearSpot ? nearSpot.label : '💬 Bicara: ' + nearNPC.name.split(' ').slice(-1)[0]; const t = nearSpot || nearNPC, [sx, sy] = toScreen(t.x, groundY(t.x, t.z) + (nearSpot ? (nearSpot.h || 1) + 0.35 : 2.0), t.z); b.style.left = Math.min(Math.max(sx, 90), innerWidth - 90) + 'px'; b.style.top = Math.min(Math.max(sy, 80), innerHeight - 130) + 'px'; }
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : talkNurse)(); }
+function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : nearNPC.id === 'polisi' ? talkPolisi : talkNurse)(); }
+let polisiT = 0;
+function talkPolisi() {
+  const n = npcs.find((q) => q.id === 'polisi'); pendingFocus = n; polisiT = T + 25; const P = 'Pak Polisi';
+  dialog([[P, 'Selamat siang, Dik! Maaf, jalan ke Kota Bogor ditutup dulu ya.'], [P, 'Lagi ada acara besar di sana, jadi Bogor belum dibuka untuk umum.'], ['{n}', 'Oh, begitu ya, Pak…'], [P, 'Sabar ya. Nanti kalau acaranya sudah selesai, Bapak kabari. Sementara itu, boleh jalan-jalan dan cari Maimon di sekitar sini!']]);
+}
+function autoMeetPolisi() { if (mode === 'play' && !inside && T > polisiT && player.z > FD.z1 - 5.2) { const n = npcs.find((q) => q.id === 'polisi'); if (n && Math.hypot(player.x - n.x, player.z - n.z) < 4.2) talkPolisi(); } }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
 
 /* ---------- Prof. Catherine ---------- */
@@ -3139,7 +3146,7 @@ function frame() {
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan
@@ -3186,6 +3193,7 @@ function frame() {
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
 addNPC('tani', 'Pak Tani', LOOK.tani, POI.tani, 0);
+addNPC('polisi', 'Pak Polisi', LOOK.polisi, [1.35, FD.z1 - 2.6], -Math.PI / 2);
 addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 FSPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z, 2));
@@ -3194,7 +3202,7 @@ enterTitle();
 // ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
 const RULE = { road: 1.5, bld: 1.5 };
 function npcRule() {
-  return npcs.filter((n) => !(n.x > 20 && n.z > 20)).map((n) => {
+  return npcs.filter((n) => !(n.z > HZ + 0.1)).map((n) => {
     const rd = Math.min(poly(C.margonda.pts, n.x, n.z).d - C.margonda.w / 2, poly(C.raya.pts, n.x, n.z).d - C.raya.w / 2);
     const bd = Math.min(...rects.map((b) => Math.hypot(Math.max(b[0] - n.x, 0, n.x - b[1]), Math.max(b[2] - n.z, 0, n.z - b[3]))));
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };

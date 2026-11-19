@@ -50,7 +50,7 @@ function frame() {
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan
@@ -97,6 +97,7 @@ function frame() {
 { const sb = $('snd'); sb.onclick = () => { Music.unlock(); sb.textContent = Music.toggle() ? '🔊' : '🔇'; }; }
 populateWorld();
 addNPC('tani', 'Pak Tani', LOOK.tani, POI.tani, 0);
+addNPC('polisi', 'Pak Polisi', LOOK.polisi, [1.35, FD.z1 - 2.6], -Math.PI / 2);
 addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 FSPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z, 2));
@@ -105,7 +106,7 @@ enterTitle();
 // ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
 const RULE = { road: 1.5, bld: 1.5 };
 function npcRule() {
-  return npcs.filter((n) => !(n.x > 20 && n.z > 20)).map((n) => {
+  return npcs.filter((n) => !(n.z > HZ + 0.1)).map((n) => {
     const rd = Math.min(poly(C.margonda.pts, n.x, n.z).d - C.margonda.w / 2, poly(C.raya.pts, n.x, n.z).d - C.raya.w / 2);
     const bd = Math.min(...rects.map((b) => Math.hypot(Math.max(b[0] - n.x, 0, n.x - b[1]), Math.max(b[2] - n.z, 0, n.z - b[3]))));
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
