@@ -35,9 +35,9 @@ function bushGeoms(x, z, s, seed) {
 function addTree(x, z, kind = 'pine', s = 1, seed = (x * 13 + z * 7) | 0) { if (Math.hypot(x - C.dais[0], z - C.dais[1]) < 3.4 || inRect(C.garden, x, z, 0.5)) return; treeSpots.push({ x, z, kind, s, seed }); circles.push({ x, z, r: 0.32 * s }); }
 function addBush(x, z, s = 1, seed = 1) { treeSpots.push({ x, z, kind: 'bush', s, seed }); }
 const treeMeshes = [];
-function buildTrees() {
+function buildTrees(from = 0) {
   const mat = toon('#ffffff', { vertexColors: true });
-  treeSpots.forEach((t) => {
+  treeSpots.slice(from).forEach((t) => {
     const a = treeGeoms.length;
     if (t.kind === 'pine') pineGeoms(t.x, t.z, t.s, t.seed); else if (t.kind === 'round') roundGeoms(t.x, t.z, t.s, t.seed, false); else if (t.kind === 'fruit') roundGeoms(t.x, t.z, t.s, t.seed, true); else bushGeoms(t.x, t.z, t.s, t.seed);
     const gs = treeGeoms.slice(a); if (!gs.length) return;
@@ -47,11 +47,11 @@ function buildTrees() {
 
 /* rumput instanced dengan angin + tersibak oleh pemain/Maimon (lapisan 1: digambar setelah outline) */
 const PUSH_N = 10, grassUniforms = { uTime: { value: 0 }, uCamRight: { value: new THREE.Vector3(1, 0, 0) }, uPush: { value: Array.from({ length: PUSH_N }, () => new THREE.Vector4()) }, uWind: { value: 1 } };
-function buildGrass() {
-  const R = rng(42), base = [], params = [], tint = [];
+function buildGrass(bx0 = -HX, bx1 = HX, bz0 = -HZ, bz1 = HZ, kf = kindAt, N = 52000, seed = 42) {
+  const R = rng(seed), base = [], params = [], tint = [];
   const push = (x, y, z, h, tx, tz, k, w = 0) => { base.push(x, y, z); params.push(h, tx, tz, w); tint.push(k * (0.92 + R() * 0.12), k * (0.95 + R() * 0.1), k * (0.85 + R() * 0.2)); };
-  for (let i = 0; i < 52000; i++) {
-    const x = -HX + 0.05 + R() * (HX * 2 - 0.1), z = -HZ + 0.05 + R() * (HZ * 2 - 0.1), k = kindAt(x, z);
+  for (let i = 0; i < N; i++) {
+    const x = bx0 + 0.05 + R() * (bx1 - bx0 - 0.1), z = bz0 + 0.05 + R() * (bz1 - bz0 - 0.1), k = kf(x, z);
     if (k !== 'grass' && k !== 'forest' && k !== 'lawn' && k !== 'orchard' && k !== 'bank') continue;
     if (k === 'bank' && R() > 0.25) continue;
     if (rects.some((b) => x > b[0] - 0.05 && x < b[1] + 0.05 && z > b[2] - 0.05 && z < b[3] + 0.05)) continue;

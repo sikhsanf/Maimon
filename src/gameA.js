@@ -71,9 +71,9 @@ const isRare = (sp, st) => RARE_SP.includes(sp);
 const NPC_SAFE = 5;
 const npcDist = (x, z) => { let d = 1e9, n0 = null; for (const n of npcs) { if (n.x > 20 && n.z > 20) continue; const q = Math.hypot(n.x - x, n.z - z); if (q < d) { d = q; n0 = n; } } return [d, n0]; };
 function pushFromNPC(x, z) { const [d, n] = npcDist(x, z); if (!n || d >= NPC_SAFE) return [x, z]; const k = d < 1e-3 ? 0 : 1 / d, ux = d < 1e-3 ? 1 : (x - n.x) * k, uz = d < 1e-3 ? 0 : (z - n.z) * k; return [n.x + ux * (NPC_SAFE + 0.4), n.z + uz * (NPC_SAFE + 0.4)]; }
-function trySpawn(sp, st, x, z) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z }); return null; } return spawnWild(sp, st, x, z); }
-function spawnWild(sp, st, hx, hz) {
-  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
+function trySpawn(sp, st, x, z, la = 0) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z, la }); return null; } return spawnWild(sp, st, x, z, la); }
+function spawnWild(sp, st, hx, hz, la = 0) {
+  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = (st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0)) + la, w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.la = la; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
 }
 function updateWild(w, dt) {
   if (w.rare && (w.spark -= dt) < 0) { w.spark = 0.7; burst(w.x, 0.5 + R0() * 0.5, w.z, '#fff3a0', 3); }
@@ -348,13 +348,23 @@ async function round(i) {
   if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return faintFlow();
   battle.busy = false; setMovesEnabled(true); say('Pilih jurus!', 900);
 }
+
+/* ---------- efek NAIK LEVEL: kilat emas, banner besar, bintang, Maimon melompat ---------- */
+async function levelUpFx(m, lv, w) {
+  const b = $('lvup'), f = $('lvflash'); b.querySelector('.n').textContent = `${m.name}  Lv ${lv - 1} ➜ Lv ${lv}`;
+  toastEl.style.opacity = 0; camGoal.set(m.x, 0.4, m.z); zoomGoal = 0.34; Music.jingle('level'); m.jump = 1.1; m.pop = 0; m.state = 'face';
+  [b, f].forEach((e) => { e.classList.remove('go'); void e.offsetWidth; e.classList.add('go'); });
+  const cols = ['#ffe066', '#ff7aa8', '#7fe0ff', '#9be85a', '#ffffff'];
+  for (let k = 0; k < 5; k++) { setTimeout(() => { burst(m.x + (R0() - 0.5) * 0.6, 0.5 + k * 0.28, m.z + (R0() - 0.5) * 0.6, cols[k % 5], 26); }, k * 170); }
+  await sleep(2300); b.classList.remove('go'); f.classList.remove('go'); m.state = 'follow'; if (w) { camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45; }
+}
 async function endBattle(res) {
   closeSwapUI(); const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
-    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push(`⬆️ ${m.name} naik ke Lv ${l}!`)); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.ups.length) burst(m.x, 0.6, m.z, '#ffe066', 22); });
-    for (const t of msgs) { toast(t, 1.7); await sleep(1500); if (mode !== 'feed') return; }
+    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); });
+    for (const t of msgs) { if (typeof t === 'string') { toast(t, 1.7); await sleep(1500); } else { await levelUpFx(t.m, t.l, w); } if (mode !== 'feed') return; }
     toast(w.rare ? `✨ ${w.name} langka ini! Jangan sampai lepas!` : `${w.name} kecapekan dan lapar!`, 2); showFeed(w); saveGame();
   } else {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
@@ -385,7 +395,7 @@ function feed(id) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
     markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
-    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; leaveEncounter(5); runAway(w); };
@@ -393,7 +403,7 @@ async function runAway(w) {
   const i = wilds.indexOf(w); if (i >= 0) wilds.splice(i, 1); w.hp = w.hpMax; w.state = 'gone'; w.walk = true; w.pop = 1;
   const dx = w.x - player.x, dz = w.z - player.z, d = Math.hypot(dx, dz) || 1, x0 = w.x, z0 = w.z; w.ang = Math.atan2(dx, dz);
   await tween(1000, (k) => { w.x = x0 + dx / d * 4 * k; w.z = z0 + dz / d * 4 * k; w.fade = Math.max(0.01, 1 - k * k); placeEnt(w, 0.016); });
-  world.remove(w.rig.root); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz });
+  world.remove(w.rig.root); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 });
 }
 
 /* =====================================================================

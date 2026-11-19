@@ -75,6 +75,18 @@ button .e{font-size:24px;display:block;line-height:1}
 #moves .mv{flex:1;padding:6px 4px;min-height:64px;font-size:17px}
 #moves .mv small{display:block;font-size:12px;font-weight:400}
 #moves .mv.wait{opacity:.5;pointer-events:none}
+
+#lvup{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.2);opacity:0;pointer-events:none;text-align:center;z-index:6;width:min(92vw,520px)}
+#lvup .rays{position:absolute;left:50%;top:50%;width:min(130vw,820px);height:min(130vw,820px);margin:calc(min(130vw,820px)/-2) 0 0 calc(min(130vw,820px)/-2);background:repeating-conic-gradient(from 0deg,rgba(255,226,102,.55) 0 8deg,rgba(255,226,102,0) 8deg 20deg);-webkit-mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 30%,transparent 62%);mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 30%,transparent 62%);animation:lvspin 6s linear infinite;z-index:-1}
+#lvup .t{font:800 min(15vw,84px)/1 var(--font-display);color:#ffe066;-webkit-text-stroke:4px var(--edge);paint-order:stroke fill;text-shadow:0 6px 0 var(--edge),0 0 28px rgba(255,214,70,.95);letter-spacing:2px}
+#lvup .n{font:800 min(7vw,34px)/1.2 var(--font-display);color:#fff;margin-top:6px;-webkit-text-stroke:3px var(--edge);paint-order:stroke fill;text-shadow:0 4px 0 var(--edge)}
+#lvup .s{font-size:min(8vw,36px);color:#ffe066;text-shadow:0 3px 0 var(--edge);letter-spacing:10px;margin-top:2px}
+#lvup.go{animation:lvpop 2.3s cubic-bezier(.2,1.4,.3,1) forwards}
+#lvflash{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,250,200,.95),rgba(255,226,102,.45) 45%,rgba(255,226,102,0) 75%);opacity:0;pointer-events:none;z-index:5}
+#lvflash.go{animation:lvfl .9s ease-out forwards}
+@keyframes lvpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-8deg)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.3) rotate(3deg)}24%{transform:translate(-50%,-50%) scale(.95) rotate(0)}34%{transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-52%) scale(1)}100%{opacity:0;transform:translate(-50%,-64%) scale(1.05)}}
+@keyframes lvfl{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+@keyframes lvspin{to{transform:rotate(360deg)}}
 #flee,#swapB{min-height:38px;font-size:14px;padding:3px 14px}
 #moves .acts{display:flex;gap:10px}
 #swapP{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:none;width:min(520px,calc(100vw - 20px));text-align:center;padding:8px 10px;pointer-events:auto}
@@ -415,6 +427,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
 <button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
+<div id="lvflash"></div><div id="lvup"><i class="rays"></i><div class="t">LEVEL UP!</div><div class="n"></div><div class="s">★ ★ ★</div></div>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>
 
@@ -635,7 +648,7 @@ sun.position.set(-18, 34, 14); sun.target.position.set(0, 0, 0);
 const toon = (c, o = {}) => toonA({ color: c, ...o });
 const glow = (c) => new THREE.MeshBasicMaterial({ color: c });
 
-await __boot.step(1, 17);
+await __boot.step(1, 18);
 /* ---------- bahan: toon 3 tingkat + garis tepi ---------- */
 
 function pixTex(w, h, fn) {
@@ -894,7 +907,7 @@ function buildPioyo(st) {
 }
 
 
-await __boot.step(2, 17);
+await __boot.step(2, 18);
 
 /* =====================================================================
    KOTA: layout Depok (diorama kecil, data-driven — tiap kota punya layout sendiri)
@@ -1010,6 +1023,7 @@ const HGX = HX * 4 + 1, HGZ = HZ * 4 + 1; let HGRID = new Float32Array(HGX * HGZ
     if (pass) HGRID = dst; }
 }
 function groundY(x, z) {
+  if (z > HZ) return fieldY(x, z);
   if (x > HX + 2) return 0;
   const fx = clamp((x + HX) * 2, 0, HGX - 1.001), fz = clamp((z + HZ) * 2, 0, HGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
   const a = HGRID[j * HGX + i], b = HGRID[j * HGX + i + 1], c = HGRID[(j + 1) * HGX + i], d = HGRID[(j + 1) * HGX + i + 1];
@@ -1019,10 +1033,11 @@ function groundY(x, z) {
 
 /* tumbukan */
 const LAB_PROF = [33.6, 31.0]; const circles = [], rects = [], vehicles = []; let inside = false; const INB = { x0: 0, x1: 0, z0: 0, z1: 0 };
-function waterAt(x, z) { const k = kindAt(x, z); return k === 'water'; }
+function waterAt(x, z) { const k = z > HZ ? fkind(x, z) : kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
   if (inside) { if (x < INB.x0 + 0.5 || x > INB.x1 - 0.5 || z < INB.z0 + 0.45 || z > INB.z1 - 0.5) return true; for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; } for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true; return false; }
-  if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8 || z > HZ - 0.8) return true;
+  if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8) return true;
+  if (z > HZ - 0.8 && (!inFieldX(x) || z > FD.z1 - 0.8)) return true;
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }
   for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true;
@@ -1031,6 +1046,7 @@ function blockedAt(x, z, r) {
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }
 function zoneName(x, z) {
+  if (z > HZ) return fieldName(x, z);
   const rv = poly(C.river.pts, x, z);
   if (rv.d < C.river.w / 2 + 1.0) return 'Kali Ciliwung';
   for (const l of C.lakes) if (inEll(l, x, z, 1.0)) return 'Danau UI';
@@ -1066,7 +1082,7 @@ const terrainMat = { m: null };
   const dc = pixCanvas(64, 40, (x, y) => { const n = fbm(x * 0.12, y * 0.2); if (y < 3) return shade(hex('#5aa23a'), 0.9 + hash2(x, y) * 0.2); if (y < 5) return shade(hex('#4a3a24'), 0.9); let c = mixc(hex('#7b583c'), hex('#5e412d'), clamp(y / 40 + n * 0.3, 0, 1)); if (hash2(x * 3, y * 5) < 0.06) c = shade(c, 0.78); if (vnoise(x * 0.5, y * 0.5) > 0.82) c = shade(hex('#8b8f93'), 0.8 + hash2(x, y) * 0.2); return c; });
   const dt = toTex(dc); dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
   const dm = toon('#ffffff', { map: dt }); const DEPTH = 2.6;
-  [[0, -HZ, Math.PI, HX * 2], [0, HZ, 0, HX * 2], [-HX, 0, -Math.PI / 2, HZ * 2], [HX, 0, Math.PI / 2, HZ * 2]].forEach(([x, z, ry, w]) => {
+  [[0, -HZ, Math.PI, HX * 2], [-13, HZ, 0, 10], [12, HZ, 0, 12], [-HX, 0, -Math.PI / 2, HZ * 2], [HX, 0, Math.PI / 2, HZ * 2]].forEach(([x, z, ry, w]) => {
     const pg = new THREE.PlaneGeometry(w, DEPTH); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 4, uv.getY(i));
     const m = new THREE.Mesh(pg, dm); m.position.set(x, -DEPTH / 2 + 0.02, z); m.rotation.y = ry; m.receiveShadow = true; world.add(m);
   });
@@ -1074,7 +1090,7 @@ const terrainMat = { m: null };
 }
 function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); }
 
-await __boot.step(3, 17);
+await __boot.step(3, 18);
 
 /* =====================================================================
    POHON (faceted low-poly seperti Arena Piksel, digabung jadi 1 mesh), SEMAK, RUMPUT
@@ -1112,9 +1128,9 @@ function bushGeoms(x, z, s, seed) {
 function addTree(x, z, kind = 'pine', s = 1, seed = (x * 13 + z * 7) | 0) { if (Math.hypot(x - C.dais[0], z - C.dais[1]) < 3.4 || inRect(C.garden, x, z, 0.5)) return; treeSpots.push({ x, z, kind, s, seed }); circles.push({ x, z, r: 0.32 * s }); }
 function addBush(x, z, s = 1, seed = 1) { treeSpots.push({ x, z, kind: 'bush', s, seed }); }
 const treeMeshes = [];
-function buildTrees() {
+function buildTrees(from = 0) {
   const mat = toon('#ffffff', { vertexColors: true });
-  treeSpots.forEach((t) => {
+  treeSpots.slice(from).forEach((t) => {
     const a = treeGeoms.length;
     if (t.kind === 'pine') pineGeoms(t.x, t.z, t.s, t.seed); else if (t.kind === 'round') roundGeoms(t.x, t.z, t.s, t.seed, false); else if (t.kind === 'fruit') roundGeoms(t.x, t.z, t.s, t.seed, true); else bushGeoms(t.x, t.z, t.s, t.seed);
     const gs = treeGeoms.slice(a); if (!gs.length) return;
@@ -1124,11 +1140,11 @@ function buildTrees() {
 
 /* rumput instanced dengan angin + tersibak oleh pemain/Maimon (lapisan 1: digambar setelah outline) */
 const PUSH_N = 10, grassUniforms = { uTime: { value: 0 }, uCamRight: { value: new THREE.Vector3(1, 0, 0) }, uPush: { value: Array.from({ length: PUSH_N }, () => new THREE.Vector4()) }, uWind: { value: 1 } };
-function buildGrass() {
-  const R = rng(42), base = [], params = [], tint = [];
+function buildGrass(bx0 = -HX, bx1 = HX, bz0 = -HZ, bz1 = HZ, kf = kindAt, N = 52000, seed = 42) {
+  const R = rng(seed), base = [], params = [], tint = [];
   const push = (x, y, z, h, tx, tz, k, w = 0) => { base.push(x, y, z); params.push(h, tx, tz, w); tint.push(k * (0.92 + R() * 0.12), k * (0.95 + R() * 0.1), k * (0.85 + R() * 0.2)); };
-  for (let i = 0; i < 52000; i++) {
-    const x = -HX + 0.05 + R() * (HX * 2 - 0.1), z = -HZ + 0.05 + R() * (HZ * 2 - 0.1), k = kindAt(x, z);
+  for (let i = 0; i < N; i++) {
+    const x = bx0 + 0.05 + R() * (bx1 - bx0 - 0.1), z = bz0 + 0.05 + R() * (bz1 - bz0 - 0.1), k = kf(x, z);
     if (k !== 'grass' && k !== 'forest' && k !== 'lawn' && k !== 'orchard' && k !== 'bank') continue;
     if (k === 'bank' && R() > 0.25) continue;
     if (rects.some((b) => x > b[0] - 0.05 && x < b[1] + 0.05 && z > b[2] - 0.05 && z < b[3] + 0.05)) continue;
@@ -1175,7 +1191,7 @@ function buildGrass() {
   const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; mesh.receiveShadow = true; mesh.layers.set(1); scene.add(mesh);
 }
 
-await __boot.step(4, 17);
+await __boot.step(4, 18);
 
 /* =====================================================================
    BANGUNAN: dinding bertekstur piksel (jendela, pintu), atap pelana bergenteng
@@ -1362,7 +1378,7 @@ function buildTrain() {
 }
 let trainT = 0; function updateTrain(dt) { trainT += dt; train.position.z = Math.sin(trainT * 0.28) * 14 - 5.2; train.position.y = 0.04; }
 
-await __boot.step(5, 17);
+await __boot.step(5, 18);
 
 function populateWorld() {
   buildBuildings(); buildProps();
@@ -1397,10 +1413,118 @@ function populateWorld() {
     if (rects.some((b) => x > b[0] - 0.2 && x < b[1] + 0.2 && z > b[2] - 0.2 && z < b[3] + 0.2)) continue;
     addBush(x, z, 0.8 + R0() * 0.6, (R0() * 100) | 0); n++;
   }
-  buildTrees(); buildGrass(); buildTraffic(); buildTrain();
+  buildTrees(); buildGrass(); populateField(); buildGrass(FD.x0, FD.x1, FD.z0, FD.z1, fkind, 30000, 77); buildTraffic(); buildTrain();
 }
 
-await __boot.step(6, 17);
+await __boot.step(6, 18);
+/* =====================================================================
+   FIELD J1 — jalur Depok–Bogor. Menyambung LANGSUNG dari ujung selatan Jl. Margonda
+   (tanpa portal): jalan yang sama, lebar yang sama, hanya ada gapura di sambungan.
+   Field Sedang 14 x 40 petak. Koordinat dunia (bukan lokal): x -8..6, z 14..54.
+   ===================================================================== */
+const FD = { id: 'J1', name: 'Jalur Depok–Bogor', x0: -8, x1: 6, z0: HZ, z1: HZ + 40 };
+const FC = {
+  road: { pts: [[-1, HZ], [-1.4, 20], [-0.6, 28], [-1.2, 36], [-0.8, 46], [-1, FD.z1]], w: 3.4 },
+  river: { pts: [[-8, 33.0], [-3, 34.0], [1, 33.5], [6, 34.4]], w: 2.2 },
+  pond: [3.4, 23.2, 2.0, 1.4],
+  forest: [[-8, -4.4, 40.5, 53.2], [3.2, 6, 43, 53.2], [-8, -5.2, 15.6, 20.5], [3.6, 6, 16, 19.5]],
+  hut: [3.6, 29.6],
+};
+const inFieldX = (x) => x > FD.x0 + 0.8 && x < FD.x1 - 0.8;
+const zMaxAt = (x) => (x > FD.x0 + 0.6 && x < FD.x1 - 0.6 ? FD.z1 - 0.6 : HZ - 0.6);
+function fkind(x, z) {
+  const mg = poly(FC.road.pts, x, z), mw = FC.road.w / 2;
+  if (mg.d < mw + 0.16) return mg.d < 0.26 ? 'median' : mg.d < mw ? 'road' : 'curb';
+  const rv = poly(FC.river.pts, x, z).d;
+  if (rv < FC.river.w / 2 || inEll(FC.pond, x, z)) return 'water';
+  if (rv < FC.river.w / 2 + 0.45 || inEll(FC.pond, x, z, 0.4)) return 'bank';
+  for (const f of FC.forest) if (inRect(f, x, z)) return 'forest';
+  return 'grass';
+}
+const FGX = (FD.x1 - FD.x0) * 2 + 1, FGZ = (FD.z1 - FD.z0) * 2 + 1; let FGRID = new Float32Array(FGX * FGZ);
+{
+  const raw = new Float32Array(FGX * FGZ);
+  for (let j = 0; j < FGZ; j++) for (let i = 0; i < FGX; i++) {
+    const x = FD.x0 + i * 0.5, z = FD.z0 + j * 0.5, k = fkind(x, z); let h = 0;
+    if (k === 'water') h = -0.45; else if (k === 'bank') h = -0.05;
+    else if (k === 'grass' || k === 'forest') h = (fbm(x * 0.35 + 9, z * 0.35) - 0.5) * 0.28;
+    raw[j * FGX + i] = h;
+  }
+  for (let pass = 0; pass < 2; pass++) { const src = pass ? FGRID : raw, dst = pass ? new Float32Array(FGX * FGZ) : FGRID;
+    for (let j = 0; j < FGZ; j++) for (let i = 0; i < FGX; i++) { let s = 0, n = 0; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= FGX || jj >= FGZ) continue; s += src[jj * FGX + ii]; n++; } dst[j * FGX + i] = s / n; }
+    if (pass) FGRID = dst; }
+  // jalan di atas sungai dibuat rata (jembatan)
+  for (let j = 0; j < FGZ; j++) for (let i = 0; i < FGX; i++) { const x = FD.x0 + i * 0.5, z = FD.z0 + j * 0.5, k = fkind(x, z); if ((k === 'road' || k === 'median' || k === 'curb') && poly(FC.river.pts, x, z).d < FC.river.w / 2 + 0.9) FGRID[j * FGX + i] = 0.06; }
+}
+function fieldY(x, z) {
+  if (x < FD.x0 || x > FD.x1) return 0;
+  const fx = clamp((x - FD.x0) * 2, 0, FGX - 1.001), fz = clamp((z - FD.z0) * 2, 0, FGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
+  const a = FGRID[j * FGX + i], b = FGRID[j * FGX + i + 1], c = FGRID[(j + 1) * FGX + i], d = FGRID[(j + 1) * FGX + i + 1];
+  return lerp(lerp(a, b, tx), lerp(c, d, tx), tz);
+}
+function fieldName(x, z) {
+  const rv = poly(FC.river.pts, x, z).d;
+  if (rv < FC.river.w / 2 + 1.2) return 'Sungai Cipakancilan';
+  if (inEll(FC.pond, x, z, 1.0)) return 'Situ Kecil';
+  if (Math.hypot(x - FC.hut[0], z - FC.hut[1]) < 2.2) return 'Warung Pinggir Jalan';
+  return 'Jl. Raya Depok–Bogor';
+}
+
+/* tanah, air, dan sisi diorama field */
+const FWATER = { tex: null };
+{
+  const W = (FD.x1 - FD.x0), H = (FD.z1 - FD.z0), PW = W * TPU, PH = H * TPU;
+  const tex = toTex(pixCanvas(PW, PH, (pxi, pzi) => { const x = FD.x0 + (pxi + 0.5) / TPU, z = FD.z0 + (pzi + 0.5) / TPU; return tileColor(fkind(x, z), x, z, pxi, pzi + 7000); }));
+  const g = new THREE.PlaneGeometry(W, H, W * 2, H * 2); g.rotateX(-Math.PI / 2); g.translate((FD.x0 + FD.x1) / 2, 0, (FD.z0 + FD.z1) / 2);
+  const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const gi = Math.round((p.getX(i) - FD.x0) * 2), gj = Math.round((p.getZ(i) - FD.z0) * 2); p.setY(i, FGRID[gj * FGX + gi]); }
+  g.computeVertexNormals();
+  const t = new THREE.Mesh(g, toon('#ffffff', { map: tex })); t.receiveShadow = true; world.add(t);
+  const wt = terrainMat.water.clone(); wt.needsUpdate = true; wt.repeat.set(W / 4, H / 4); FWATER.tex = wt;
+  const wm = new THREE.Mesh(new THREE.PlaneGeometry(W, H).rotateX(-Math.PI / 2), toon('#ffffff', { map: wt })); wm.position.set((FD.x0 + FD.x1) / 2, -0.13, (FD.z0 + FD.z1) / 2); wm.receiveShadow = true; world.add(wm);
+  const dc = pixCanvas(64, 40, (x, y) => { const n = fbm(x * 0.12, y * 0.2); if (y < 3) return shade(hex('#5aa23a'), 0.9 + hash2(x, y) * 0.2); if (y < 5) return shade(hex('#4a3a24'), 0.9); let c = mixc(hex('#7b583c'), hex('#5e412d'), n); return shade(c, 0.9 + hash2(x, y) * 0.2); });
+  const dt = toTex(dc); dt.wrapS = dt.wrapT = THREE.RepeatWrapping; const dm = toon('#ffffff', { map: dt }), DEPTH = 2.6, cx = (FD.x0 + FD.x1) / 2, cz = (FD.z0 + FD.z1) / 2;
+  [[FD.x0, cz, -Math.PI / 2, H], [FD.x1, cz, Math.PI / 2, H], [cx, FD.z1, 0, W]].forEach(([x, z, ry, w]) => {
+    const pg = new THREE.PlaneGeometry(w, DEPTH); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 4, uv.getY(i));
+    const m = new THREE.Mesh(pg, dm); m.position.set(x, -DEPTH / 2 + 0.02, z); m.rotation.y = ry; m.receiveShadow = true; world.add(m);
+  });
+  const bot = new THREE.Mesh(new THREE.PlaneGeometry(W, H).rotateX(Math.PI / 2), toon('#4a3a24')); bot.position.set(cx, -DEPTH, cz); world.add(bot);
+}
+
+/* isi field: pohon, semak, jembatan, gapura, warung, palang gerbang Bogor */
+function populateField() {
+  const R = rng(311), t0 = treeSpots.length;
+  const free = (x, z, m) => !rects.some((b) => x > b[0] - m && x < b[1] + m && z > b[2] - m && z < b[3] + m) && !treeSpots.some((p) => p.kind !== 'bush' && Math.hypot(p.x - x, p.z - z) < 1.9);
+  for (const f of FC.forest) { let n = 0, tr = 0; const want = Math.round((f[1] - f[0]) * (f[3] - f[2]) * 0.5); while (n < want && tr++ < 600) { const x = f[0] + 0.6 + R() * (f[1] - f[0] - 1.2), z = f[2] + 0.6 + R() * (f[3] - f[2] - 1.2); if (fkind(x, z) !== 'forest' || !free(x, z, 0.9)) continue; addTree(x, z, R() < 0.6 ? 'pine' : 'round', 0.85 + R() * 0.4); n++; } }
+  let n = 0, tr = 0; while (n < 16 && tr++ < 800) { const x = FD.x0 + 1 + R() * (FD.x1 - FD.x0 - 2), z = FD.z0 + 2 + R() * (FD.z1 - FD.z0 - 3); if (fkind(x, z) !== 'grass' || !free(x, z, 1.0) || poly(FC.road.pts, x, z).d < 3.2) continue; addTree(x, z, R() < 0.5 ? 'pine' : 'round', 0.8 + R() * 0.35); n++; }
+  n = 0; tr = 0; while (n < 36 && tr++ < 1200) { const x = FD.x0 + 0.8 + R() * (FD.x1 - FD.x0 - 1.6), z = FD.z0 + 1 + R() * (FD.z1 - FD.z0 - 2), k = fkind(x, z); if ((k !== 'grass' && k !== 'forest') || !free(x, z, 0.2)) continue; addBush(x, z, 0.8 + R() * 0.6, (R() * 100) | 0); n++; }
+  // semak di trotoar tengah
+  for (let s = 1.5; s < polyLen(FC.road.pts) - 0.5; s += 2.7) { const [x, z] = polyAt(FC.road.pts, s); if (poly(FC.river.pts, x, z).d > FC.river.w / 2 + 1.4) addBush(x, z, 1.0, (s * 10) | 0); }
+  buildTrees(t0);
+  // jembatan: pagar di dua sisi jalan sepanjang sungai
+  { const rail = toon('#e9e4d6'), post = toon('#b9b1a0'); const rc = poly(FC.river.pts, -1, 34), zc = 33.6;
+    [-1, 1].forEach((sd) => { const x = -1 + sd * 1.95; box(world, 0.14, 0.34, 3.6, rail, x, 0.36, zc); [-1.7, -0.6, 0.6, 1.7].forEach((dz) => box(world, 0.2, 0.5, 0.2, post, x, 0.25, zc + dz)); }); }
+  // gapura "KE BOGOR" tepat di sambungan Depok - field
+  const arch = (zc, txt, bg) => {
+    const wood = toon('#c9b88a'), roof = toon('#8a3b2e'); const cx = -1.2;
+    [-2.5, 2.5].forEach((dx) => { box(world, 0.42, 2.1, 0.42, wood, cx + dx, 1.05, zc); circles.push({ x: cx + dx, z: zc, r: 0.3 }); });
+    box(world, 5.9, 0.28, 0.5, roof, cx, 2.2, zc); box(world, 5.2, 0.5, 0.3, toon('#f3ead2'), cx, 1.85, zc);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.52), new THREE.MeshBasicMaterial({ map: labelTex(txt, bg, '#ffffff'), side: THREE.DoubleSide })); m.position.set(cx, 1.85, zc); world.add(m);
+  };
+  arch(HZ + 1.4, 'KE BOGOR', '#1d6f6a');
+  // palang tutup di ujung field (Kota Bogor belum dibuka)
+  arch(FD.z1 - 2.2, 'BOGOR: TUTUP', '#a8442e');
+  { const bar = toon('#f1f1f1'), red = toon('#d8452e'); const zc = FD.z1 - 1.6; for (let k = 0; k < 6; k++) box(world, 0.65, 0.18, 0.12, k % 2 ? red : bar, -3.0 + k * 0.65 + 0.33 - 0.0, 0.6, zc); rects.push([-3.4, 0.9, zc - 0.3, zc + 0.3]); }
+  // warung pinggir jalan
+  { const h = house(FC.hut[0], FC.hut[1], -Math.PI / 2, 3); }
+}
+const FSPAWNS = [['kucingko', 1, -5.5, 24], ['tikusil', 1, 3.8, 20.4], ['dombanyo', 1, 3.5, 26.2], ['kucingko', 1, 2.8, 38.5], ['tikusil', 1, -4.5, 29.5], ['dombanyo', 1, -6, 37.5], ['kancik', 1, -6.2, 46.5], ['cebongi', 1, 3.4, 22.6], ['pioyo', 1, 4.4, 47.5], ['kancik', 2, 4.9, 41.2]];
+let fToastT = 0;
+function updateField(dt) {
+  FWATER.tex.offset.set(T * 0.03, T * 0.02);
+  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Gerbang Kota Bogor belum dibuka. Segera hadir!', 2.6); }
+}
+
+await __boot.step(7, 18);
 /* =====================================================================
    INTERIOR LAB MAIMON UI — ruangan di luar peta, dimasuki lewat pintu Lab di Depok Lama
    ===================================================================== */
@@ -1481,7 +1605,7 @@ function clearYaw(x, z, base) {
   return best;
 }
 
-await __boot.step(7, 17);
+await __boot.step(8, 18);
 
 function buildQuad(S) {
   const r = newRig(), g = r.root; r.size = 1; r.h = S.h || 0.8;
@@ -1550,7 +1674,7 @@ function buildPlayer() {
   return r;
 }
 
-await __boot.step(8, 17);
+await __boot.step(9, 18);
 
 /* =====================================================================
    KAMERA ORTOGRAFIS + RENDER (pipeline Arena Piksel: normal pass, color pass, outline pass, final)
@@ -1591,7 +1715,7 @@ function render(T) {
   renderer.render(finalScene, quadCam);
 }
 
-await __boot.step(9, 17);
+await __boot.step(10, 18);
 
 /* =====================================================================
    MUSIK PROSEDURAL (WebAudio) — tiap kota punya tema sendiri, battle punya tema sendiri.
@@ -1620,11 +1744,12 @@ const Music = (() => {
       bass: 'r.r.r.r.r.r.r.8.', arp: '0.1.2.3.2.1.2.1.',
       dr: { k: 'X...X...X...X.x.', s: '....X.......X..x', h: 'x.x.x.x.x.x.x.xx', d: 'x..x..x.x..x.x..', c: '........x.......' },
       A: [[0, 7, 3], [4, 7, 1], [6, 9, 2], [8, 11, 6], [16, 10, 3], [20, 9, 1], [22, 7, 2], [24, 9, 8]], B: [[0, 11, 3], [4, 11, 1], [6, 12, 2], [8, 13, 6], [16, 12, 3], [20, 11, 1], [22, 9, 2], [24, 11, 8]] },
-    depok: { bpm: 104, swing: 0.05, spb: 16, root: 45, sc: 'mix', lead: 'pluck', lead2: 'flute', bassI: 'pluck', padV: 0.9, arpI: 'pluck', gong: false,
-      ch: [[0, 'maj'], [10, 'maj'], [5, 'maj'], [0, 'maj'], [0, 'maj'], [10, 'maj'], [5, 'maj'], [7, 'min']],
-      bass: 'r..r..5.r..r..5.', arp: '..0.1.2...0.1.2.',
-      dr: { k: 'X.....x.X.....x.', s: '....x.......x...', h: 'x.x.x.x.x.x.x.x.', w: '..x.....x...x...', p: 'o.o.o.o.o.o.o.o.' },
-      A: [[0, 4, 2], [2, 5, 2], [4, 4, 4], [8, 2, 2], [10, 4, 2], [12, 5, 4], [16, 4, 2], [18, 2, 2], [20, 0, 4], [24, 2, 8]], B: [[0, 5, 2], [2, 6, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 4, 4], [16, 2, 2], [18, 0, 2], [20, -1, 4], [24, 0, 8]] },
+    depok: { bpm: 92, swing: 0.02, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1.15, arpI: 'pluck', gong: false,
+      ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [4, 'm7'], [5, 'maj7'], [0, 'maj'], [5, 'add9'], [7, 'sus4']],
+      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
+      dr: { h: '..o...o...o...o.', p: 'o...............' },
+      A: [[0, 4, 4], [4, 5, 2], [6, 4, 2], [8, 2, 8], [16, 4, 4], [20, 2, 2], [22, 0, 2], [24, 1, 4], [28, 2, 4]],
+      B: [[0, 5, 4], [4, 7, 2], [6, 5, 2], [8, 4, 8], [16, 2, 4], [20, 4, 2], [22, 5, 2], [24, 4, 8]] },
     jakarta: { bpm: 118, swing: 0.08, spb: 16, root: 50, sc: 'dor', lead: 'synth', lead2: 'brass', bassI: 'pluck', padV: 0.8, arpI: 'pluck',
       ch: [[0, 'm9'], [5, 'dom7'], [3, 'maj7'], [7, 'm7'], [0, 'm9'], [5, 'dom7'], [3, 'maj7'], [10, 'dom7']],
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
@@ -1853,7 +1978,7 @@ const Music = (() => {
   function jingle(kind) {
     if (!ctx) return; const t = ctx.currentTime + 0.05, bus = ctx.createGain(); bus.gain.value = 1; bus.connect(duck); const r = ctx.createGain(); r.gain.value = 0.5; bus.connect(r); r.connect(revIn);
     duck.gain.cancelScheduledValues(t); duck.gain.setValueAtTime(duck.gain.value, t); duck.gain.linearRampToValueAtTime(0.28, t + 0.08); duck.gain.setValueAtTime(0.28, t + 2.8); duck.gain.linearRampToValueAtTime(1, t + 3.6);
-    const seq = kind === 'heal' ? [[72, 0], [76, 0.16], [79, 0.32], [84, 0.5], [79, 0.78], [84, 1.0], [88, 1.25], [91, 1.5]] : kind === 'win' ? [[60, 0], [64, 0.12], [67, 0.24], [72, 0.36], [76, 0.52], [79, 0.7], [84, 0.9]] : kind === 'catch' ? [[72, 0], [76, 0.1], [79, 0.2], [84, 0.3], [88, 0.46], [91, 0.62], [96, 0.8], [84, 1.15], [88, 1.15], [91, 1.15], [96, 1.15]] : [[67, 0], [64, 0.2], [60, 0.4], [55, 0.7]];
+    const seq = kind === 'level' ? [[67, 0], [72, 0.1], [76, 0.2], [79, 0.3], [84, 0.42], [79, 0.58], [84, 0.7], [88, 0.82], [91, 0.98], [96, 1.18], [91, 1.32], [96, 1.5], [100, 1.7], [103, 1.9]] : kind === 'heal' ? [[72, 0], [76, 0.16], [79, 0.32], [84, 0.5], [79, 0.78], [84, 1.0], [88, 1.25], [91, 1.5]] : kind === 'win' ? [[60, 0], [64, 0.12], [67, 0.24], [72, 0.36], [76, 0.52], [79, 0.7], [84, 0.9]] : kind === 'catch' ? [[72, 0], [76, 0.1], [79, 0.2], [84, 0.3], [88, 0.46], [91, 0.62], [96, 0.8], [84, 1.15], [88, 1.15], [91, 1.15], [96, 1.15]] : [[67, 0], [64, 0.2], [60, 0.4], [55, 0.7]];
     seq.forEach(([m, dt]) => { (kind === 'lose' ? VOICE.flute : VOICE.bell)(t + dt, mtof(m), 0.5, 1, bus); }); if (kind !== 'lose') [48, 55, 64, 72].forEach((m) => VOICE.pad(t + 0.7, mtof(m), 1.6, 1.2, bus));
     setTimeout(() => { try { bus.disconnect(); } catch (e) {} }, 8000);
   }
@@ -1873,7 +1998,7 @@ const Music = (() => {
   return { set lite(v) { lite = v; }, get lite() { return lite; }, TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
 })();
 
-await __boot.step(10, 17);
+await __boot.step(11, 18);
 
 /* =====================================================================
    MANUSIA: pemain (cowok/cewek), Prof. Catherine, Dokter Klinik
@@ -1928,7 +2053,7 @@ const LOOK = {
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);
 
-await __boot.step(11, 17);
+await __boot.step(12, 18);
 
 const CITY = 'depok';
 /* =====================================================================
@@ -2002,9 +2127,9 @@ const isRare = (sp, st) => RARE_SP.includes(sp);
 const NPC_SAFE = 5;
 const npcDist = (x, z) => { let d = 1e9, n0 = null; for (const n of npcs) { if (n.x > 20 && n.z > 20) continue; const q = Math.hypot(n.x - x, n.z - z); if (q < d) { d = q; n0 = n; } } return [d, n0]; };
 function pushFromNPC(x, z) { const [d, n] = npcDist(x, z); if (!n || d >= NPC_SAFE) return [x, z]; const k = d < 1e-3 ? 0 : 1 / d, ux = d < 1e-3 ? 1 : (x - n.x) * k, uz = d < 1e-3 ? 0 : (z - n.z) * k; return [n.x + ux * (NPC_SAFE + 0.4), n.z + uz * (NPC_SAFE + 0.4)]; }
-function trySpawn(sp, st, x, z) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z }); return null; } return spawnWild(sp, st, x, z); }
-function spawnWild(sp, st, hx, hz) {
-  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0), w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
+function trySpawn(sp, st, x, z, la = 0) { if (isRare(sp, st) && R0() > RARE_CHANCE * (st === 2 ? 0.4 : 1)) { respawns.push({ t: T + 120 + R0() * 60, sp, st, hx: x, hz: z, la }); return null; } return spawnWild(sp, st, x, z, la); }
+function spawnWild(sp, st, hx, hz, la = 0) {
+  [hx, hz] = pushFromNPC(hx, hz); const [x, z] = freeSpot(hx, hz, 0.4), rare = isRare(sp, st), lv = (st === 2 ? 10 + ((R0() * 3) | 0) : rare ? 6 + ((R0() * 3) | 0) : 3 + ((R0() * 4) | 0)) + la, w = mkMon(sp, st, x, z, lv); w.hx = hx; w.hz = hz; w.la = la; w.rad = sp === 'kancik' ? 3.5 : 2.6; w.rare = isRare(sp, st); w.spark = 0; wilds.push(w); return w;
 }
 function updateWild(w, dt) {
   if (w.rare && (w.spark -= dt) < 0) { w.spark = 0.7; burst(w.x, 0.5 + R0() * 0.5, w.z, '#fff3a0', 3); }
@@ -2279,13 +2404,23 @@ async function round(i) {
   if (w.hp <= 0) return endBattle('win'); if (me.hp <= 0) return faintFlow();
   battle.busy = false; setMovesEnabled(true); say('Pilih jurus!', 900);
 }
+
+/* ---------- efek NAIK LEVEL: kilat emas, banner besar, bintang, Maimon melompat ---------- */
+async function levelUpFx(m, lv, w) {
+  const b = $('lvup'), f = $('lvflash'); b.querySelector('.n').textContent = `${m.name}  Lv ${lv - 1} ➜ Lv ${lv}`;
+  toastEl.style.opacity = 0; camGoal.set(m.x, 0.4, m.z); zoomGoal = 0.34; Music.jingle('level'); m.jump = 1.1; m.pop = 0; m.state = 'face';
+  [b, f].forEach((e) => { e.classList.remove('go'); void e.offsetWidth; e.classList.add('go'); });
+  const cols = ['#ffe066', '#ff7aa8', '#7fe0ff', '#9be85a', '#ffffff'];
+  for (let k = 0; k < 5; k++) { setTimeout(() => { burst(m.x + (R0() - 0.5) * 0.6, 0.5 + k * 0.28, m.z + (R0() - 0.5) * 0.6, cols[k % 5], 26); }, k * 170); }
+  await sleep(2300); b.classList.remove('go'); f.classList.remove('go'); m.state = 'follow'; if (w) { camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45; }
+}
 async function endBattle(res) {
   closeSwapUI(); const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
-    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push(`⬆️ ${m.name} naik ke Lv ${l}!`)); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.ups.length) burst(m.x, 0.6, m.z, '#ffe066', 22); });
-    for (const t of msgs) { toast(t, 1.7); await sleep(1500); if (mode !== 'feed') return; }
+    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); });
+    for (const t of msgs) { if (typeof t === 'string') { toast(t, 1.7); await sleep(1500); } else { await levelUpFx(t.m, t.l, w); } if (mode !== 'feed') return; }
     toast(w.rare ? `✨ ${w.name} langka ini! Jangan sampai lepas!` : `${w.name} kecapekan dan lapar!`, 2); showFeed(w); saveGame();
   } else {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
@@ -2316,7 +2451,7 @@ function feed(id) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
     markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
-    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz }); leaveEncounter(2);
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; leaveEncounter(5); runAway(w); };
@@ -2324,7 +2459,7 @@ async function runAway(w) {
   const i = wilds.indexOf(w); if (i >= 0) wilds.splice(i, 1); w.hp = w.hpMax; w.state = 'gone'; w.walk = true; w.pop = 1;
   const dx = w.x - player.x, dz = w.z - player.z, d = Math.hypot(dx, dz) || 1, x0 = w.x, z0 = w.z; w.ang = Math.atan2(dx, dz);
   await tween(1000, (k) => { w.x = x0 + dx / d * 4 * k; w.z = z0 + dz / d * 4 * k; w.fade = Math.max(0.01, 1 - k * k); placeEnt(w, 0.016); });
-  world.remove(w.rig.root); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz });
+  world.remove(w.rig.root); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 });
 }
 
 /* =====================================================================
@@ -2379,7 +2514,7 @@ function updateMates(dt) {
 }
 
 
-await __boot.step(12, 17);
+await __boot.step(13, 18);
 
 /* =====================================================================
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
@@ -2692,7 +2827,7 @@ async function healScene() {
   dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }
 
-await __boot.step(13, 17);
+await __boot.step(14, 18);
 
 /* =====================================================================
    TAS + CARI MAKANAN: kebun warga (jagung/timun/wortel/kacang), kangkung di tepi danau, mancing ikan
@@ -2811,7 +2946,7 @@ $('pullb').onclick = () => {
 };
 $('fishx').onclick = () => { if (fishSt) endFish(false); };
 
-await __boot.step(14, 17);
+await __boot.step(15, 18);
 
 /* =====================================================================
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
@@ -2920,7 +3055,7 @@ $('dexb').onclick = () => {
 document.querySelectorAll('#menu button').forEach((b) => { b.onclick = () => openScr(b.dataset.s); });
 document.querySelectorAll('.scr [data-x]').forEach((b) => { b.onclick = () => closeScr(b.dataset.x); });
 
-await __boot.step(15, 17);
+await __boot.step(16, 18);
 /* =====================================================================
    LOOP UTAMA
    ===================================================================== */
@@ -2943,6 +3078,7 @@ let actZ = false; const clk = new THREE.Clock(); let objT = 0;
 function frame() {
   const rawDt = clk.getDelta(), dt = Math.min(rawDt, 0.05); T += dt; perfTick(rawDt);
   if (mode === 'play' && T > (window.__saveT || 0)) { window.__saveT = T + 5; if (S.stage >= 1) saveGame(); }
+  { const tz = Math.max(0, Math.round((player.z - 8) * 4) / 4); if (tz !== sun.target.position.z) { sun.target.position.z = tz; sun.position.z = 14 + tz; } }
   // pemain
   if (mode === 'play') {
     let ix = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0) + joy.x;
@@ -2954,7 +3090,7 @@ function frame() {
       const vx = (rx * ix - fx * iy) * sp, vz = (rz * ix - fz * iy) * sp;
       if (!blockedAt(player.x + vx, player.z, 0.28)) player.x += vx;
       if (!blockedAt(player.x, player.z + vz, 0.28)) player.z += vz;
-      if (!inside) { player.x = clamp(player.x, -HX + 0.6, HX - 0.6); player.z = clamp(player.z, -HZ + 0.6, HZ - 0.6); }
+      if (!inside) { player.x = clamp(player.x, -HX + 0.6, HX - 0.6); player.z = clamp(player.z, -HZ + 0.6, zMaxAt(player.x)); }
       player.ang = lerpAng(player.ang, Math.atan2(vx, vz), Math.min(1, dt * 12)); player.walk = true;
       const l = trail[trail.length - 1]; if (!l || Math.hypot(l[0] - player.x, l[1] - player.z) > 0.09) { trail.push([player.x, player.z]); if (trail.length > 300) trail.shift(); }
     } else player.walk = false;
@@ -2966,7 +3102,7 @@ function frame() {
   starters.forEach((s) => { s.pop += dt; s.jump = Math.max(0, s.jump - dt); placeEnt(s, dt); animRig(s.rig, T + s.rig.off, false); });
   updateMates(dt);
   // respawn
-  for (let i = respawns.length - 1; i >= 0; i--) if (T > respawns[i].t) { const r = respawns.splice(i, 1)[0]; trySpawn(r.sp, r.st, r.hx, r.hz); }
+  for (let i = respawns.length - 1; i >= 0; i--) if (T > respawns[i].t) { const r = respawns.splice(i, 1)[0]; trySpawn(r.sp, r.st, r.hx, r.hz, r.la || 0); }
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
@@ -3005,7 +3141,7 @@ function frame() {
 
   toastT -= dt; if (toastT < 0) toastEl.style.opacity = 0;
   logT -= dt; if (logT < 0 && mode !== 'battle') logEl.style.opacity = 0;
-  grassUniforms.uTime.value = T; updateWater(T); updateTraffic(dt, player.x, player.z); updateTrain(dt); updateParts(dt);
+  grassUniforms.uTime.value = T; updateWater(T); updateField(dt); updateTraffic(dt, player.x, player.z); updateTrain(dt); updateParts(dt);
   updateCamera(dt); render(T); requestAnimationFrame(frame);
 }
 
@@ -3018,6 +3154,7 @@ populateWorld();
 addNPC('tani', 'Pak Tani', LOOK.tani, POI.tani, 0);
 addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
+FSPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z, 2));
 resize(); addEventListener('resize', resize);
 enterTitle();
 // ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
@@ -3029,7 +3166,7 @@ function npcRule() {
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
   });
 }
-window.__g = { get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();

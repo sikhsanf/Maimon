@@ -113,6 +113,7 @@ const HGX = HX * 4 + 1, HGZ = HZ * 4 + 1; let HGRID = new Float32Array(HGX * HGZ
     if (pass) HGRID = dst; }
 }
 function groundY(x, z) {
+  if (z > HZ) return fieldY(x, z);
   if (x > HX + 2) return 0;
   const fx = clamp((x + HX) * 2, 0, HGX - 1.001), fz = clamp((z + HZ) * 2, 0, HGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
   const a = HGRID[j * HGX + i], b = HGRID[j * HGX + i + 1], c = HGRID[(j + 1) * HGX + i], d = HGRID[(j + 1) * HGX + i + 1];
@@ -122,10 +123,11 @@ function groundY(x, z) {
 
 /* tumbukan */
 const LAB_PROF = [33.6, 31.0]; const circles = [], rects = [], vehicles = []; let inside = false; const INB = { x0: 0, x1: 0, z0: 0, z1: 0 };
-function waterAt(x, z) { const k = kindAt(x, z); return k === 'water'; }
+function waterAt(x, z) { const k = z > HZ ? fkind(x, z) : kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
   if (inside) { if (x < INB.x0 + 0.5 || x > INB.x1 - 0.5 || z < INB.z0 + 0.45 || z > INB.z1 - 0.5) return true; for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; } for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true; return false; }
-  if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8 || z > HZ - 0.8) return true;
+  if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8) return true;
+  if (z > HZ - 0.8 && (!inFieldX(x) || z > FD.z1 - 0.8)) return true;
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }
   for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true;
@@ -134,6 +136,7 @@ function blockedAt(x, z, r) {
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }
 function zoneName(x, z) {
+  if (z > HZ) return fieldName(x, z);
   const rv = poly(C.river.pts, x, z);
   if (rv.d < C.river.w / 2 + 1.0) return 'Kali Ciliwung';
   for (const l of C.lakes) if (inEll(l, x, z, 1.0)) return 'Danau UI';
@@ -169,7 +172,7 @@ const terrainMat = { m: null };
   const dc = pixCanvas(64, 40, (x, y) => { const n = fbm(x * 0.12, y * 0.2); if (y < 3) return shade(hex('#5aa23a'), 0.9 + hash2(x, y) * 0.2); if (y < 5) return shade(hex('#4a3a24'), 0.9); let c = mixc(hex('#7b583c'), hex('#5e412d'), clamp(y / 40 + n * 0.3, 0, 1)); if (hash2(x * 3, y * 5) < 0.06) c = shade(c, 0.78); if (vnoise(x * 0.5, y * 0.5) > 0.82) c = shade(hex('#8b8f93'), 0.8 + hash2(x, y) * 0.2); return c; });
   const dt = toTex(dc); dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
   const dm = toon('#ffffff', { map: dt }); const DEPTH = 2.6;
-  [[0, -HZ, Math.PI, HX * 2], [0, HZ, 0, HX * 2], [-HX, 0, -Math.PI / 2, HZ * 2], [HX, 0, Math.PI / 2, HZ * 2]].forEach(([x, z, ry, w]) => {
+  [[0, -HZ, Math.PI, HX * 2], [-13, HZ, 0, 10], [12, HZ, 0, 12], [-HX, 0, -Math.PI / 2, HZ * 2], [HX, 0, Math.PI / 2, HZ * 2]].forEach(([x, z, ry, w]) => {
     const pg = new THREE.PlaneGeometry(w, DEPTH); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 4, uv.getY(i));
     const m = new THREE.Mesh(pg, dm); m.position.set(x, -DEPTH / 2 + 0.02, z); m.rotation.y = ry; m.receiveShadow = true; world.add(m);
   });

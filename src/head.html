@@ -66,6 +66,18 @@ button .e{font-size:24px;display:block;line-height:1}
 #moves .mv{flex:1;padding:6px 4px;min-height:64px;font-size:17px}
 #moves .mv small{display:block;font-size:12px;font-weight:400}
 #moves .mv.wait{opacity:.5;pointer-events:none}
+
+#lvup{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.2);opacity:0;pointer-events:none;text-align:center;z-index:6;width:min(92vw,520px)}
+#lvup .rays{position:absolute;left:50%;top:50%;width:min(130vw,820px);height:min(130vw,820px);margin:calc(min(130vw,820px)/-2) 0 0 calc(min(130vw,820px)/-2);background:repeating-conic-gradient(from 0deg,rgba(255,226,102,.55) 0 8deg,rgba(255,226,102,0) 8deg 20deg);-webkit-mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 30%,transparent 62%);mask:radial-gradient(circle,#000 0,rgba(0,0,0,.6) 30%,transparent 62%);animation:lvspin 6s linear infinite;z-index:-1}
+#lvup .t{font:800 min(15vw,84px)/1 var(--font-display);color:#ffe066;-webkit-text-stroke:4px var(--edge);paint-order:stroke fill;text-shadow:0 6px 0 var(--edge),0 0 28px rgba(255,214,70,.95);letter-spacing:2px}
+#lvup .n{font:800 min(7vw,34px)/1.2 var(--font-display);color:#fff;margin-top:6px;-webkit-text-stroke:3px var(--edge);paint-order:stroke fill;text-shadow:0 4px 0 var(--edge)}
+#lvup .s{font-size:min(8vw,36px);color:#ffe066;text-shadow:0 3px 0 var(--edge);letter-spacing:10px;margin-top:2px}
+#lvup.go{animation:lvpop 2.3s cubic-bezier(.2,1.4,.3,1) forwards}
+#lvflash{position:fixed;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,250,200,.95),rgba(255,226,102,.45) 45%,rgba(255,226,102,0) 75%);opacity:0;pointer-events:none;z-index:5}
+#lvflash.go{animation:lvfl .9s ease-out forwards}
+@keyframes lvpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-8deg)}14%{opacity:1;transform:translate(-50%,-50%) scale(1.3) rotate(3deg)}24%{transform:translate(-50%,-50%) scale(.95) rotate(0)}34%{transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-52%) scale(1)}100%{opacity:0;transform:translate(-50%,-64%) scale(1.05)}}
+@keyframes lvfl{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+@keyframes lvspin{to{transform:rotate(360deg)}}
 #flee,#swapB{min-height:38px;font-size:14px;padding:3px 14px}
 #moves .acts{display:flex;gap:10px}
 #swapP{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:none;width:min(520px,calc(100vw - 20px));text-align:center;padding:8px 10px;pointer-events:auto}
@@ -312,6 +324,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
 <button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
+<div id="lvflash"></div><div id="lvup"><i class="rays"></i><div class="t">LEVEL UP!</div><div class="n"></div><div class="s">★ ★ ★</div></div>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>
 
