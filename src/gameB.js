@@ -19,6 +19,7 @@ function perfTick(raw) {
 let actZ = false; const clk = new THREE.Clock(); let objT = 0;
 function frame() {
   const rawDt = clk.getDelta(), dt = Math.min(rawDt, 0.05); T += dt; perfTick(rawDt);
+  if (mode === 'play' && T > (window.__saveT || 0)) { window.__saveT = T + 5; if (S.stage >= 1) saveGame(); }
   // pemain
   if (mode === 'play') {
     let ix = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0) + joy.x;

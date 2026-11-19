@@ -7,7 +7,9 @@ const S = { name: 'Pelatih', gender: 'boy', stage: 0, tut: 0, tf: {}, dex: {}, b
 const DEXLIST = ['kancik', 'cebongi', 'pioyo', 'kucingko', 'tikusil', 'dombanyo'], COMMONS = ['kucingko', 'tikusil', 'dombanyo'];
 const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
-function saveGame() { store.set(JSON.stringify({ S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp })), box: stash })); }
+let lastPos = null;
+function curPos() { if (mode === 'play' && player.rig) lastPos = inside ? [LABDOOR.x, LABDOOR.z - 0.9, 0] : [player.x, player.z, player.ang]; return lastPos; }
+function saveGame() { store.set(JSON.stringify({ pos: curPos(), S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp })), box: stash })); }
 const nm = (s) => s.replace(/\{n\}/g, S.name);
 
 /* ---------- NPC ---------- */
@@ -212,10 +214,16 @@ function talkNurse() {
 /* ---------- title + buat karakter ---------- */
 const humans = []; let gender = null;
 function enterTitle() {
-  mode = 'title'; Music.play('pick'); $('title').style.display = 'flex'; $('bCont').style.display = store.get() ? '' : 'none'; $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none'; $('snd').style.display = '';
+  mode = 'title'; Music.play('pick'); $('title').style.display = 'flex'; setTitleBtns(); $('joy').style.display = 'none'; $('zone').style.display = 'none'; $('mates').style.display = 'none'; $('snd').style.display = '';
   yaw = 0.3; pitch = 0.78; camGoal.set(-3, 0, 1); camTarget.copy(camGoal); zoomGoal = zoom = 1.55;
 }
-$('bNew').onclick = () => { Music.unlock(); $('title').style.display = 'none'; startIntro(() => enterCreate()); };
+function saveInfo() { try { const d = JSON.parse(store.get()); return d && d.S ? d : null; } catch (e) { return null; } }
+function setTitleBtns() { const d = saveInfo(), has = !!d, c = $('bCont'), n = $('bNew'); c.style.display = has ? '' : 'none'; $('newBox').style.display = 'none'; $('title').querySelector('.btns').style.display = '';
+  if (has) { c.innerHTML = `▶ Lanjutkan<small>${d.S.name || 'Pemain'} · ${(d.mates || []).length} teman</small>`; c.classList.add('main'); n.classList.add('sec'); n.textContent = 'Main Baru (hapus save)'; const b = $('title').querySelector('.btns'); b.insertBefore(c, n); }
+  else { n.classList.remove('sec'); n.textContent = 'Main Baru'; } }
+function startNew() { Music.unlock(); $('title').style.display = 'none'; startIntro(() => enterCreate()); }
+$('bNew').onclick = () => { if (saveInfo()) { $('newBox').style.display = 'flex'; $('title').querySelector('.btns').style.display = 'none'; return; } startNew(); };
+$('nYes').onclick = () => { store.set(''); startNew(); }; $('nNo').onclick = () => { $('newBox').style.display = 'none'; $('title').querySelector('.btns').style.display = ''; };
 $('bCont').onclick = () => { Music.unlock(); $('title').style.display = 'none'; loadGame(); };
 
 /* ---------- intro sinematik ---------- */
@@ -272,7 +280,9 @@ function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
   Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
   (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
-  renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
+  renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; lastPos = null;
+  if (Array.isArray(d.pos) && d.pos.every(Number.isFinite) && !blockedAt(d.pos[0], d.pos[1], 0.3)) { player.x = d.pos[0]; player.z = d.pos[1]; player.ang = d.pos[2]; lastPos = d.pos.slice(); }
+  mates.forEach((m, i) => { m.x = player.x - 0.6 * (i + 1); m.z = player.z; }); trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;
 }

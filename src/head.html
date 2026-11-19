@@ -96,6 +96,11 @@ body[data-mode=play] .rot{display:block}
 #title .sub{font-family:var(--font-label);font-size:min(4vw,16px);letter-spacing:2px;padding:6px 14px;background:var(--paper);border:3px solid var(--edge)}
 #title .btns{display:flex;flex-direction:column;gap:10px;margin-top:10px;pointer-events:auto}
 #title button{min-width:240px;font-size:22px;min-height:56px}
+#title button small{display:block;font-size:14px;font-weight:600;opacity:.85}
+#title button.main{min-height:72px;font-size:26px;background:var(--ok);color:#fff}
+#title button.sec{min-height:36px;font-size:13px;min-width:200px;opacity:.8}
+#newBox{display:none;flex-direction:column;gap:8px;align-items:center;padding:10px 14px;margin-top:8px;pointer-events:auto}
+#newBox div{display:flex;gap:8px}#newBox button{min-width:0;font-size:15px;min-height:42px;padding:4px 12px}
 #title .hint{font-family:var(--font-label);font-weight:700;font-size:13px;opacity:.7;background:rgba(243,233,210,.8);padding:2px 8px}
 #create{inset:0;padding:12px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5;overflow:auto}
 #create h2{margin:0;padding:8px 18px;font-size:26px;text-align:center}
@@ -275,7 +280,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 </head>
 <body>
 <div id="app"><canvas id="view"></canvas></div>
-<div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
+<div id="title" class="ui"><div class="logo">MAI<b>MON</b></div><div class="sub">EDISI JAWA · DEPOK</div><div class="btns"><button id="bNew">Main Baru</button><button id="bCont">Lanjutkan</button></div><div id="newBox" class="panel"><b>Hapus save lama dan mulai baru?</b><div><button id="nNo">Tidak, kembali</button><button id="nYes">Ya, hapus</button></div></div><div class="hint">Sentuh layar untuk menyalakan musik 🔊</div></div>
 <div id="cbg"><i class="wall"></i><i class="panel l1"></i><i class="panel l2"></i><i class="wain"></i><i class="floor"></i><i class="wb">PENELITIAN MAIMON
 ● Dex: Depok 6 spesies
 ● Tipe: Air > Api > Daun > Air
