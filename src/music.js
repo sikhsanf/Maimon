@@ -26,7 +26,7 @@ const Music = (() => {
       bass: 'r.r.r.r.r.r.r.8.', arp: '0.1.2.3.2.1.2.1.',
       dr: { k: 'X...X...X...X.x.', s: '....X.......X..x', h: 'x.x.x.x.x.x.x.xx', d: 'x..x..x.x..x.x..', c: '........x.......' },
       A: [[0, 7, 3], [4, 7, 1], [6, 9, 2], [8, 11, 6], [16, 10, 3], [20, 9, 1], [22, 7, 2], [24, 9, 8]], B: [[0, 11, 3], [4, 11, 1], [6, 12, 2], [8, 13, 6], [16, 12, 3], [20, 11, 1], [22, 9, 2], [24, 11, 8]] },
-    depok: { bpm: 92, swing: 0.02, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1.15, arpI: 'pluck', gong: false,
+    depok: { bpm: 92, swing: 0.02, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
       ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [4, 'm7'], [5, 'maj7'], [0, 'maj'], [5, 'add9'], [7, 'sus4']],
       bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
       dr: { h: '..o...o...o...o.', p: 'o...............' },
@@ -37,11 +37,28 @@ const Music = (() => {
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
       dr: { k: 'X..o..x...X.o...', s: '....X..o....X.xo', h: 'xxoxxxoxxxoxxxox', c: '........x.......' },
       A: [[0, 2, 2], [2, 4, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 0, 4], [16, 2, 2], [18, 4, 2], [20, 6, 6], [28, 5, 2], [30, 4, 2]], B: [[0, 7, 4], [4, 6, 2], [6, 4, 2], [8, 5, 6], [16, 4, 2], [18, 2, 2], [20, 4, 4], [24, 0, 8]] },
-    bogor: { bpm: 90, swing: 0.05, spb: 16, root: 55, sc: 'pent', lead: 'flute', lead2: 'pluck', bassI: 'sub', padV: 1.2, arpI: 'pluck',
-      ch: [[0, 'maj'], [9, 'm7'], [5, 'maj7'], [7, 'sus4'], [0, 'maj'], [4, 'm7'], [5, 'maj7'], [7, 'dom7']],
-      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.3.',
-      dr: { k: 'X.......x.......', h: '..o...o...o...o.', w: 'x...x...x..ox...' },
-      A: [[0, 2, 8], [8, 3, 4], [12, 2, 4], [16, 4, 6], [22, 3, 2], [24, 2, 8]], B: [[0, 5, 6], [6, 4, 2], [8, 3, 8], [16, 2, 4], [20, 3, 4], [24, 0, 8]] },
+    bogor: { bpm: 116, swing: 0.08, spb: 16, root: 52, sc: 'pent', lead: 'bell', lead2: 'pluck', bassI: 'pluck', padV: 0.9, arpI: 'bell', gong: false,
+      ch: [[0, 'maj'], [9, 'm7'], [5, 'maj'], [7, 'dom7'], [0, 'maj'], [4, 'm7'], [5, 'maj7'], [7, 'sus4']],
+      bass: 'r..5r..5r..5r.5.', arp: '0.2.1.3.0.2.1.4.',
+      dr: { k: 'X.......x.......', h: 'x.o.x.o.x.o.x.o.' },
+      A: [[0, 4, 1], [1, 3, 1], [2, 2, 2], [4, 3, 1], [5, 2, 1], [6, 0, 2], [8, 2, 1], [9, 3, 1], [10, 4, 2], [12, 3, 1], [13, 2, 1], [14, 0, 2], [16, 4, 1], [17, 5, 1], [18, 7, 2], [20, 5, 2], [22, 4, 2], [24, 2, 4], [28, 0, 4]], B: [[0, 7, 1], [1, 6, 1], [2, 4, 2], [4, 5, 1], [5, 4, 1], [6, 2, 2], [8, 4, 1], [9, 5, 1], [10, 7, 2], [12, 6, 1], [13, 5, 1], [14, 4, 2], [16, 2, 2], [18, 4, 2], [20, 5, 4], [24, 4, 4], [28, 2, 4]] },
+    depokK: { bpm: 100, swing: 0.15, spb: 16, root: 48, sc: 'maj', lead: 'pluck', lead2: 'flute', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [5, 'maj'], [7, 'dom7'], [0, 'maj'], [9, 'm7'], [2, 'm7'], [7, 'dom7'], [0, 'maj']],
+      bass: 'r...5...r...5...', arp: '.0.1.2.1.0.1.2.1', dr: { w: 'x...x...x...x...', h: '..o...o...o...o.' },
+      A: [[0, 4, 2], [2, 5, 2], [4, 4, 4], [8, 2, 2], [10, 3, 2], [12, 2, 4], [16, 4, 2], [18, 5, 2], [20, 7, 4], [24, 5, 2], [26, 4, 2], [28, 2, 4]], B: [[0, 7, 2], [2, 6, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 4, 4], [16, 2, 2], [18, 4, 2], [20, 5, 4], [24, 4, 4], [28, 0, 4]] },
+    depokL: { bpm: 80, swing: 0.2, spb: 16, root: 48, sc: 'maj', lead: 'bell', lead2: 'pluck', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj7'], [9, 'm7'], [2, 'm7'], [7, 'dom7'], [0, 'maj7'], [5, 'maj7'], [2, 'm7'], [7, 'sus4']],
+      bass: 'r.....5...r.....', arp: '0.1.2.3.2.1.0.1.', dr: { k: 'X.....x...X.....', h: '..o...o...o...o.' },
+      A: [[0, 4, 3], [4, 2, 2], [8, 5, 4], [14, 4, 2], [16, 2, 4], [22, 4, 2], [24, 1, 6]], B: [[0, 6, 3], [4, 5, 2], [8, 4, 4], [14, 2, 2], [16, 4, 4], [22, 2, 2], [24, 0, 6]] },
+    depokM: { bpm: 84, swing: 0, spb: 16, root: 48, sc: 'maj', lead: 'bell', lead2: 'bell', bassI: 'sub', padV: 0, arpI: 'bell', gong: false,
+      ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [4, 'm7'], [5, 'maj7'], [0, 'maj'], [5, 'add9'], [7, 'sus4']],
+      bass: 'r.......5.......', arp: '0.1.2.3.2.1.0.1.', dr: {},
+      A: [[0, 7, 2], [2, 6, 2], [4, 4, 4], [8, 5, 2], [10, 4, 2], [12, 2, 4], [16, 4, 2], [18, 5, 2], [20, 7, 4], [24, 6, 2], [26, 4, 2], [28, 2, 4]], B: [[0, 9, 4], [4, 7, 2], [6, 6, 2], [8, 7, 4], [12, 5, 4], [16, 4, 4], [20, 6, 4], [24, 4, 8]] },
+    lintas: { bpm: 100, swing: 0.04, spb: 16, root: 50, sc: 'mix', lead: 'flute', lead2: 'pluck', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [10, 'maj'], [5, 'maj'], [7, 'sus4'], [0, 'maj'], [9, 'm7'], [5, 'maj7'], [7, 'dom7']],
+      bass: 'r...5...r..5r...', arp: '0.1.2.1.0.2.3.2.',
+      dr: { k: 'X.......x.......', h: '..o...o...o...o.' },
+      A: [[0, 4, 4], [4, 5, 2], [6, 4, 2], [8, 2, 4], [12, 3, 2], [14, 2, 2], [16, 4, 4], [20, 6, 2], [22, 5, 2], [24, 4, 4], [28, 2, 4]], B: [[0, 5, 4], [4, 6, 2], [6, 7, 2], [8, 6, 4], [12, 4, 2], [14, 5, 2], [16, 4, 4], [20, 2, 4], [24, 0, 8]] },
     bandung: { bpm: 96, swing: 0, spb: 16, root: 53, sc: 'pel', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1, arpI: 'bell', gong: true,
       ch: [[0, 'sus2'], [0, 'sus2'], [5, 'sus2'], [7, 'sus4'], [0, 'sus2'], [0, 'pw'], [5, 'sus2'], [7, 'sus4']],
       bass: 'r.......5.......', arp: '0...2...1...3...',
@@ -113,7 +130,7 @@ const Music = (() => {
   function LP(freq, q, dest) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q; f.connect(dest); return f; }
   function noiseSrc(t, end, dest, type, freq, q, vol) { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(dest); s.start(t, Math.random()); s.stop(end); return { g, f }; }
   const VOICE = {
-    pad(t, f, dur, v, dest) { const g = ctx.createGain(), fl = LP(1100, 0.6, g); adsr(g.gain, t, 0.55, 0.055 * v, 0.5, 0.8, dur, 0.9); g.connect(dest); const e = t + dur + 1.1; [-8, 8].forEach((dt) => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; o.connect(fl); o.start(t); o.stop(e); }); },
+    pad(t, f, dur, v, dest) { const g = ctx.createGain(), fl = LP(1500, 0.5, g); adsr(g.gain, t, 0.7, 0.085 * v, 0.5, 0.8, dur, 0.9); g.connect(dest); const e = t + dur + 1.1; [[-5, 'triangle', 1], [5, 'sine', 1.1]].forEach(([dt, ty, gv]) => { const o = ctx.createOscillator(), og = ctx.createGain(); og.gain.value = gv; o.type = ty; o.frequency.value = f; o.detune.value = dt; o.connect(og); og.connect(fl); o.start(t); o.stop(e); }); },
     str(t, f, dur, v, dest) { VOICE.pad(t, f, dur, v * 0.9, dest); },
     sub(t, f, dur, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.012, 0.34 * v, 0.25, 0.6, dur, 0.1); g.connect(dest); O('sine', f, t, t + dur + 0.2, g, 1); O('triangle', f * 2, t, t + dur + 0.2, g, 0.18); },
     pluckB(t, f, dur, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.004, 0.3 * v, 0.2, 0.35, dur, 0.08); g.connect(dest); const fl = LP(600, 4, g); fl.frequency.setValueAtTime(2200, t); fl.frequency.exponentialRampToValueAtTime(260, t + 0.18); O('sawtooth', f, t, t + dur + 0.2, fl, 1); O('sine', f / 2, t, t + dur + 0.2, g, 0.5); },
@@ -204,7 +221,7 @@ const Music = (() => {
     const [off, ty] = th.ch[bp], rootM = th.root + off, tones = CH[ty], bus = st.bus, V = VOICE;
     const bd = st.sd * spb, tt = t + (si % 2 ? th.swing * st.sd : 0);
     if (si === 0) {
-      tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
+      if (th.padV !== 0) tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
       if (th.gong && bp % 4 === 0) V.gong(t, pass ? 1 : 0.8, bus);
     }
     const gp = (s, i) => (s && i < s.length ? s[i] : '.');
@@ -218,7 +235,7 @@ const Music = (() => {
     }
     // arp
     const ac = gp(th.arp, si);
-    if (lite < 1 && ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
+    if (lite < 1 && ac !== '.' && (bs >= 2 || pass || th.padV === 0)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
     // drum
     const D = th.dr, hit = (k) => STR[gp(D[k], si)] ?? 0;
     if (!(bs === 0 && false)) {

@@ -289,7 +289,8 @@ function loadGame() {
   Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
   (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; if (q.nick) { m.nick = q.nick; m.name = q.nick; } m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; lastPos = null;
-  if (Array.isArray(d.pos) && d.pos.every(Number.isFinite) && !blockedAt(d.pos[0], d.pos[1], 0.3)) { player.x = d.pos[0]; player.z = d.pos[1]; player.ang = d.pos[2]; lastPos = d.pos.slice(); }
+  if (Array.isArray(d.pos) && d.pos.every(Number.isFinite)) { let [qx, qz] = d.pos; const inYard = (qz <= HZ - 0.8); if (inYard && (blockedAt(qx, qz, 0.45) || Math.hypot(qx - LABDOOR.x, qz - LABDOOR.z) < 1.6)) [qx, qz] = safeSpot(qx, qz); if (!blockedAt(qx, qz, 0.3)) { player.x = qx; player.z = qz; player.ang = d.pos[2]; lastPos = [qx, qz, d.pos[2]]; } }
+  doorCool = T + 2;
   mates.forEach((m, i) => { m.x = player.x - 0.6 * (i + 1); m.z = player.z; }); trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;

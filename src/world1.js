@@ -136,6 +136,7 @@ function blockedAt(x, z, r) {
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }
 function zoneName(x, z) {
+  if (z > HZ) return z < 34 ? 'KM 6 · Cimanggis' : 'KM 16 · Bojonggede';
   if (z > HZ) return fieldName(x, z);
   const rv = poly(C.river.pts, x, z);
   if (rv.d < C.river.w / 2 + 1.0) return 'Kali Ciliwung';

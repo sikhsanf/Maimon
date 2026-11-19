@@ -30,9 +30,11 @@ function frame() {
       if (mag > 1) { ix /= mag; iy /= mag; }
       const sp = 3.6 * dt, rx = Math.cos(yaw), rz = -Math.sin(yaw), fx = -Math.sin(yaw), fz = -Math.cos(yaw);
       const vx = (rx * ix - fx * iy) * sp, vz = (rz * ix - fz * iy) * sp;
+      const px0 = player.x, pz0 = player.z;
       if (!blockedAt(player.x + vx, player.z, 0.28)) player.x += vx;
       if (!blockedAt(player.x, player.z + vz, 0.28)) player.z += vz;
       if (!inside) { player.x = clamp(player.x, -HX + 0.6, HX - 0.6); player.z = clamp(player.z, -HZ + 0.6, zMaxAt(player.x)); }
+      if (!inside) { if (Math.hypot(player.x - px0, player.z - pz0) < sp * 0.15) { stuckT += dt; if (stuckT > 1.3) { stuckT = 0; unstick(); } } else stuckT = 0; } else stuckT = 0;
       player.ang = lerpAng(player.ang, Math.atan2(vx, vz), Math.min(1, dt * 12)); player.walk = true;
       const l = trail[trail.length - 1]; if (!l || Math.hypot(l[0] - player.x, l[1] - player.z) > 0.09) { trail.push([player.x, player.z]); if (trail.length > 300) trail.shift(); }
     } else player.walk = false;
@@ -64,6 +66,7 @@ function frame() {
   if (battle && battle.yawG !== undefined) yaw = lerpAng(yaw, battle.yawG, Math.min(1, dt * 3));
   if (document.body.dataset.mode !== mode) document.body.dataset.mode = mode;
   if (mode === 'play') $('zone').firstChild.textContent = inside ? 'Lab Maimon UI' : zoneName(player.x, player.z);
+  if (mode === 'play' && !inside) { const ak = player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) areaKey = ak; else if (ak !== areaKey) { areaKey = ak; showArea(ak === 'depok' ? ['Kota', 'Depok'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
 
   // rumput terdorong
   const pu = grassUniforms.uPush.value; let n = 0;
@@ -108,7 +111,15 @@ function npcRule() {
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
   });
 }
-window.__g = { talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+let stuckT = 0, areaKey = null, areaTm = 0;
+function showArea(a) { $('areaS').textContent = a[0]; $('areaT').textContent = a[1]; const el = $('areaB'); el.classList.add('go'); Music.blip(784); clearTimeout(areaTm); areaTm = setTimeout(() => el.classList.remove('go'), 3000); }
+// penyelamat kalau pemain nyangkut: pindah ke titik bebas terdekat (ruang gerak cukup lega)
+function safeSpot(x, z) {
+  for (let r = 0.8; r <= 9; r += 0.6) for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (nz > -HZ + 0.8 && nz < HZ - 0.8 && Math.abs(nx) < HX - 0.8 && !blockedAt(nx, nz, 0.7) && Math.hypot(nx - LABDOOR.x, nz - LABDOOR.z) > 1.6) return [nx, nz]; }
+  return [-6.6, 10.4];
+}
+function unstick() { const [x, z] = safeSpot(player.x, player.z); player.x = x; player.z = z; mates.forEach((m, i) => { m.x = x - 0.6 * (i + 1); m.z = z; }); trail.length = 0; toast('Ayo lanjut jalan! 🐾', 1.6); }
+window.__g = { unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();

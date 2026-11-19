@@ -287,6 +287,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 #create .cards{display:none;gap:12px;width:min(440px,92vw)}
 #create .card{flex:1;padding:6px;text-align:center;cursor:pointer;font-size:22px;font-weight:700;pointer-events:auto;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px}
 #create .card img{width:64px;height:64px;image-rendering:pixelated}
+#areaB{position:fixed;left:50%;top:36%;transform:translate(-50%,-20px);z-index:30;opacity:0;pointer-events:none;text-align:center;padding:10px 22px;min-width:min(300px,80vw);transition:opacity .45s,transform .45s}#areaB.go{opacity:1;transform:translate(-50%,0)}#areaB small{display:block;font:700 14px var(--font-label);opacity:.75;letter-spacing:.5px}#areaB b{display:block;font-size:22px;margin-top:2px}
 #nickBox{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:60;flex-direction:column;align-items:center;gap:10px;padding:14px 16px;width:min(360px,92vw);text-align:center;pointer-events:auto}#nickBox .em{font-size:44px;line-height:1}#nickBox b{font-size:19px}#nickBox input{font:inherit;font-size:22px;text-align:center;width:92%;padding:8px;border:3px solid #2a2a2a;border-radius:10px}#nickBox .nb{display:flex;gap:10px;width:100%}#nickBox .nb button{flex:1;font-size:19px;padding:12px 6px}#nickGo{background:#3ecf6e}
 #nameBox{display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;width:min(340px,90vw)}
 @media (max-height:480px) and (orientation:landscape){#cbg.two #cprof{left:24%}#cbg.two #cplayer{left:50%}#cprof,#cplayer{bottom:96px;height:min(60vh,50vw);aspect-ratio:5/8}#create{inset:auto 3vw 124px auto;align-items:flex-end}#create .cards{flex-direction:column;width:200px}#cbg .cap{height:36vh}#cbg .wb{height:25vh;top:11%;font-size:10px}#cbg .wb::after{display:none}#cbg .items{font-size:26px}#cbg .jars{font-size:28px;height:10vh}}
@@ -419,7 +420,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 <div id="zone" class="ui panel">Depok<small>EDISI JAWA</small></div>
 <div id="mates" class="ui panel"><span class="lb">TEMAN</span><div class="chips" id="mchips"></div></div>
 <div id="bubble" class="ui"></div>
-<div id="nickBox" class="panel ui"><div class="em" id="nickEm"></div><b id="nickT"></b><input id="nickIn" maxlength="10" placeholder="Nama panggilan" autocomplete="off"><div class="nb"><button id="nickGo">✏️ Beri nama</button><button id="nickNo">Lewati</button></div></div><div id="fade"></div><div id="pvig"></div><div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
+<div id="areaB" class="panel"><small id="areaS"></small><b id="areaT"></b></div><div id="nickBox" class="panel ui"><div class="em" id="nickEm"></div><b id="nickT"></b><input id="nickIn" maxlength="10" placeholder="Nama panggilan" autocomplete="off"><div class="nb"><button id="nickGo">✏️ Beri nama</button><button id="nickNo">Lewati</button></div></div><div id="fade"></div><div id="pvig"></div><div id="pick" class="ui"><h2 class="panel">Pilih teman pertamamu!</h2><div class="cards" id="cards"></div><button id="go">Ajak!</button></div>
 <div id="battle" class="ui">
   <div class="hp l panel" id="hpL"></div><div class="hp r panel" id="hpR"></div>
   <div id="log" class="panel"></div>
@@ -1047,6 +1048,7 @@ function blockedAt(x, z, r) {
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }
 function zoneName(x, z) {
+  if (z > HZ) return z < 34 ? 'KM 6 · Cimanggis' : 'KM 16 · Bojonggede';
   if (z > HZ) return fieldName(x, z);
   const rv = poly(C.river.pts, x, z);
   if (rv.d < C.river.w / 2 + 1.0) return 'Kali Ciliwung';
@@ -1745,7 +1747,7 @@ const Music = (() => {
       bass: 'r.r.r.r.r.r.r.8.', arp: '0.1.2.3.2.1.2.1.',
       dr: { k: 'X...X...X...X.x.', s: '....X.......X..x', h: 'x.x.x.x.x.x.x.xx', d: 'x..x..x.x..x.x..', c: '........x.......' },
       A: [[0, 7, 3], [4, 7, 1], [6, 9, 2], [8, 11, 6], [16, 10, 3], [20, 9, 1], [22, 7, 2], [24, 9, 8]], B: [[0, 11, 3], [4, 11, 1], [6, 12, 2], [8, 13, 6], [16, 12, 3], [20, 11, 1], [22, 9, 2], [24, 11, 8]] },
-    depok: { bpm: 92, swing: 0.02, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1.15, arpI: 'pluck', gong: false,
+    depok: { bpm: 92, swing: 0.02, spb: 16, root: 48, sc: 'maj', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
       ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [4, 'm7'], [5, 'maj7'], [0, 'maj'], [5, 'add9'], [7, 'sus4']],
       bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.1.',
       dr: { h: '..o...o...o...o.', p: 'o...............' },
@@ -1756,11 +1758,28 @@ const Music = (() => {
       bass: 'r..r.r5.r..8.r5.', arp: '..0.2.3...1.3.2.',
       dr: { k: 'X..o..x...X.o...', s: '....X..o....X.xo', h: 'xxoxxxoxxxoxxxox', c: '........x.......' },
       A: [[0, 2, 2], [2, 4, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 0, 4], [16, 2, 2], [18, 4, 2], [20, 6, 6], [28, 5, 2], [30, 4, 2]], B: [[0, 7, 4], [4, 6, 2], [6, 4, 2], [8, 5, 6], [16, 4, 2], [18, 2, 2], [20, 4, 4], [24, 0, 8]] },
-    bogor: { bpm: 90, swing: 0.05, spb: 16, root: 55, sc: 'pent', lead: 'flute', lead2: 'pluck', bassI: 'sub', padV: 1.2, arpI: 'pluck',
-      ch: [[0, 'maj'], [9, 'm7'], [5, 'maj7'], [7, 'sus4'], [0, 'maj'], [4, 'm7'], [5, 'maj7'], [7, 'dom7']],
-      bass: 'r.......5.......', arp: '0.1.2.1.0.1.2.3.',
-      dr: { k: 'X.......x.......', h: '..o...o...o...o.', w: 'x...x...x..ox...' },
-      A: [[0, 2, 8], [8, 3, 4], [12, 2, 4], [16, 4, 6], [22, 3, 2], [24, 2, 8]], B: [[0, 5, 6], [6, 4, 2], [8, 3, 8], [16, 2, 4], [20, 3, 4], [24, 0, 8]] },
+    bogor: { bpm: 116, swing: 0.08, spb: 16, root: 52, sc: 'pent', lead: 'bell', lead2: 'pluck', bassI: 'pluck', padV: 0.9, arpI: 'bell', gong: false,
+      ch: [[0, 'maj'], [9, 'm7'], [5, 'maj'], [7, 'dom7'], [0, 'maj'], [4, 'm7'], [5, 'maj7'], [7, 'sus4']],
+      bass: 'r..5r..5r..5r.5.', arp: '0.2.1.3.0.2.1.4.',
+      dr: { k: 'X.......x.......', h: 'x.o.x.o.x.o.x.o.' },
+      A: [[0, 4, 1], [1, 3, 1], [2, 2, 2], [4, 3, 1], [5, 2, 1], [6, 0, 2], [8, 2, 1], [9, 3, 1], [10, 4, 2], [12, 3, 1], [13, 2, 1], [14, 0, 2], [16, 4, 1], [17, 5, 1], [18, 7, 2], [20, 5, 2], [22, 4, 2], [24, 2, 4], [28, 0, 4]], B: [[0, 7, 1], [1, 6, 1], [2, 4, 2], [4, 5, 1], [5, 4, 1], [6, 2, 2], [8, 4, 1], [9, 5, 1], [10, 7, 2], [12, 6, 1], [13, 5, 1], [14, 4, 2], [16, 2, 2], [18, 4, 2], [20, 5, 4], [24, 4, 4], [28, 2, 4]] },
+    depokK: { bpm: 100, swing: 0.15, spb: 16, root: 48, sc: 'maj', lead: 'pluck', lead2: 'flute', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [5, 'maj'], [7, 'dom7'], [0, 'maj'], [9, 'm7'], [2, 'm7'], [7, 'dom7'], [0, 'maj']],
+      bass: 'r...5...r...5...', arp: '.0.1.2.1.0.1.2.1', dr: { w: 'x...x...x...x...', h: '..o...o...o...o.' },
+      A: [[0, 4, 2], [2, 5, 2], [4, 4, 4], [8, 2, 2], [10, 3, 2], [12, 2, 4], [16, 4, 2], [18, 5, 2], [20, 7, 4], [24, 5, 2], [26, 4, 2], [28, 2, 4]], B: [[0, 7, 2], [2, 6, 2], [4, 5, 4], [8, 4, 2], [10, 2, 2], [12, 4, 4], [16, 2, 2], [18, 4, 2], [20, 5, 4], [24, 4, 4], [28, 0, 4]] },
+    depokL: { bpm: 80, swing: 0.2, spb: 16, root: 48, sc: 'maj', lead: 'bell', lead2: 'pluck', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj7'], [9, 'm7'], [2, 'm7'], [7, 'dom7'], [0, 'maj7'], [5, 'maj7'], [2, 'm7'], [7, 'sus4']],
+      bass: 'r.....5...r.....', arp: '0.1.2.3.2.1.0.1.', dr: { k: 'X.....x...X.....', h: '..o...o...o...o.' },
+      A: [[0, 4, 3], [4, 2, 2], [8, 5, 4], [14, 4, 2], [16, 2, 4], [22, 4, 2], [24, 1, 6]], B: [[0, 6, 3], [4, 5, 2], [8, 4, 4], [14, 2, 2], [16, 4, 4], [22, 2, 2], [24, 0, 6]] },
+    depokM: { bpm: 84, swing: 0, spb: 16, root: 48, sc: 'maj', lead: 'bell', lead2: 'bell', bassI: 'sub', padV: 0, arpI: 'bell', gong: false,
+      ch: [[0, 'add9'], [7, 'maj'], [9, 'm7'], [4, 'm7'], [5, 'maj7'], [0, 'maj'], [5, 'add9'], [7, 'sus4']],
+      bass: 'r.......5.......', arp: '0.1.2.3.2.1.0.1.', dr: {},
+      A: [[0, 7, 2], [2, 6, 2], [4, 4, 4], [8, 5, 2], [10, 4, 2], [12, 2, 4], [16, 4, 2], [18, 5, 2], [20, 7, 4], [24, 6, 2], [26, 4, 2], [28, 2, 4]], B: [[0, 9, 4], [4, 7, 2], [6, 6, 2], [8, 7, 4], [12, 5, 4], [16, 4, 4], [20, 6, 4], [24, 4, 8]] },
+    lintas: { bpm: 100, swing: 0.04, spb: 16, root: 50, sc: 'mix', lead: 'flute', lead2: 'pluck', bassI: 'sub', padV: 0, arpI: 'pluck', gong: false,
+      ch: [[0, 'maj'], [10, 'maj'], [5, 'maj'], [7, 'sus4'], [0, 'maj'], [9, 'm7'], [5, 'maj7'], [7, 'dom7']],
+      bass: 'r...5...r..5r...', arp: '0.1.2.1.0.2.3.2.',
+      dr: { k: 'X.......x.......', h: '..o...o...o...o.' },
+      A: [[0, 4, 4], [4, 5, 2], [6, 4, 2], [8, 2, 4], [12, 3, 2], [14, 2, 2], [16, 4, 4], [20, 6, 2], [22, 5, 2], [24, 4, 4], [28, 2, 4]], B: [[0, 5, 4], [4, 6, 2], [6, 7, 2], [8, 6, 4], [12, 4, 2], [14, 5, 2], [16, 4, 4], [20, 2, 4], [24, 0, 8]] },
     bandung: { bpm: 96, swing: 0, spb: 16, root: 53, sc: 'pel', lead: 'flute', lead2: 'bell', bassI: 'sub', padV: 1, arpI: 'bell', gong: true,
       ch: [[0, 'sus2'], [0, 'sus2'], [5, 'sus2'], [7, 'sus4'], [0, 'sus2'], [0, 'pw'], [5, 'sus2'], [7, 'sus4']],
       bass: 'r.......5.......', arp: '0...2...1...3...',
@@ -1832,7 +1851,7 @@ const Music = (() => {
   function LP(freq, q, dest) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q; f.connect(dest); return f; }
   function noiseSrc(t, end, dest, type, freq, q, vol) { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q; const g = ctx.createGain(); g.gain.value = vol; s.connect(f); f.connect(g); g.connect(dest); s.start(t, Math.random()); s.stop(end); return { g, f }; }
   const VOICE = {
-    pad(t, f, dur, v, dest) { const g = ctx.createGain(), fl = LP(1100, 0.6, g); adsr(g.gain, t, 0.55, 0.055 * v, 0.5, 0.8, dur, 0.9); g.connect(dest); const e = t + dur + 1.1; [-8, 8].forEach((dt) => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; o.connect(fl); o.start(t); o.stop(e); }); },
+    pad(t, f, dur, v, dest) { const g = ctx.createGain(), fl = LP(1500, 0.5, g); adsr(g.gain, t, 0.7, 0.085 * v, 0.5, 0.8, dur, 0.9); g.connect(dest); const e = t + dur + 1.1; [[-5, 'triangle', 1], [5, 'sine', 1.1]].forEach(([dt, ty, gv]) => { const o = ctx.createOscillator(), og = ctx.createGain(); og.gain.value = gv; o.type = ty; o.frequency.value = f; o.detune.value = dt; o.connect(og); og.connect(fl); o.start(t); o.stop(e); }); },
     str(t, f, dur, v, dest) { VOICE.pad(t, f, dur, v * 0.9, dest); },
     sub(t, f, dur, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.012, 0.34 * v, 0.25, 0.6, dur, 0.1); g.connect(dest); O('sine', f, t, t + dur + 0.2, g, 1); O('triangle', f * 2, t, t + dur + 0.2, g, 0.18); },
     pluckB(t, f, dur, v, dest) { const g = ctx.createGain(); adsr(g.gain, t, 0.004, 0.3 * v, 0.2, 0.35, dur, 0.08); g.connect(dest); const fl = LP(600, 4, g); fl.frequency.setValueAtTime(2200, t); fl.frequency.exponentialRampToValueAtTime(260, t + 0.18); O('sawtooth', f, t, t + dur + 0.2, fl, 1); O('sine', f / 2, t, t + dur + 0.2, g, 0.5); },
@@ -1923,7 +1942,7 @@ const Music = (() => {
     const [off, ty] = th.ch[bp], rootM = th.root + off, tones = CH[ty], bus = st.bus, V = VOICE;
     const bd = st.sd * spb, tt = t + (si % 2 ? th.swing * st.sd : 0);
     if (si === 0) {
-      tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
+      if (th.padV !== 0) tones.slice(0, lite >= 2 ? 2 : 4).forEach((iv, i) => { if (i === 3 && th.ch[bp][1] === 'maj') return; V.pad(t, mtof(rootM + 12 + iv), bd * (th.padHold ?? 1), th.padV * (i === 0 ? 0.8 : 1), bus); });
       if (th.gong && bp % 4 === 0) V.gong(t, pass ? 1 : 0.8, bus);
     }
     const gp = (s, i) => (s && i < s.length ? s[i] : '.');
@@ -1937,7 +1956,7 @@ const Music = (() => {
     }
     // arp
     const ac = gp(th.arp, si);
-    if (lite < 1 && ac !== '.' && (bs >= 2 || pass)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
+    if (lite < 1 && ac !== '.' && (bs >= 2 || pass || th.padV === 0)) { const d = +ac, iv = tones[d % 4] + 12 * Math.floor(d / 4) + (th.arpOct ? 12 : 0), f = mtof(rootM + 12 + iv); (th.arpI === 'bell' ? V.bell : V.pluck)(tt, f, st.sd * 1.5, 0.55 + 0.3 * pass, bus); }
     // drum
     const D = th.dr, hit = (k) => STR[gp(D[k], si)] ?? 0;
     if (!(bs === 0 && false)) {
@@ -2833,7 +2852,8 @@ function loadGame() {
   Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
   (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; if (q.nick) { m.nick = q.nick; m.name = q.nick; } m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; lastPos = null;
-  if (Array.isArray(d.pos) && d.pos.every(Number.isFinite) && !blockedAt(d.pos[0], d.pos[1], 0.3)) { player.x = d.pos[0]; player.z = d.pos[1]; player.ang = d.pos[2]; lastPos = d.pos.slice(); }
+  if (Array.isArray(d.pos) && d.pos.every(Number.isFinite)) { let [qx, qz] = d.pos; const inYard = (qz <= HZ - 0.8); if (inYard && (blockedAt(qx, qz, 0.45) || Math.hypot(qx - LABDOOR.x, qz - LABDOOR.z) < 1.6)) [qx, qz] = safeSpot(qx, qz); if (!blockedAt(qx, qz, 0.3)) { player.x = qx; player.z = qz; player.ang = d.pos[2]; lastPos = [qx, qz, d.pos[2]]; } }
+  doorCool = T + 2;
   mates.forEach((m, i) => { m.x = player.x - 0.6 * (i + 1); m.z = player.z; }); trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
   $('zone').style.display = ''; $('mates').style.display = ''; $('joy').style.display = ''; Music.play(CITY); mode = 'play';
   if (!mates.length && S.stage >= 2) S.stage = 0;
@@ -3123,9 +3143,11 @@ function frame() {
       if (mag > 1) { ix /= mag; iy /= mag; }
       const sp = 3.6 * dt, rx = Math.cos(yaw), rz = -Math.sin(yaw), fx = -Math.sin(yaw), fz = -Math.cos(yaw);
       const vx = (rx * ix - fx * iy) * sp, vz = (rz * ix - fz * iy) * sp;
+      const px0 = player.x, pz0 = player.z;
       if (!blockedAt(player.x + vx, player.z, 0.28)) player.x += vx;
       if (!blockedAt(player.x, player.z + vz, 0.28)) player.z += vz;
       if (!inside) { player.x = clamp(player.x, -HX + 0.6, HX - 0.6); player.z = clamp(player.z, -HZ + 0.6, zMaxAt(player.x)); }
+      if (!inside) { if (Math.hypot(player.x - px0, player.z - pz0) < sp * 0.15) { stuckT += dt; if (stuckT > 1.3) { stuckT = 0; unstick(); } } else stuckT = 0; } else stuckT = 0;
       player.ang = lerpAng(player.ang, Math.atan2(vx, vz), Math.min(1, dt * 12)); player.walk = true;
       const l = trail[trail.length - 1]; if (!l || Math.hypot(l[0] - player.x, l[1] - player.z) > 0.09) { trail.push([player.x, player.z]); if (trail.length > 300) trail.shift(); }
     } else player.walk = false;
@@ -3157,6 +3179,7 @@ function frame() {
   if (battle && battle.yawG !== undefined) yaw = lerpAng(yaw, battle.yawG, Math.min(1, dt * 3));
   if (document.body.dataset.mode !== mode) document.body.dataset.mode = mode;
   if (mode === 'play') $('zone').firstChild.textContent = inside ? 'Lab Maimon UI' : zoneName(player.x, player.z);
+  if (mode === 'play' && !inside) { const ak = player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) areaKey = ak; else if (ak !== areaKey) { areaKey = ak; showArea(ak === 'depok' ? ['Kota', 'Depok'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
 
   // rumput terdorong
   const pu = grassUniforms.uPush.value; let n = 0;
@@ -3201,7 +3224,15 @@ function npcRule() {
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
   });
 }
-window.__g = { talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+let stuckT = 0, areaKey = null, areaTm = 0;
+function showArea(a) { $('areaS').textContent = a[0]; $('areaT').textContent = a[1]; const el = $('areaB'); el.classList.add('go'); Music.blip(784); clearTimeout(areaTm); areaTm = setTimeout(() => el.classList.remove('go'), 3000); }
+// penyelamat kalau pemain nyangkut: pindah ke titik bebas terdekat (ruang gerak cukup lega)
+function safeSpot(x, z) {
+  for (let r = 0.8; r <= 9; r += 0.6) for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (nz > -HZ + 0.8 && nz < HZ - 0.8 && Math.abs(nx) < HX - 0.8 && !blockedAt(nx, nz, 0.7) && Math.hypot(nx - LABDOOR.x, nz - LABDOOR.z) > 1.6) return [nx, nz]; }
+  return [-6.6, 10.4];
+}
+function unstick() { const [x, z] = safeSpot(player.x, player.z); player.x = x; player.z = z; mates.forEach((m, i) => { m.x = x - 0.6 * (i + 1); m.z = z; }); trail.length = 0; toast('Ayo lanjut jalan! 🐾', 1.6); }
+window.__g = { unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();
