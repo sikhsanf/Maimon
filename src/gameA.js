@@ -366,16 +366,29 @@ const joy = { x: 0, y: 0 }, keys = {};
 {
   const base = $('joy'), knob = $('knob'); let pid = null;
   const set = (e) => { const r = base.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; let dx = e.clientX - cx, dy = e.clientY - cy; const m = 46, d = Math.hypot(dx, dy); if (d > m) { dx = dx / d * m; dy = dy / d * m; } knob.style.transform = `translate(${dx}px,${dy}px)`; joy.x = dx / m; joy.y = dy / m; };
-  base.addEventListener('pointerdown', (e) => { pid = e.pointerId; base.setPointerCapture(pid); set(e); });
-  base.addEventListener('pointermove', (e) => { if (e.pointerId === pid) set(e); });
-  const end = (e) => { if (e.pointerId === pid) { pid = null; joy.x = joy.y = 0; knob.style.transform = ''; } };
-  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
+  /* Joystick melayang: sentuh di mana saja di separuh KIRI layar -> joystick muncul di situ.
+     Geser di separuh KANAN -> putar kamera (baru aktif setelah geser > 12 px, supaya ketukan kecil tidak memutar). */
+  const homeJoy = () => { base.style.left = ''; base.style.top = ''; base.style.bottom = ''; base.classList.remove('on'); };
+  let jc = { x: 0, y: 0 }, cam = null;
+  const setJoy = (e) => { let dx = e.clientX - jc.x, dy = e.clientY - jc.y; const m = 46, d = Math.hypot(dx, dy); if (d > m) { dx = dx / d * m; dy = dy / d * m; } knob.style.transform = `translate(${dx}px,${dy}px)`; joy.x = dx / m; joy.y = dy / m; };
+  const startTouch = (e) => {
+    if (mode !== 'play') return;
+    if (e.clientX < innerWidth * 0.5) {
+      if (pid !== null) return; pid = e.pointerId; const w = base.offsetWidth;
+      jc = { x: Math.min(innerWidth * 0.5 - w / 2, Math.max(w / 2 + 6, e.clientX)), y: Math.min(innerHeight - w / 2 - 6, Math.max(w / 2 + 6, e.clientY)) };
+      base.style.left = (jc.x - w / 2) + 'px'; base.style.top = (jc.y - w / 2) + 'px'; base.style.bottom = 'auto'; base.classList.add('on'); setJoy(e);
+    } else if (!cam) cam = { id: e.pointerId, x: e.clientX, on: false, x0: e.clientX };
+  };
+  canvas.addEventListener('pointerdown', startTouch); base.addEventListener('pointerdown', startTouch);
+  addEventListener('pointermove', (e) => {
+    if (e.pointerId === pid) setJoy(e);
+    if (cam && e.pointerId === cam.id && mode === 'play') { if (!cam.on && Math.abs(e.clientX - cam.x0) > 12) { cam.on = true; cam.x = e.clientX; } if (cam.on) { yawGoal = null; yaw -= (e.clientX - cam.x) * 0.008; cam.x = e.clientX; } }
+  });
+  const endTouch = (e) => { if (e.pointerId === pid) { pid = null; joy.x = joy.y = 0; knob.style.transform = ''; homeJoy(); } if (cam && e.pointerId === cam.id) cam = null; };
+  addEventListener('pointerup', endTouch); addEventListener('pointercancel', endTouch);
   addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; }); addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-  let drag = null;
-  canvas.addEventListener('pointerdown', (e) => { drag = { id: e.pointerId, x: e.clientX }; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointermove', (e) => { if (drag && e.pointerId === drag.id && mode === 'play') { yaw -= (e.clientX - drag.x) * 0.008; drag.x = e.clientX; } });
-  const dend = (e) => { if (drag && e.pointerId === drag.id) drag = null; };
-  canvas.addEventListener('pointerup', dend); canvas.addEventListener('pointercancel', dend);
+  $('rotL').onclick = () => { yawGoal = (yawGoal === null ? yaw : yawGoal) + Math.PI / 4; };
+  $('rotR').onclick = () => { yawGoal = (yawGoal === null ? yaw : yawGoal) - Math.PI / 4; };
 }
 
 /* =====================================================================

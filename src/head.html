@@ -76,6 +76,10 @@ button .e{font-size:24px;display:block;line-height:1}
 
 #toast{left:50%;top:20%;transform:translate(-50%,0);font-size:24px;font-weight:700;padding:8px 18px;opacity:0;transition:opacity .25s;text-align:center;max-width:90vw}
 #joy{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:120px;height:120px;border-radius:50%;background:rgba(243,233,210,.55);border:3px solid var(--edge);touch-action:none}
+#joy.on{background:rgba(243,233,210,.75)}
+.rot{display:none;position:fixed;right:max(12px,env(safe-area-inset-right));width:44px;height:44px;font-size:24px;padding:0;z-index:6;pointer-events:auto}
+#rotR{bottom:calc(env(safe-area-inset-bottom,0px) + 164px)}#rotL{bottom:calc(env(safe-area-inset-bottom,0px) + 238px)}
+body[data-mode=play] .rot{display:block}
 #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--paper);border:3px solid var(--edge);box-shadow:0 3px 0 var(--edge)}
 #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--sky);font-family:var(--font-label);font-size:12px;letter-spacing:1px;z-index:9}
 
@@ -295,7 +299,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
   <div id="moves"><div class="row" id="mvRow"></div><button id="flee">Kabur</button></div>
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
-<button id="snd" class="ui">🔊</button>
+<button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>
 

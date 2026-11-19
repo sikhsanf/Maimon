@@ -85,6 +85,10 @@ button .e{font-size:24px;display:block;line-height:1}
 
 #toast{left:50%;top:20%;transform:translate(-50%,0);font-size:24px;font-weight:700;padding:8px 18px;opacity:0;transition:opacity .25s;text-align:center;max-width:90vw}
 #joy{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:120px;height:120px;border-radius:50%;background:rgba(243,233,210,.55);border:3px solid var(--edge);touch-action:none}
+#joy.on{background:rgba(243,233,210,.75)}
+.rot{display:none;position:fixed;right:max(12px,env(safe-area-inset-right));width:44px;height:44px;font-size:24px;padding:0;z-index:6;pointer-events:auto}
+#rotR{bottom:calc(env(safe-area-inset-bottom,0px) + 164px)}#rotL{bottom:calc(env(safe-area-inset-bottom,0px) + 238px)}
+body[data-mode=play] .rot{display:block}
 #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--paper);border:3px solid var(--edge);box-shadow:0 3px 0 var(--edge)}
 #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--sky);font-family:var(--font-label);font-size:12px;letter-spacing:1px;z-index:9}
 
@@ -398,7 +402,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
   <div id="moves"><div class="row" id="mvRow"></div><button id="flee">Kabur</button></div>
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
-<button id="snd" class="ui">🔊</button>
+<button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>
 
@@ -2281,16 +2285,29 @@ const joy = { x: 0, y: 0 }, keys = {};
 {
   const base = $('joy'), knob = $('knob'); let pid = null;
   const set = (e) => { const r = base.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; let dx = e.clientX - cx, dy = e.clientY - cy; const m = 46, d = Math.hypot(dx, dy); if (d > m) { dx = dx / d * m; dy = dy / d * m; } knob.style.transform = `translate(${dx}px,${dy}px)`; joy.x = dx / m; joy.y = dy / m; };
-  base.addEventListener('pointerdown', (e) => { pid = e.pointerId; base.setPointerCapture(pid); set(e); });
-  base.addEventListener('pointermove', (e) => { if (e.pointerId === pid) set(e); });
-  const end = (e) => { if (e.pointerId === pid) { pid = null; joy.x = joy.y = 0; knob.style.transform = ''; } };
-  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
+  /* Joystick melayang: sentuh di mana saja di separuh KIRI layar -> joystick muncul di situ.
+     Geser di separuh KANAN -> putar kamera (baru aktif setelah geser > 12 px, supaya ketukan kecil tidak memutar). */
+  const homeJoy = () => { base.style.left = ''; base.style.top = ''; base.style.bottom = ''; base.classList.remove('on'); };
+  let jc = { x: 0, y: 0 }, cam = null;
+  const setJoy = (e) => { let dx = e.clientX - jc.x, dy = e.clientY - jc.y; const m = 46, d = Math.hypot(dx, dy); if (d > m) { dx = dx / d * m; dy = dy / d * m; } knob.style.transform = `translate(${dx}px,${dy}px)`; joy.x = dx / m; joy.y = dy / m; };
+  const startTouch = (e) => {
+    if (mode !== 'play') return;
+    if (e.clientX < innerWidth * 0.5) {
+      if (pid !== null) return; pid = e.pointerId; const w = base.offsetWidth;
+      jc = { x: Math.min(innerWidth * 0.5 - w / 2, Math.max(w / 2 + 6, e.clientX)), y: Math.min(innerHeight - w / 2 - 6, Math.max(w / 2 + 6, e.clientY)) };
+      base.style.left = (jc.x - w / 2) + 'px'; base.style.top = (jc.y - w / 2) + 'px'; base.style.bottom = 'auto'; base.classList.add('on'); setJoy(e);
+    } else if (!cam) cam = { id: e.pointerId, x: e.clientX, on: false, x0: e.clientX };
+  };
+  canvas.addEventListener('pointerdown', startTouch); base.addEventListener('pointerdown', startTouch);
+  addEventListener('pointermove', (e) => {
+    if (e.pointerId === pid) setJoy(e);
+    if (cam && e.pointerId === cam.id && mode === 'play') { if (!cam.on && Math.abs(e.clientX - cam.x0) > 12) { cam.on = true; cam.x = e.clientX; } if (cam.on) { yawGoal = null; yaw -= (e.clientX - cam.x) * 0.008; cam.x = e.clientX; } }
+  });
+  const endTouch = (e) => { if (e.pointerId === pid) { pid = null; joy.x = joy.y = 0; knob.style.transform = ''; homeJoy(); } if (cam && e.pointerId === cam.id) cam = null; };
+  addEventListener('pointerup', endTouch); addEventListener('pointercancel', endTouch);
   addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; }); addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-  let drag = null;
-  canvas.addEventListener('pointerdown', (e) => { drag = { id: e.pointerId, x: e.clientX }; canvas.setPointerCapture(e.pointerId); });
-  canvas.addEventListener('pointermove', (e) => { if (drag && e.pointerId === drag.id && mode === 'play') { yaw -= (e.clientX - drag.x) * 0.008; drag.x = e.clientX; } });
-  const dend = (e) => { if (drag && e.pointerId === drag.id) drag = null; };
-  canvas.addEventListener('pointerup', dend); canvas.addEventListener('pointercancel', dend);
+  $('rotL').onclick = () => { yawGoal = (yawGoal === null ? yaw : yawGoal) + Math.PI / 4; };
+  $('rotR').onclick = () => { yawGoal = (yawGoal === null ? yaw : yawGoal) - Math.PI / 4; };
 }
 
 /* =====================================================================
@@ -2952,7 +2969,7 @@ function npcRule() {
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
   });
 }
-window.__g = { catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();
