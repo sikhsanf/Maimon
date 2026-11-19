@@ -9,7 +9,7 @@ const npcs = [];
 const store = { get() { try { return localStorage.getItem(SAVE_KEY); } catch (e) { return null; } }, set(v) { try { localStorage.setItem(SAVE_KEY, v); } catch (e) {} } };
 let lastPos = null;
 function curPos() { if (mode === 'play' && player.rig) lastPos = inside ? [LABDOOR.x, LABDOOR.z - 0.9, 0] : [player.x, player.z, player.ang]; return lastPos; }
-function saveGame() { store.set(JSON.stringify({ pos: curPos(), S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp })), box: stash })); }
+function saveGame() { store.set(JSON.stringify({ pos: curPos(), S, mates: mates.map((m) => ({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp, nick: m.nick })), box: stash })); }
 const nm = (s) => s.replace(/\{n\}/g, S.name);
 
 /* ---------- NPC ---------- */
@@ -74,7 +74,9 @@ function updateObjective() {
   else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   else if (S.stage === 3) { txt = inside ? 'Lapor hasil penelitian ke Prof. Catherine' : 'Lapor ke Prof. Catherine di Lab Maimon UI'; tgt = labTgt(); }
   else if (S.stage === 4) { txt = 'Capek seharian — istirahat dulu di Hotel Maimon 🏨'; tgt = npcs.find((n) => n.id === 'home'); }
-  else if (S.stage >= 5) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 5) { txt = inside ? 'Bicara dengan Prof. Catherine' : 'Pagi! Prof. Catherine menunggu di Lab Maimon UI'; tgt = labTgt(); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage >= 6) { txt = 'Antar surat Prof ke Pak Botani — ikuti Jl. Margonda ke selatan 🌿'; tgt = { x: -1.2, z: HZ + 1.4 }; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (false) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
   const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
   let spEl = null, spTxt = '👆 Tap di sini!'; const menuOpen = getComputedStyle($('menu')).display !== 'none';
@@ -176,6 +178,12 @@ function talkProf() {
     dialog([[P, 'Kucingko, Tikusil, Dombanyo… datanya lengkap! Kamu hebat, {n}!'], [P, 'Penelitianku di Depok berjalan lancar berkat kamu. Tapi Pulau Jawa itu luas. Ada Jakarta, Bogor, Bandung, Yogyakarta, Surabaya…'], ['{n}', 'Masih banyak Maimon yang belum kutemui! Aku siap, Prof!'], [P, 'Kuliahmu di UI juga akan segera mulai, jadi jaga keseimbangan ya. Tapi gelar Pelatih Maimon terbaik di dunia menunggumu!']], () => {
       S.stage = 4; saveGame(); Music.jingle('catch'); chapter('HARI PERTAMA SELESAI', `Kerja bagus, ${S.name}! Hari pertama di Depok padat sekali. Istirahat dulu di Hotel Maimon ya.`, 'Keluar lab', () => goLab(false));
     });
+  } else if (S.stage === 5) {
+    dialog([[P, 'Selamat pagi, {n}! Lihat ini, halaman Maimondex-ku masih kosong di bagian Daun 🌿'], [P, 'Di Kebun Raya Bogor ada Maimon Daun yang belum pernah dicatat siapa pun. Tapi hari ini aku harus mengajar di UI, jadi aku tidak bisa ke sana.'], [P, 'Jadilah mata dan telingaku di Bogor, ya! Temui temanku, Pak Botani. Dia pemimpin Gym Kebun Raya. Ini suratku untuknya 💌'], ['{n}', 'Siap, Prof! Aku antar suratnya dengan selamat!'], [P, 'Ikuti Jl. Margonda ke selatan, lewat gapura KE BOGOR. Hati-hati di jalan, dan bawa Maimon-mu yang sehat!']], () => {
+      S.stage = 6; saveGame(); Music.jingle('catch'); chapter('BAB 2: MENUJU BOGOR', `Kamu menerima surat Prof untuk Pak Botani. Ikuti Jl. Margonda ke selatan, lewat gapura KE BOGOR.`, 'Berangkat!', () => goLab(false));
+    });
+  } else if (S.stage >= 6) {
+    dialog([[P, 'Suratku untuk Pak Botani jangan sampai hilang ya, {n}. Bogor ada di selatan, lewat gapura KE BOGOR!']]);
   } else {
     dialog([[P, 'Penelitianku butuh banyak data. Cari Maimon berkilau ✨ ya, {n}! Kalau ketemu, kabari aku.']]);
   }
@@ -185,10 +193,10 @@ function talkProf() {
 function renderHome() {
   const P = $('homeP'), B = $('homeB'); P.innerHTML = ''; B.innerHTML = '';
   $('homeH1').textContent = `Ikut denganmu (${mates.length}/${MAXP})`; $('homeH2').textContent = `Dititip di rumah (${stash.length})`;
-  const card = (sp, name, hp, hpMax, btns, star) => { const d = MAI[sp], c = document.createElement('div'); c.className = 'hc'; c.innerHTML = `<div class="em">${d.info.emo}</div><b>${star ? '⭐ ' : ''}${name}</b><span class="chip" style="background:${TCOL[d.type]}">${d.type}</span><small>HP ${Math.ceil(hp)}/${hpMax}</small>`; btns.forEach(([t, f]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = f; c.appendChild(b); }); return c; };
-  mates.forEach((m, i) => { const bt = []; if (i > 0) bt.push(['⭐ Pimpin', () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); renderHome(); saveGame(); }]); bt.push(['🏠 Titip', () => { if (mates.length <= 1) { toast('Minimal 1 Maimon ikut denganmu!', 1.6); return; } stash.push({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp }); world.remove(m.rig.root); mates.splice(i, 1); renderChips(); renderHome(); saveGame(); }]); P.appendChild(card(m.sp, `${m.name} Lv${m.lv}`, m.hp, m.hpMax, bt, i === 0)); });
+  const card = (sp, name, hp, hpMax, btns, star) => { const d = MAI[sp], c = document.createElement('div'); c.className = 'hc'; const lm = /^(.*) (Lv ?\d+)$/.exec(name), nn = lm ? lm[1] : name, lv = lm ? lm[2].replace('Lv', 'Lv ').replace('Lv  ', 'Lv ') : ''; c.innerHTML = `<div class="em">${d.info.emo}</div><b>${star ? '⭐ ' : ''}${nn}</b>${lv ? `<span class="lv">${lv}</span>` : ''}<span class="chip" style="background:${TCOL[d.type]}">${d.type}</span><small>HP ${Math.ceil(hp)}/${hpMax}</small>`; btns.forEach(([t, f]) => { const b = document.createElement('button'); b.textContent = t; b.onclick = f; c.appendChild(b); }); return c; };
+  mates.forEach((m, i) => { const bt = []; if (i > 0) bt.push(['⭐ Pimpin', () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); renderHome(); saveGame(); }]); bt.push(['🏠 Titip', () => { if (mates.length <= 1) { toast('Minimal 1 Maimon ikut denganmu!', 1.6); return; } stash.push({ sp: m.sp, st: m.st, hp: m.hp, lv: m.lv, xp: m.xp, nick: m.nick }); world.remove(m.rig.root); mates.splice(i, 1); renderChips(); renderHome(); saveGame(); }]); P.appendChild(card(m.sp, `${m.name} Lv${m.lv}`, m.hp, m.hpMax, bt, i === 0)); });
   if (!stash.length) B.innerHTML = '<div class="hint">Belum ada Maimon yang dititip. Kalau timmu penuh, Maimon baru otomatis dititip di sini.</div>';
-  stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st, r.lv || 5); B.appendChild(card(r.sp, MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1] + ' Lv' + (r.lv || 5), r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z, q.lv || 5, q.xp || 0); m.hp = Math.min(q.hp, m.hpMax); m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
+  stash.forEach((r, j) => { const hm = hpMaxOf(r.sp, r.st, r.lv || 5); B.appendChild(card(r.sp, (r.nick || MAI[r.sp].n[Math.min(r.st, MAI[r.sp].n.length) - 1]) + ' Lv' + (r.lv || 5), r.hp, hm, [['🎒 Ajak', () => { if (mates.length >= MAXP) { toast(`Tim sudah penuh (maks. ${MAXP}). Titip satu dulu!`, 1.8); return; } const q = stash.splice(j, 1)[0], m = mkMon(q.sp, q.st, player.x, player.z, q.lv || 5, q.xp || 0); if (q.nick) { m.nick = q.nick; m.name = q.nick; } m.hp = Math.min(q.hp, m.hpMax); m.state = 'follow'; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); renderChips(); renderHome(); saveGame(); }]], false)); });
 }
 function openHome() { mode = 'home'; $('joy').style.display = 'none'; $('talk').style.display = 'none'; renderHome(); $('home').style.display = 'block'; }
 $('homeX').onclick = () => { $('home').style.display = 'none'; mode = 'play'; cooldown = Math.max(cooldown, T + 2.5); $('joy').style.display = ''; };
@@ -279,7 +287,7 @@ function beginStory() {
 function loadGame() {
   let d; try { d = JSON.parse(store.get()); } catch (e) { d = null; } if (!d) { enterCreate(); return; }
   Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
-  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
+  (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; if (q.nick) { m.nick = q.nick; m.name = q.nick; } m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; lastPos = null;
   if (Array.isArray(d.pos) && d.pos.every(Number.isFinite) && !blockedAt(d.pos[0], d.pos[1], 0.3)) { player.x = d.pos[0]; player.z = d.pos[1]; player.ang = d.pos[2]; lastPos = d.pos.slice(); }
   mates.forEach((m, i) => { m.x = player.x - 0.6 * (i + 1); m.z = player.z; }); trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
@@ -306,6 +314,6 @@ async function healScene() {
     fxClear(); m.hp = m.hpMax; m.jump = 0; burst(m.x, 0.6, m.z, '#8dffb0', 18); floatText('+HP ❤️', m.x, 1.3, m.z, '#2fae5a'); flashScreen(); Music.blip(880); renderChips(); await sleep(450);
   }
   stash.forEach((r) => { r.hp = hpMaxOf(r.sp, r.st, r.lv || 5); }); saveGame();
-  camGoal.copy(base); zoomGoal = zb; await sleep(300); mode = 'play'; cooldown = Math.max(cooldown, T + 2); $('joy').style.display = '';
+  camGoal.copy(base); zoomGoal = 1; camBack = null; await sleep(300); mode = 'play'; cooldown = Math.max(cooldown, T + 2); $('joy').style.display = '';
   dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }

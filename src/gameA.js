@@ -96,6 +96,22 @@ function updateWild(w, dt) {
    ===================================================================== */
 const starters = [], peds = []; let pickSel = null, sparkT = 0;
 const STARTS = [['kancik', 11.7], ['cebongi', 10.4], ['pioyo', 9.1]];
+/* ---------- beri nama Maimon (tiap kali dapat Maimon baru) ---------- */
+function askNick(m, rec, done) {
+  const sp = m.d ? m.d.n[Math.min(m.st, m.d.n.length) - 1] : m.name, back = mode;
+  mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none';
+  $('nickEm').textContent = m.d && m.d.info ? m.d.info.emo : '🐾'; $('nickT').textContent = `Mau kasih nama untuk ${sp}?`;
+  const inp = $('nickIn'); inp.value = ''; inp.placeholder = sp; $('nickBox').style.display = 'flex';
+  const fin = (ok) => {
+    const v = ok ? inp.value.trim().slice(0, 10) : '';
+    $('nickBox').style.display = 'none'; inp.blur();
+    if (v) { m.nick = v; m.name = v; if (rec) rec.nick = v; Music.blip(988); toast(`Halo, ${v}! 💖`, 1.8); renderChips(); }
+    mode = back === 'cut' ? 'play' : back; $('joy').style.display = ''; cooldown = Math.max(cooldown, T + 1.5); saveGame();
+    if (done) done();
+  };
+  $('nickGo').onclick = () => fin(true); $('nickNo').onclick = () => fin(false);
+  inp.onkeydown = (e) => { if (e.key === 'Enter') fin(true); };
+}
 function enterPick() {
   mode = 'pick'; player.rig.root.visible = false;
   STARTS.forEach(([sp, z]) => { const m = mkMon(sp, 1, -5.3, z, 5); m.state = 'display'; m.ang = Math.PI / 2; m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8 * 1.35; m.baseZ = z; starters.push(m); const pd = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 0.08, 16), glow(TCOL[m.type] || '#ffd84a')); pd.position.set(-5.3, groundY(-5.3, z) + 0.04, z); world.add(pd); peds.push(pd); });
@@ -123,7 +139,7 @@ $('go').onclick = () => {
   player.x = -3.0; player.z = 10.4; player.ang = -Math.PI / 2; player.rig.root.visible = true;
   addChip(m); mode = 'play'; Music.jingle('catch'); pitch = 0.66; yaw = 0.62; zoomGoal = 1; $('joy').style.display = ''; $('zone').style.display = ''; $('mates').style.display = '';
   S.stage = 1; S.tut = 0; S.tf = {}; markDex(m.sp, 2); saveGame();
-  dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik merah muda di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']]);
+  askNick(m, null, () => dialog([['Prof. Catherine', `Pilihan bagus! ${m.name} pasti jadi partner yang hebat.`], ['Prof. Catherine', 'Tapi sebelum menangkap Maimon liar, kamu harus belajar dasarnya dulu: melihat Maimon-mu, memancing, memetik hasil kebun, dan membuka Tas.'], ['Prof. Catherine', 'Ikuti titik-titik merah muda di jalan dan lihat bagian TUJUAN di layar. Semangat, Pelatih!']]));
 };
 function renderChips() { const c = $('mchips'); c.innerHTML = ''; mates.forEach((m, i) => { const s = document.createElement('span'); s.textContent = (i === 0 ? '⭐ ' : '') + m.name + ' Lv' + m.lv; c.appendChild(s); }); $('mates').firstChild.textContent = `TEMAN ${mates.length}/${MAXP}`; }
 const addChip = () => renderChips();
@@ -392,10 +408,10 @@ function feed(id) {
   if (bagN(id) === 0) { toast(`Belum punya ${FOOD[id][1]}. ${FOODWHERE[id]}`, 2.4); return; }
   if (id === w.fav && R0() >= catchP(w)) { useBag(id); w.shake = 0.8; refreshFoods(); toast(`${w.name} makan ${FOOD[id][2]} tapi belum mau ikut 😋 coba lagi!`, 2); $('phint').textContent = bagN(w.fav) === 0 ? `Makanan favorit habis. ${FOODWHERE[w.fav]}.` : ''; return; }
   if (id === w.fav) {
-    useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP;
-    if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { stash.push({ sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }); world.remove(w.rig.root); }
+    useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP; let rec = null;
+    if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { rec = { sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }; stash.push(rec); world.remove(w.rig.root); }
     markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
-    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2);
+    toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2); setTimeout(() => askNick(w, rec), 1200);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
 $('skip').onclick = () => { if (!talk) return; const w = talk; leaveEncounter(5); runAway(w); };
