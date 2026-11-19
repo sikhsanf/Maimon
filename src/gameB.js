@@ -66,7 +66,7 @@ function frame() {
   if (battle && battle.yawG !== undefined) yaw = lerpAng(yaw, battle.yawG, Math.min(1, dt * 3));
   if (document.body.dataset.mode !== mode) document.body.dataset.mode = mode;
   if (mode === 'play') $('zone').firstChild.textContent = inside ? 'Lab Maimon UI' : zoneName(player.x, player.z);
-  if (mode === 'play' && !inside) { const ak = player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) areaKey = ak; else if (ak !== areaKey) { areaKey = ak; showArea(ak === 'depok' ? ['Kota', 'Depok'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
+  if (mode === 'play' && !inside) { const ak = player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) { areaKey = ak; if (ak !== 'depok') Music.play('lintas'); } else if (ak !== areaKey) { const wasF = areaKey !== 'depok'; areaKey = ak; if (wasF !== (ak !== 'depok')) Music.play(ak === 'depok' ? CITY : 'lintas'); showArea(ak === 'depok' ? ['Kota', 'Depok'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
 
   // rumput terdorong
   const pu = grassUniforms.uPush.value; let n = 0;
