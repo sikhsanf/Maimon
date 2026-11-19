@@ -2237,6 +2237,16 @@ function bestBattleYaw(cx, cz) {
   }
   return best;
 }
+// kamera battle: pilih sudut yang tidak tertutup bangunan untuk KEDUA Maimon (cek sampai 7 petak ke arah kamera)
+function battleCamYaw(pts, base) {
+  let best = base, bs = 1e9;
+  for (let k = 0; k < 24; k++) {
+    const y = k * Math.PI / 12, dx = Math.sin(y), dz = Math.cos(y); let blocked = 0;
+    for (const [cx, cz] of pts) for (let d = 0.6; d <= 7; d += 0.4) { const px = cx + dx * d, pz = cz + dz * d; if (rects.some((b) => px > b[0] - 0.3 && px < b[1] + 0.3 && pz > b[2] - 0.3 && pz < b[3] + 0.3)) blocked += (7.4 - d); }
+    const dyaw = Math.abs(((y - base + Math.PI * 3) % (Math.PI * 2)) - Math.PI), sc = blocked * 3 + dyaw * 0.3; if (sc < bs) { bs = sc; best = y; }
+  }
+  return { yaw: best, score: bs };
+}
 function startBattle(w) {
   const me = mates[0]; if (!me) return;
   if (me.hp <= 0) me.hp = 1;
@@ -2248,7 +2258,7 @@ function startBattle(w) {
   battle.me.bx = w.x - rx * sgn * 2.0; battle.me.bz = w.z - rz * sgn * 2.0; battle.px = w.x - rx * sgn * 3.0; battle.pz = w.z - rz * sgn * 3.0;
   battle.cx = (w.x + me.bx) / 2; battle.cz = (w.z + me.bz) / 2;
   me.ang = Math.atan2(w.x - me.bx, w.z - me.bz); w.ang = Math.atan2(me.bx - w.x, me.bz - w.z); w.walk = false;
-  clearArena(battle.cx, battle.cz, 3.2); camGoal.set(battle.cx, 0.3, battle.cz); zoomGoal = 0.42; pitch = 0.9; forceYaw(clearYaw(battle.cx, battle.cz, yaw)); $('hpL').classList.add('fl'); $('hpR').classList.add('fl');
+  clearArena(battle.cx, battle.cz, 3.2); camGoal.set(battle.cx, 0.3, battle.cz); zoomGoal = 0.42; pitch = 0.9; battle.camYaw = battleCamYaw([[battle.me.bx, battle.me.bz], [w.x, w.z], [battle.cx, battle.cz]], by).yaw; battle.yawG = battle.camYaw; $('hpL').classList.add('fl'); $('hpR').classList.add('fl');
   hpBar($('hpL'), me); hpBar($('hpR'), w); $('battle').style.display = 'block';
   buildMoveButtons(); say(w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
 }
