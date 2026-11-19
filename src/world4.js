@@ -32,5 +32,5 @@ function populateWorld() {
     if (rects.some((b) => x > b[0] - 0.2 && x < b[1] + 0.2 && z > b[2] - 0.2 && z < b[3] + 0.2)) continue;
     addBush(x, z, 0.8 + R0() * 0.6, (R0() * 100) | 0); n++;
   }
-  buildTrees(); buildGrass(); populateField(); buildGrass(FD.x0, FD.x1, FD.z0, FD.z1, fkind, 30000, 77); buildTraffic(); buildTrain();
+  buildTrees(); buildGrass(); populateField(); buildOuter(); buildGrass(FD.x0, FD.x1, FD.z0, FD.z1, fkind, 30000, 77); buildTraffic(); buildTrain();
 }

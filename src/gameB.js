@@ -33,7 +33,7 @@ function frame() {
       const px0 = player.x, pz0 = player.z;
       if (!blockedAt(player.x + vx, player.z, 0.28)) player.x += vx;
       if (!blockedAt(player.x, player.z + vz, 0.28)) player.z += vz;
-      if (!inside) { player.x = clamp(player.x, -HX + 0.6, HX - 0.6); player.z = clamp(player.z, -HZ + 0.6, zMaxAt(player.x)); }
+      if (!inside) { player.x = clamp(player.x, -HX + 0.6, ECOR.xEnd); player.z = clamp(player.z, NCOR.zEnd, zMaxAt(player.x)); }
       if (!inside) { if (Math.hypot(player.x - px0, player.z - pz0) < sp * 0.15) { stuckT += dt; if (stuckT > 1.3) { stuckT = 0; unstick(); } } else stuckT = 0; } else stuckT = 0;
       player.ang = lerpAng(player.ang, Math.atan2(vx, vz), Math.min(1, dt * 12)); player.walk = true;
       const l = trail[trail.length - 1]; if (!l || Math.hypot(l[0] - player.x, l[1] - player.z) > 0.09) { trail.push([player.x, player.z]); if (trail.length > 300) trail.shift(); }
@@ -50,7 +50,7 @@ function frame() {
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); updateOuter(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan

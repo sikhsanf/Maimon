@@ -37,6 +37,7 @@ const FGX = (FD.x1 - FD.x0) * 2 + 1, FGZ = (FD.z1 - FD.z0) * 2 + 1; let FGRID = 
   // jalan di atas sungai dibuat rata (jembatan)
   for (let j = 0; j < FGZ; j++) for (let i = 0; i < FGX; i++) { const x = FD.x0 + i * 0.5, z = FD.z0 + j * 0.5, k = fkind(x, z); if ((k === 'road' || k === 'median' || k === 'curb') && poly(FC.river.pts, x, z).d < FC.river.w / 2 + 0.9) FGRID[j * FGX + i] = 0.06; }
 }
+smoothBorder(FGRID, FGX, FGZ, { w: 1, e: 1, s: 1 });
 function fieldY(x, z) {
   if (x < FD.x0 || x > FD.x1) return 0;
   const fx = clamp((x - FD.x0) * 2, 0, FGX - 1.001), fz = clamp((z - FD.z0) * 2, 0, FGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -62,13 +63,6 @@ const FWATER = { tex: null };
   const t = new THREE.Mesh(g, toon('#ffffff', { map: tex })); t.receiveShadow = true; world.add(t);
   const wt = terrainMat.water.clone(); wt.needsUpdate = true; wt.repeat.set(W / 4, H / 4); FWATER.tex = wt;
   const wm = new THREE.Mesh(new THREE.PlaneGeometry(W, H).rotateX(-Math.PI / 2), toon('#ffffff', { map: wt })); wm.position.set((FD.x0 + FD.x1) / 2, -0.13, (FD.z0 + FD.z1) / 2); wm.receiveShadow = true; world.add(wm);
-  const dc = pixCanvas(64, 40, (x, y) => { const n = fbm(x * 0.12, y * 0.2); if (y < 3) return shade(hex('#5aa23a'), 0.9 + hash2(x, y) * 0.2); if (y < 5) return shade(hex('#4a3a24'), 0.9); let c = mixc(hex('#7b583c'), hex('#5e412d'), n); return shade(c, 0.9 + hash2(x, y) * 0.2); });
-  const dt = toTex(dc); dt.wrapS = dt.wrapT = THREE.RepeatWrapping; const dm = toon('#ffffff', { map: dt }), DEPTH = 2.6, cx = (FD.x0 + FD.x1) / 2, cz = (FD.z0 + FD.z1) / 2;
-  [[FD.x0, cz, -Math.PI / 2, H], [FD.x1, cz, Math.PI / 2, H], [cx, FD.z1, 0, W]].forEach(([x, z, ry, w]) => {
-    const pg = new THREE.PlaneGeometry(w, DEPTH); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 4, uv.getY(i));
-    const m = new THREE.Mesh(pg, dm); m.position.set(x, -DEPTH / 2 + 0.02, z); m.rotation.y = ry; m.receiveShadow = true; world.add(m);
-  });
-  const bot = new THREE.Mesh(new THREE.PlaneGeometry(W, H).rotateX(Math.PI / 2), toon('#4a3a24')); bot.position.set(cx, -DEPTH, cz); world.add(bot);
 }
 
 /* isi field: pohon, semak, jembatan, gapura, warung, palang gerbang Bogor */

@@ -112,7 +112,16 @@ const HGX = HX * 4 + 1, HGZ = HZ * 4 + 1; let HGRID = new Float32Array(HGX * HGZ
     for (let j = 0; j < HGZ; j++) for (let i = 0; i < HGX; i++) { let s = 0, n = 0; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= HGX || jj >= HGZ) continue; s += src[jj * HGX + ii]; n++; } dst[j * HGX + i] = s / n; }
     if (pass) HGRID = dst; }
 }
-function groundY(x, z) {
+function smoothBorder(G, GX, GZ, sides) { // titik tengah di tepi dibuat linear agar tanah luar menyambung tanpa retak
+  const at = (i, j) => G[j * GX + i];
+  if (sides.w) for (let j = 1; j < GZ - 1; j += 2) G[j * GX] = (at(0, j - 1) + at(0, j + 1)) / 2;
+  if (sides.e) for (let j = 1; j < GZ - 1; j += 2) G[j * GX + GX - 1] = (at(GX - 1, j - 1) + at(GX - 1, j + 1)) / 2;
+  if (sides.n) for (let i = 1; i < GX - 1; i += 2) G[i] = (at(i - 1, 0) + at(i + 1, 0)) / 2;
+  if (sides.s) for (let i = 1; i < GX - 1; i += 2) if (!sides.sSkip || !sides.sSkip(i)) G[(GZ - 1) * GX + i] = (at(i - 1, GZ - 1) + at(i + 1, GZ - 1)) / 2;
+}
+smoothBorder(HGRID, HGX, HGZ, { w: 1, e: 1, n: 1, s: 1, sSkip: (i) => { const x = -HX + i * 0.5; return x >= -8 - 0.5 && x <= 6 + 0.5; } });
+function groundY(x, z) { if (outerOn && !inHole(x, z)) return outerH(x, z); return baseGroundY(x, z); }
+function baseGroundY(x, z) {
   if (z > HZ) return fieldY(x, z);
   if (x > HX + 2) return 0;
   const fx = clamp((x + HX) * 2, 0, HGX - 1.001), fz = clamp((z + HZ) * 2, 0, HGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -126,7 +135,8 @@ const LAB_PROF = [33.6, 31.0]; const circles = [], rects = [], vehicles = []; le
 function waterAt(x, z) { const k = z > HZ ? fkind(x, z) : kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
   if (inside) { if (x < INB.x0 + 0.5 || x > INB.x1 - 0.5 || z < INB.z0 + 0.45 || z > INB.z1 - 0.5) return true; for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; } for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true; return false; }
-  if (x < -HX + 0.8 || x > HX - 0.8 || z < -HZ + 0.8) return true;
+  if (x < -HX + 0.8) return true;
+  if ((x > HX - 0.8 || z < -HZ + 0.8) && !outerCorridor(x, z, r)) return true;
   if (z > HZ - 0.8 && (!inFieldX(x) || z > FD.z1 - 0.8)) return true;
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }
@@ -169,14 +179,5 @@ const terrainMat = { m: null };
   const wc = pixCanvas(32, 32, (x, y) => { const n = vnoise(x * 0.35, y * 0.35); const h = hash2(x, y); let c = mixc(hex('#3f94c6'), hex('#58b0dc'), n); if (h > 0.965) c = hex('#c9ecff'); if (vnoise(x * 0.6 + 5, y * 0.25) > 0.78) c = shade(c, 1.12); return c; });
   const wt = toTex(wc); wt.wrapS = wt.wrapT = THREE.RepeatWrapping; wt.repeat.set(HX * 2 / 4, HZ * 2 / 4); terrainMat.water = wt;
   const wm = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2).rotateX(-Math.PI / 2), toon('#ffffff', { map: wt })); wm.position.y = -0.13; wm.receiveShadow = true; world.add(wm);
-  // sisi tanah
-  const dc = pixCanvas(64, 40, (x, y) => { const n = fbm(x * 0.12, y * 0.2); if (y < 3) return shade(hex('#5aa23a'), 0.9 + hash2(x, y) * 0.2); if (y < 5) return shade(hex('#4a3a24'), 0.9); let c = mixc(hex('#7b583c'), hex('#5e412d'), clamp(y / 40 + n * 0.3, 0, 1)); if (hash2(x * 3, y * 5) < 0.06) c = shade(c, 0.78); if (vnoise(x * 0.5, y * 0.5) > 0.82) c = shade(hex('#8b8f93'), 0.8 + hash2(x, y) * 0.2); return c; });
-  const dt = toTex(dc); dt.wrapS = dt.wrapT = THREE.RepeatWrapping;
-  const dm = toon('#ffffff', { map: dt }); const DEPTH = 2.6;
-  [[0, -HZ, Math.PI, HX * 2], [-13, HZ, 0, 10], [12, HZ, 0, 12], [-HX, 0, -Math.PI / 2, HZ * 2], [HX, 0, Math.PI / 2, HZ * 2]].forEach(([x, z, ry, w]) => {
-    const pg = new THREE.PlaneGeometry(w, DEPTH); const uv = pg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / 4, uv.getY(i));
-    const m = new THREE.Mesh(pg, dm); m.position.set(x, -DEPTH / 2 + 0.02, z); m.rotation.y = ry; m.receiveShadow = true; world.add(m);
-  });
-  const bot = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2).rotateX(Math.PI / 2), toon('#4a3a24')); bot.position.y = -DEPTH; world.add(bot);
 }
-function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); }
+function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); if (terrainMat.outer) terrainMat.outer.offset.set(T * 0.03, T * 0.02); }
