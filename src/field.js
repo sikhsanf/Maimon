@@ -83,12 +83,12 @@ function populateField() {
     const wood = toon('#c9b88a'), roof = toon('#8a3b2e'); const cx = -1.2;
     [-2.5, 2.5].forEach((dx) => { box(world, 0.42, 2.1, 0.42, wood, cx + dx, 1.05, zc); circles.push({ x: cx + dx, z: zc, r: 0.3 }); });
     box(world, 5.9, 0.28, 0.5, roof, cx, 2.2, zc); box(world, 5.2, 0.5, 0.3, toon('#f3ead2'), cx, 1.85, zc);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.52), new THREE.MeshBasicMaterial({ map: labelTex(txt, bg, '#ffffff'), side: THREE.DoubleSide })); m.position.set(cx, 1.85, zc); world.add(m);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.52), new THREE.MeshBasicMaterial({ map: labelTex(txt, bg, '#ffffff'), side: THREE.DoubleSide })); m.position.set(cx, 1.85, zc); world.add(m); return m;
   };
   arch(HZ + 1.4, 'KE BOGOR', '#1d6f6a');
   // palang tutup di ujung field (Kota Bogor belum dibuka)
-  arch(FD.z1 - 2.2, 'BOGOR: TUTUP', '#a8442e');
-  { const bar = toon('#f1f1f1'), red = toon('#d8452e'); const zc = FD.z1 - 1.6; for (let k = 0; k < 6; k++) box(world, 0.65, 0.18, 0.12, k % 2 ? red : bar, -3.0 + k * 0.65 + 0.33 - 0.0, 0.6, zc); rects.push([-3.4, 0.9, zc - 0.3, zc + 0.3]); }
+  bogorGate.label = arch(FD.z1 - 2.2, 'BOGOR: TUTUP', '#a8442e');
+  { const bar = toon('#f1f1f1'), red = toon('#d8452e'), grp = new THREE.Group(); world.add(grp); const zc = FD.z1 - 1.6; for (let k = 0; k < 6; k++) box(grp, 0.65, 0.18, 0.12, k % 2 ? red : bar, -3.0 + k * 0.65 + 0.33 - 0.0, 0.6, zc); const rr = [-3.4, 0.9, zc - 0.3, zc + 0.3]; rects.push(rr); bogorGate.bar = grp; bogorGate.rect = rr; }
   // warung pinggir jalan
   { const h = house(FC.hut[0], FC.hut[1], -Math.PI / 2, 3); }
 }
@@ -96,5 +96,5 @@ const FSPAWNS = [['kucingko', 1, -5.5, 24], ['tikusil', 1, 3.8, 20.4], ['dombany
 let fToastT = 0;
 function updateField(dt) {
   FWATER.tex.offset.set(T * 0.03, T * 0.02);
-  if (player.z > FD.z1 - 5 && T > fToastT) { fToastT = T + 6; toast('Ada Pak Polisi menjaga gerbang Bogor 👮', 2.6); }
+  if (!gateOpen && player.z > FD.z1 - 5 && player.z < FD.z1 + 1 && T > fToastT) { fToastT = T + 6; toast('Ada Pak Polisi menjaga gerbang Bogor 👮', 2.6); }
 }

@@ -75,7 +75,9 @@ function updateObjective() {
   else if (S.stage === 3) { txt = inside ? 'Lapor hasil penelitian ke Prof. Catherine' : 'Lapor ke Prof. Catherine di Lab Maimon UI'; tgt = labTgt(); }
   else if (S.stage === 4) { txt = 'Capek seharian — istirahat dulu di Hotel Maimon 🏨'; tgt = npcs.find((n) => n.id === 'home'); }
   else if (S.stage === 5) { txt = inside ? 'Bicara dengan Prof. Catherine' : 'Pagi! Prof. Catherine menunggu di Lab Maimon UI'; tgt = labTgt(); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  else if (S.stage >= 6) { txt = 'Antar surat Prof ke Pak Botani — ikuti Jl. Margonda ke selatan 🌿'; tgt = { x: -1.2, z: HZ + 1.4 }; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 6) { txt = 'Antar surat Prof ke Bogor — ikuti Jl. Margonda ke selatan, temui Pak Polisi di gerbang 🌿'; tgt = npcs.find((n) => n.id === 'polisi'); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 7) { txt = 'Antar surat Prof ke Pak Botani di Gym Kebun Raya (ujung Jl. Pajajaran) 🌿'; tgt = npcs.find((n) => n.id === 'botani'); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon Bogor 🩷'; tgt = npcs.find((n) => n.id === 'nurse2'); } }
+  else if (S.stage >= 8) { txt = 'Jelajahi Kota Bogor · tangkap Maimon Daun 🌿 (Gym Kebun Raya segera dibuka)'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = nearestNPC('nurse'); } }
   else if (false) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
   $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
   const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
@@ -161,11 +163,26 @@ function updateInteract() {
   if (on) { b.textContent = nearSpot ? nearSpot.label : '💬 Bicara: ' + nearNPC.name.split(' ').slice(-1)[0]; const t = nearSpot || nearNPC, [sx, sy] = toScreen(t.x, groundY(t.x, t.z) + (nearSpot ? (nearSpot.h || 1) + 0.35 : 2.0), t.z); b.style.left = Math.min(Math.max(sx, 90), innerWidth - 90) + 'px'; b.style.top = Math.min(Math.max(sy, 80), innerHeight - 130) + 'px'; }
 }
 $('talk').onclick = () => interact();
-function interact() { if (mode !== 'play') return; if (nearSpot) return gatherAt(nearSpot); if (!nearNPC) return; (nearNPC.id === 'prof' ? talkProf : nearNPC.id === 'home' ? talkHome : nearNPC.id === 'tani' ? talkTani : nearNPC.id === 'polisi' ? talkPolisi : talkNurse)(); }
+/* kunci aktivitas Depok menurut cerita: sebelum starter semua terkunci; mancing+petik buka saat latihan; klinik setelah latihan; hotel setelah lapor ke Prof */
+function lockMsg(id) {
+  const st = S.stage;
+  if (id === 'prof' || id === 'polisi') return null;
+  if (st === 0) return { tani: ['Pak Tani', 'Halo, Nak! Kamu anak baru ya? Temui Prof. Catherine di Lab Maimon dulu, baru kita ngobrol.'], nurse: ['Dokter Sari', 'Selamat datang! Temui Prof. Catherine dulu ya, nanti klinik ini siap membantu Maimon-mu.'], home: ['Bu Wati', 'Selamat datang di Hotel Maimon! Temui Prof. Catherine dulu ya, Nak.'] }[id] || null;
+  if (id === 'nurse' && st < 2) return ['Dokter Sari', 'Selesaikan latihan dasarnya dulu ya. Setelah itu klinik ini siap merawat Maimon-mu!'];
+  if (id === 'home' && st < 4) return ['Bu Wati', 'Hotel baru buka untuk pelatih yang sudah lapor ke Prof. Catherine. Selesaikan tugasmu dulu ya, Nak.'];
+  return null;
+}
+function interact() { if (mode !== 'play') return; if (nearSpot) { if (S.stage === 0) { toast('Temui Prof. Catherine dulu ya 🔬', 2.4); return; } return gatherAt(nearSpot); } if (!nearNPC) return; { const lk = lockMsg(nearNPC.id); if (lk) { pendingFocus = nearNPC; dialog([lk]); return; } } const nid = nearNPC.id; (nid === 'prof' ? talkProf : nid === 'home' ? talkHome : nid === 'tani' ? talkTani : nid === 'polisi' ? talkPolisi : nid === 'nurse' ? talkNurse : () => talkBogor(nid))(); }
 let polisiT = 0;
 function talkPolisi() {
   const n = npcs.find((q) => q.id === 'polisi'); pendingFocus = n; polisiT = T + 25; const P = 'Pak Polisi';
-  dialog([[P, 'Selamat siang, Dik! Maaf, jalan ke Kota Bogor ditutup dulu ya.'], [P, 'Lagi ada acara besar di sana, jadi Bogor belum dibuka untuk umum.'], ['{n}', 'Oh, begitu ya, Pak…'], [P, 'Sabar ya. Nanti kalau acaranya sudah selesai, Bapak kabari. Sementara itu, boleh jalan-jalan dan cari Maimon di sekitar sini!']]);
+  if (S.stage >= 7) { dialog([[P, 'Silakan lewat, Dik! Titip salam buat Pak Botani ya.']]); return; }
+  if (S.stage === 6) {
+    dialog([[P, 'Selamat siang, Dik {n}! Maaf, jalan ke Kota Bogor ditutup dulu karena ada acara besar.'], [P, 'Eh, itu amplop apa? Surat dari Prof. Catherine untuk Pak Botani?'], ['{n}', 'Iya, Pak. Saya disuruh mengantarnya ke Kebun Raya.'], [P, 'Wah, kalau begitu lain cerita! Pelatih yang membawa surat Prof boleh lewat. Silakan, palangnya Bapak buka.']], () => {
+      S.stage = 7; openGate(true); saveGame(); Music.jingle('catch'); toast('Palang dibuka! Jalan ke Kota Bogor terbuka 🌿', 3); });
+    return;
+  }
+  dialog([[P, 'Selamat siang, Dik! Maaf, jalan ke Kota Bogor ditutup dulu ya.'], [P, 'Lagi ada acara besar di sana, jadi Bogor belum dibuka untuk umum.'], ['{n}', 'Oh, begitu ya, Pak…'], [P, 'Sabar ya. Nanti kalau sudah waktunya, pasti Bapak bukakan.']]);
 }
 function autoMeetPolisi() { if (mode === 'play' && !inside && T > polisiT && player.z > FD.z1 - 5.2) { const n = npcs.find((q) => q.id === 'polisi'); if (n && Math.hypot(player.x - n.x, player.z - n.z) < 4.2) talkPolisi(); } }
 function autoMeetProf() { if (S.stage === 0 && mode === 'play') { const n = npcs.find((q) => q.id === 'prof'); if (Math.hypot(player.x - n.x, player.z - n.z) < 2.6) talkProf(); } }
@@ -218,8 +235,8 @@ function talkHome() {
   dialog([[K, 'Selamat datang di Hotel Maimon, {n}! Ibu jaga Maimon titipanmu ya. Kamu hanya boleh membawa 3 Maimon sekaligus.']], () => openHome());
 }
 /* ---------- Dokter Sari (Klinik Maimon) ---------- */
-function talkNurse() {
-  pendingFocus = npcs.find((n) => n.id === 'nurse'); const D = 'Dokter Sari', hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
+function talkNurse(id = 'nurse') {
+  pendingFocus = npcs.find((n) => n.id === id); const D = pendingFocus.name, hurt = mates.some((m) => m.hp < m.hpMax) || stash.some((r) => r.hp < hpMaxOf(r.sp, r.st, r.lv || 5));
   if (!mates.length) { dialog([[D, 'Selamat datang di Klinik Maimon! Kalau punya Maimon yang lelah, bawa ke sini ya.']]); return; }
   if (!hurt) { dialog([[D, 'Selamat datang di Klinik Maimon! Maimon-mu sehat semua. Mantap!']]); return; }
   dialog([[D, 'Selamat datang di Klinik Maimon! Wah, Maimon-mu kelihatan lelah. Sini, kuperiksa dulu.']], () => healScene());
@@ -295,6 +312,7 @@ function loadGame() {
   Object.assign(S, d.S); S.bag = d.S.bag || {}; stash.length = 0; (d.box || []).forEach((r) => stash.push(r)); setupPlayer(); mates.forEach((m) => world.remove(m.rig.root)); mates.length = 0; $('mchips').innerHTML = '';
   (d.mates || []).forEach((q) => { const m = mkMon(q.sp, q.st, -6.6, 10.4, q.lv || 5, q.xp || 0); m.state = 'follow'; if (q.nick) { m.nick = q.nick; m.name = q.nick; } m.hp = Math.min(q.hp, m.hpMax); m.pop = 0; m.sc = m.rig.size * m.d.s * 0.8; mates.push(m); });
   renderChips(); player.x = -6.6; player.z = 10.4; player.ang = Math.PI / 2; lastPos = null;
+  applyGateFromStory();
   if (Array.isArray(d.pos) && d.pos.every(Number.isFinite)) { let [qx, qz] = d.pos; const inYard = (qz <= HZ - 0.8); if (inYard && (blockedAt(qx, qz, 0.45) || Math.hypot(qx - LABDOOR.x, qz - LABDOOR.z) < 1.6)) [qx, qz] = safeSpot(qx, qz); if (!blockedAt(qx, qz, 0.3)) { player.x = qx; player.z = qz; player.ang = d.pos[2]; lastPos = [qx, qz, d.pos[2]]; } }
   doorCool = T + 2;
   mates.forEach((m, i) => { m.x = player.x - 0.6 * (i + 1); m.z = player.z; }); trail.length = 0; yaw = 0.62; pitch = 0.66; zoomGoal = zoom = 1; camGoal.set(player.x, 0.4, player.z); camTarget.copy(camGoal);
@@ -304,11 +322,11 @@ function loadGame() {
 
 /* ---------- animasi pengobatan di klinik ---------- */
 async function healScene() {
-  const D = 'Dokter Sari', nurse = npcs.find((n) => n.id === 'nurse'); mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none';
+  const nurse = nearestNPC('nurse'), D = nurse.name; mode = 'cut'; $('joy').style.display = 'none'; $('talk').style.display = 'none';
   const list = mates.filter((m) => m.hp < m.hpMax); Music.jingle('heal');
   const base = camGoal.clone(); const zb = zoomGoal; forceYaw(clearYaw(mates[0].x, mates[0].z, 0.3));
   for (const m of list) {
-    camGoal.set(m.x, 0.4, m.z); zoomGoal = 0.34; toast('💊 Dokter Sari memberi obat untuk ' + m.name, 1.6);
+    camGoal.set(m.x, 0.4, m.z); zoomGoal = 0.34; toast('💊 ' + D + ' memberi obat untuk ' + m.name, 1.6);
     const cross = [fxCube('#ffffff', 0.5, 0.14, 0.14), fxCube('#ffffff', 0.14, 0.5, 0.14)], pill = fxCube('#ff7aa8', 0.16, 0.1, 0.1), pill2 = fxCube('#ffffff', 0.16, 0.1, 0.1);
     floatText('💊', m.x, 1.5, m.z, '#e0507a');
     await tween(1500, (k) => {

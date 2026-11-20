@@ -122,6 +122,7 @@ function smoothBorder(G, GX, GZ, sides) { // titik tengah di tepi dibuat linear 
 smoothBorder(HGRID, HGX, HGZ, { w: 1, e: 1, n: 1, s: 1, sSkip: (i) => { const x = -HX + i * 0.5; return x >= -8 - 0.5 && x <= 6 + 0.5; } });
 function groundY(x, z) { if (outerOn && !inHole(x, z)) return outerH(x, z); return baseGroundY(x, z); }
 function baseGroundY(x, z) {
+  if (bogorOn && z >= BG.z0 && z <= BG.z1 && x >= BG.x0 && x <= BG.x1) return bogorY(x, z);
   if (z > HZ) return fieldY(x, z);
   if (x > HX + 2) return 0;
   const fx = clamp((x + HX) * 2, 0, HGX - 1.001), fz = clamp((z + HZ) * 2, 0, HGZ - 1.001), i = Math.floor(fx), j = Math.floor(fz), tx = fx - i, tz = fz - j;
@@ -132,12 +133,15 @@ function baseGroundY(x, z) {
 
 /* tumbukan */
 const LAB_PROF = [33.6, 31.0]; const circles = [], rects = [], vehicles = []; let inside = false; const INB = { x0: 0, x1: 0, z0: 0, z1: 0 };
-function waterAt(x, z) { const k = z > HZ ? fkind(x, z) : kindAt(x, z); return k === 'water'; }
+function waterAt(x, z) { const k = z >= BG.z0 ? bkind(x, z) : z > HZ ? fkind(x, z) : kindAt(x, z); return k === 'water'; }
 function blockedAt(x, z, r) {
   if (inside) { if (x < INB.x0 + 0.5 || x > INB.x1 - 0.5 || z < INB.z0 + 0.45 || z > INB.z1 - 0.5) return true; for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; } for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true; return false; }
-  if (x < -HX + 0.8) return true;
-  if ((x > HX - 0.8 || z < -HZ + 0.8) && !outerCorridor(x, z, r)) return true;
-  if (z > HZ - 0.8 && (!inFieldX(x) || z > FD.z1 - 0.8)) return true;
+  if (z <= HZ - 0.8) { if (x < -HX + 0.8) return true; if ((x > HX - 0.8 || z < -HZ + 0.8) && !outerCorridor(x, z, r)) return true; }
+  if (z > HZ - 0.8) {
+    if (z > FD.z1 - 0.8 && !gateOpen) return true;
+    if (z < FD.z1 + 0.8) { if (!inFieldX(x)) return true; }
+    else if ((x < BG.x0 + 0.8 || x > BG.x1 - 0.8 || z > BG.z1 - 0.8) && !bogorCorr(x, z, r)) return true;
+  }
   if (waterAt(x, z)) return true;
   for (const c of circles) { const dx = x - c.x, dz = z - c.z, rr = c.r + r; if (dx * dx + dz * dz < rr * rr) return true; }
   for (const b of rects) if (x > b[0] - r && x < b[1] + r && z > b[2] - r && z < b[3] + r) return true;
@@ -146,6 +150,7 @@ function blockedAt(x, z, r) {
 }
 function freeSpot(x, z, r) { for (let i = 0; i < 50; i++) { const nx = x + (R0() - 0.5) * i * 0.25, nz = z + (R0() - 0.5) * i * 0.25; if (!blockedAt(nx, nz, r)) return [nx, nz]; } return [x, z]; }
 function zoneName(x, z) {
+  if (z > FD.z1) return z > 73.2 ? 'Kebun Raya Bogor' : Math.abs(z - ZR) < 2.2 ? 'Jl. Suryakencana' : 'Jl. Pajajaran';
   if (z > HZ) return z < 34 ? 'KM 6 · Cimanggis' : 'KM 16 · Bojonggede';
   if (z > HZ) return fieldName(x, z);
   const rv = poly(C.river.pts, x, z);
@@ -180,4 +185,4 @@ const terrainMat = { m: null };
   const wt = toTex(wc); wt.wrapS = wt.wrapT = THREE.RepeatWrapping; wt.repeat.set(HX * 2 / 4, HZ * 2 / 4); terrainMat.water = wt;
   const wm = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2).rotateX(-Math.PI / 2), toon('#ffffff', { map: wt })); wm.position.y = -0.13; wm.receiveShadow = true; world.add(wm);
 }
-function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); if (terrainMat.outer) terrainMat.outer.offset.set(T * 0.03, T * 0.02); }
+function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); if (terrainMat.outer) terrainMat.outer.offset.set(T * 0.03, T * 0.02); if (terrainMat.bogor) terrainMat.bogor.offset.set(T * 0.03, T * 0.02); }

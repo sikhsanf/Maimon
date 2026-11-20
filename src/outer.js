@@ -6,7 +6,7 @@
    Pola ini dipakai ulang untuk kota-kota berikutnya.
    ===================================================================== */
 var outerOn = false;
-const OUT = { x0: -40, x1: 40, z0: -38, z1: 76 }, OTPU = 6;
+const OUT = { x0: -40, x1: 40, z0: -38, z1: 100 }, OTPU = 6;
 const NRIV = { pts: [[-40, -20.6], [-20, -21.1], [-1, -20.9], [20, -21.4], [40, -20.8]], w: 3.4 };
 const FRW = { pts: [[-8, 33.0], [-20, 32.6], [-40, 33.6]], w: 2.2 }, FRE = { pts: [[6, 34.4], [20, 35.0], [40, 34.2]], w: 2.2 };
 const FROAD_EXT = { pts: [[-1, FD.z1], [-1.2, 62], [-1, 80]], w: 3.4 };
@@ -15,9 +15,9 @@ const FEN = 0.35;
 
 const inDepok = (x, z) => x > -HX && x < HX && z > -HZ && z < HZ;
 const inFieldR = (x, z) => x > FD.x0 && x < FD.x1 && z >= HZ && z < FD.z1;
-const inHole = (x, z) => inDepok(x, z) || inFieldR(x, z);
+const inHole = (x, z) => inDepok(x, z) || inFieldR(x, z) || inBogor(x, z);
 function rectNear(x0, x1, z0, z1, x, z) { const bx = clamp(x, x0, x1), bz = clamp(z, z0, z1); return [Math.hypot(x - bx, z - bz), bx, bz]; }
-function holeNear(x, z) { const a = rectNear(-HX, HX, -HZ, HZ, x, z), b = rectNear(FD.x0, FD.x1, HZ, FD.z1, x, z); return a[0] <= b[0] ? a : b; }
+function holeNear(x, z) { const a = rectNear(-HX, HX, -HZ, HZ, x, z), b = rectNear(FD.x0, FD.x1, HZ, FD.z1, x, z), c = rectNear(BG.x0, BG.x1, BG.z0, BG.z1, x, z); let m = a; if (b[0] < m[0]) m = b; if (c[0] < m[0]) m = c; return m; }
 /* koridor jalan keluar yang boleh dilewati pemain (sampai penghalang) */
 function outerCorridor(x, z, r) {
   if (z < -HZ + 0.8 && z > NCOR.zEnd && Math.abs(x - NCOR.x) < NCOR.hw - r) return true;
@@ -39,8 +39,7 @@ function okind(x, z) {
   const mg = poly(C.margonda.pts, x, z).d, mw = C.margonda.w / 2;
   if (mg < mw + 0.16) return mg < 0.26 ? 'median' : mg < mw ? 'road' : 'curb';
   if (x > -HX) { const ry = Math.abs(z - 5), rw = C.raya.w / 2; if (ry < rw + 0.14) return ry < rw ? 'road' : 'curb'; }
-  const fr = poly(FROAD_EXT.pts, x, z).d, fw = FROAD_EXT.w / 2;
-  if (z > FD.z1 - 0.2 && fr < fw + 0.16) return fr < 0.26 ? 'median' : fr < fw ? 'road' : 'curb';
+  if (z > BG.z0 && (x > BG.x1 || x < BG.x0)) { const sk = Math.abs(z - ZR), sw = BRD[1].w / 2; if (sk < sw + 0.14) return sk < sw ? 'road' : 'curb'; }
   if (poly(C.rail.pts, x, z).d < C.rail.w / 2) return 'rail';
   const f = fbm(x * 0.11 + 3, z * 0.11 - 5); if (f > 0.6 && mg > 3 && Math.abs(z - 5) > 3) return 'forest';
   return 'grass';
@@ -88,7 +87,7 @@ function buildOuter() {
       if (s < n) { const mx = lerp(x1, x2, (s + 0.5) / n), mz = lerp(z1, z2, (s + 0.5) / n); if (skip && skip(mx, mz)) continue; const my = groundY(mx, mz); const sl = L / n; BX(sl, 0.06, 0.05, mx, my + 0.46, mz, ry); BX(sl, 0.06, 0.05, mx, my + 0.24, mz, ry); }
     }
   };
-  const wet = (x, z) => { const k = z > HZ - 0.01 && inFieldR(x, z) ? fkind(x, z) : kindAt(x, z); return k === 'water' || k === 'bank' || k === 'bridge'; };
+  const wet = (x, z) => { const k = z >= BG.z0 ? bkind(x, z) : z > HZ - 0.01 && inFieldR(x, z) ? fkind(x, z) : kindAt(x, z); return k === 'water' || k === 'bank' || k === 'bridge'; };
   const northGap = (x) => Math.abs(x - NCOR.x) < NCOR.hw + 0.35, eastGap = (z) => Math.abs(z - ECOR.z) < ECOR.hw + 0.35;
   // Depok
   fenceLine(-HX + FEN, -HZ + FEN, HX - FEN, -HZ + FEN, (x, z) => wet(x, z) || northGap(x));
@@ -101,15 +100,15 @@ function buildOuter() {
   fenceLine(HX - FEN, ECOR.z - ECOR.hw - 0.35, ECOR.xEnd, ECOR.z - ECOR.hw - 0.35);
   fenceLine(HX - FEN, ECOR.z + ECOR.hw + 0.35, ECOR.xEnd, ECOR.z + ECOR.hw + 0.35);
   // field J1
-  fenceLine(FD.x0 + FEN, HZ - FEN, FD.x0 + FEN, FD.z1 - FEN, wet); fenceLine(FD.x1 - FEN, HZ - FEN, FD.x1 - FEN, FD.z1 - FEN, wet);
-  fenceLine(FD.x0 + FEN, FD.z1 - FEN, FD.x1 - FEN, FD.z1 - FEN, (x, z) => Math.abs(x - FROAD_EXT.pts[0][0]) < 2.2 || wet(x, z));
+  fenceLine(FD.x0 + FEN, HZ - FEN, FD.x0 + FEN, FD.z1 + FEN, wet); fenceLine(FD.x1 - FEN, HZ - FEN, FD.x1 - FEN, FD.z1 + FEN, wet);
+  bogorFences(fenceLine, wet);
   const fm = new THREE.Mesh(mergeGeometries(fg), toon('#a98a5a')); fm.castShadow = true; fm.receiveShadow = true; world.add(fm);
 
   /* ---------- pohon di tanah luar (digabung per kuadran, murah) ---------- */
   { const R = rng(907), spots = [];
     const ok = (x, z, m) => { if (inHole(x, z)) return false; const k = okind(x, z); if (k !== 'grass' && k !== 'forest') return false; if (holeNear(x, z)[0] < m) return false;
       if (poly(C.margonda.pts, x, z).d < 3.2 && z < -HZ) return false; if (Math.abs(z - 5) < 2.8 && x > HX) return false; if (Math.abs(z - 5) < 2.4 && x < -HX) return false;
-      if (poly(FROAD_EXT.pts, x, z).d < 3.2 && z > FD.z1 - 1) return false; if (z < -HZ && Math.abs(x - NCOR.x) < 3.4 && z > NCOR.zEnd - 4) return false; if (x > HX && Math.abs(z - ECOR.z) < 3.4 && x < ECOR.xEnd + 3) return false;
+      if (Math.abs(z - ZR) < 3.4 && (x > BG.x1 || x < BG.x0)) return false; if (z < -HZ && Math.abs(x - NCOR.x) < 3.4 && z > NCOR.zEnd - 4) return false; if (x > HX && Math.abs(z - ECOR.z) < 3.4 && x < ECOR.xEnd + 3) return false;
       return !spots.some((p) => Math.hypot(p.x - x, p.z - z) < (p.kind === 'bush' ? 0.9 : 1.7)); };
     let n = 0, tr = 0;
     while (n < 190 && tr++ < 9000) { const x = OUT.x0 + 2 + R() * (W - 4), z = OUT.z0 + 2 + R() * (H - 4); const k = okind(x, z), dh = holeNear(x, z)[0];
@@ -126,7 +125,7 @@ function buildOuter() {
 
   /* ---------- rumput di tanah luar (pita sekitar perbatasan) ---------- */
   { const kf = (x, z) => (inHole(x, z) ? 'none' : okind(x, z));
-    [[-28, 28, -26, -14, 12000, 61], [-28, -18, -14, 14, 5200, 62], [18, 28, -14, 14, 5200, 63], [-28, -8, 14, 24, 3800, 64], [6, 28, 14, 24, 4200, 65], [-16, -8, 24, 56, 5200, 66], [6, 16, 24, 56, 5200, 67]]
+    [[-28, 28, -26, -14, 12000, 61], [-28, -18, -14, 14, 5200, 62], [18, 28, -14, 14, 5200, 63], [-28, -8, 14, 24, 3800, 64], [6, 28, 14, 24, 4200, 65], [-16, -8, 24, 54, 5200, 66], [6, 16, 24, 54, 5200, 67], [-28, -18, 54, 82, 5200, 68], [18, 28, 54, 82, 5200, 69], [-28, 28, 82, 92, 9000, 70]]
       .forEach(([x0, x1, z0, z1, N, sd]) => buildGrass(x0, x1, z0, z1, kf, N, sd)); }
 
   /* ---------- penghalang: gapura + sungai/jembatan putus (utara), semak lebat (timur) ---------- */

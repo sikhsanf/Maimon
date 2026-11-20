@@ -33,7 +33,7 @@ function frame() {
       const px0 = player.x, pz0 = player.z;
       if (!blockedAt(player.x + vx, player.z, 0.28)) player.x += vx;
       if (!blockedAt(player.x, player.z + vz, 0.28)) player.z += vz;
-      if (!inside) { player.x = clamp(player.x, -HX + 0.6, ECOR.xEnd); player.z = clamp(player.z, NCOR.zEnd, zMaxAt(player.x)); }
+      if (!inside) { player.x = clamp(player.x, -BG.x1 - 4.6, ECOR.xEnd + 0.1); player.z = clamp(player.z, NCOR.zEnd, BG.z1 - 0.6); }
       if (!inside) { if (Math.hypot(player.x - px0, player.z - pz0) < sp * 0.15) { stuckT += dt; if (stuckT > 1.3) { stuckT = 0; unstick(); } } else stuckT = 0; } else stuckT = 0;
       player.ang = lerpAng(player.ang, Math.atan2(vx, vz), Math.min(1, dt * 12)); player.walk = true;
       const l = trail[trail.length - 1]; if (!l || Math.hypot(l[0] - player.x, l[1] - player.z) > 0.09) { trail.push([player.x, player.z]); if (trail.length > 300) trail.shift(); }
@@ -50,7 +50,7 @@ function frame() {
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); updateOuter(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); updateOuter(); updateBogor(); applyGateFromStory(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan
@@ -66,7 +66,7 @@ function frame() {
   if (battle && battle.yawG !== undefined) yaw = lerpAng(yaw, battle.yawG, Math.min(1, dt * 3));
   if (document.body.dataset.mode !== mode) document.body.dataset.mode = mode;
   if (mode === 'play') $('zone').firstChild.textContent = inside ? 'Lab Maimon UI' : zoneName(player.x, player.z);
-  if (mode === 'play' && !inside) { const ak = player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) { areaKey = ak; if (ak !== 'depok') Music.play('lintas'); } else if (ak !== areaKey) { const wasF = areaKey !== 'depok'; areaKey = ak; if (wasF !== (ak !== 'depok')) Music.play(ak === 'depok' ? CITY : 'lintas'); showArea(ak === 'depok' ? ['Kota', 'Depok'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
+  if (mode === 'play' && !inside) { const ak = player.z > FD.z1 + 1.2 ? 'bogor' : player.z > HZ ? (player.z < 34 ? 'f1a' : 'f1b') : 'depok'; if (areaKey === null) { areaKey = ak; if (ak === 'bogor') Music.play('bogor'); else if (ak !== 'depok') Music.play('lintas'); } else if (ak !== areaKey) { const prev = areaKey; areaKey = ak; if (ak === 'bogor') Music.play('bogor'); else if (ak === 'depok') Music.play(CITY); else if (prev === 'depok' || prev === 'bogor') Music.play('lintas'); showArea(ak === 'depok' ? ['Kota', 'Depok'] : ak === 'bogor' ? ['Kota', 'Bogor'] : ['Lintas Raya Bogor', zoneName(player.x, player.z)]); } }
 
   // rumput terdorong
   const pu = grassUniforms.uPush.value; let n = 0;
@@ -101,16 +101,18 @@ addNPC('polisi', 'Pak Polisi', LOOK.polisi, [1.35, FD.z1 - 2.6], -Math.PI / 2);
 addNPC('prof', 'Prof. Catherine', LOOK.prof, POI.prof, Math.PI / 2); addNPC('home', 'Bu Wati', LOOK.kos, POI.home, Math.PI); addNPC('nurse', 'Dokter Sari', LOOK.nurse, POI.nurse, 0);
 SPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z));
 FSPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z, 2));
+buildBogorNPCs();
+BSPAWNS.forEach(([sp, st, x, z]) => trySpawn(sp, st, x, z, 3));
 resize(); addEventListener('resize', resize);
 enterTitle();
 // ATURAN LAYOUT: NPC luar-ruang wajib di pinggir jalan raya (<= RULE.road) dan dekat gedungnya (<= RULE.bld)
 const RULE = { road: 1.5, bld: 1.5 };
 function npcRule() {
-  return npcs.filter((n) => !(n.z > HZ + 0.1)).map((n) => {
+  return npcs.filter((n) => !(n.z > HZ + 0.1)).concat([]).map((n) => {
     const rd = Math.min(poly(C.margonda.pts, n.x, n.z).d - C.margonda.w / 2, poly(C.raya.pts, n.x, n.z).d - C.raya.w / 2);
     const bd = Math.min(...rects.map((b) => Math.hypot(Math.max(b[0] - n.x, 0, n.x - b[1]), Math.max(b[2] - n.z, 0, n.z - b[3]))));
     return { id: n.id, road: +rd.toFixed(2), bld: +bd.toFixed(2), ok: rd <= RULE.road && bd <= RULE.bld };
-  });
+  }).concat(bogorNpcRule());
 }
 let stuckT = 0, areaKey = null, areaTm = 0;
 function showArea(a) { $('areaS').textContent = a[0]; $('areaT').textContent = a[1]; const el = $('areaB'); el.classList.add('go'); Music.blip(784); clearTimeout(areaTm); areaTm = setTimeout(() => el.classList.remove('go'), 3000); }
