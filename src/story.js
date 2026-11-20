@@ -71,14 +71,14 @@ function updateObjective() {
   else if (S.stage === 1) { while (S.tut < TUT.length && S.tf[TUT[S.tut].id]) { S.tut++; saveGame(); if (S.tut < TUT.length) { Music.jingle('catch'); toast('Bagus! Langkah berikutnya ✨', 2); } }
     if (S.tut >= TUT.length) { S.stage = 2; saveGame(); Music.jingle('win'); toast('Latihan selesai! Sekarang tangkap Maimon liar 🎉', 3.2); }
     else { const st = TUT[S.tut]; txt = `Latihan ${S.tut + 1}/${TUT.length}: ${st.txt}`; tgt = st.tgt ? st.tgt() : null; } }
-  else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; if (leadLow()) { txt = 'Maimon-mu lelah — bawa ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 2) { txt = `Tangkap Kucingko, Tikusil & Dombanyo (${commonsCaught()}/3)`; }
   else if (S.stage === 3) { txt = inside ? 'Lapor hasil penelitian ke Prof. Catherine' : 'Lapor ke Prof. Catherine di Lab Maimon UI'; tgt = labTgt(); }
   else if (S.stage === 4) { txt = 'Capek seharian — istirahat dulu di Hotel Maimon 🏨'; tgt = npcs.find((n) => n.id === 'home'); }
-  else if (S.stage === 5) { txt = inside ? 'Bicara dengan Prof. Catherine' : 'Pagi! Prof. Catherine menunggu di Lab Maimon UI'; tgt = labTgt(); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  else if (S.stage === 6) { txt = 'Antar surat Prof ke Bogor — ikuti Jl. Margonda ke selatan, temui Pak Polisi di gerbang 🌿'; tgt = npcs.find((n) => n.id === 'polisi'); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
-  else if (S.stage === 7) { txt = 'Antar surat Prof ke Pak Botani di Gym Kebun Raya (ujung Jl. Pajajaran) 🌿'; tgt = npcs.find((n) => n.id === 'botani'); if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon Bogor 🩷'; tgt = npcs.find((n) => n.id === 'nurse2'); } }
-  else if (S.stage >= 8) { txt = 'Jelajahi Kota Bogor · tangkap Maimon Daun 🌿 (Gym Kebun Raya segera dibuka)'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = nearestNPC('nurse'); } }
-  else if (false) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; if (leadLow()) { txt = 'Maimon-mu lelah — ke Klinik Maimon 🩷'; tgt = npcs.find((n) => n.id === 'nurse'); } }
+  else if (S.stage === 5) { txt = inside ? 'Bicara dengan Prof. Catherine' : 'Pagi! Prof. Catherine menunggu di Lab Maimon UI'; tgt = labTgt(); }
+  else if (S.stage === 6) { txt = 'Antar surat Prof ke Bogor — ikuti Jl. Margonda ke selatan, temui Pak Polisi di gerbang 🌿'; tgt = npcs.find((n) => n.id === 'polisi'); }
+  else if (S.stage === 7) { txt = 'Antar surat Prof ke Pak Botani di Gym Kebun Raya (ujung Jl. Pajajaran) 🌿'; tgt = npcs.find((n) => n.id === 'botani'); }
+  else if (S.stage >= 8) { txt = 'Jelajahi Kota Bogor · tangkap Maimon Daun 🌿 (Gym Kebun Raya segera dibuka)'; }
+  else if (false) { txt = 'Jelajahi Depok · cari Maimon berkilau ✨'; }
   $('dexb').style.display = (mode === 'play' || mode === 'menu') && S.stage >= 1 ? 'block' : 'none';
   const hs = S.stage === 1 && S.tut < TUT.length ? TUT[S.tut].hint : null; $('dexb').classList.toggle('pulse', !!hs && mode === 'play'); document.querySelectorAll('#menu button').forEach((b) => b.classList.toggle('pulse', !!hs && hs === b.dataset.s));
   let spEl = null, spTxt = '👆 Tap di sini!'; const menuOpen = getComputedStyle($('menu')).display !== 'none';
