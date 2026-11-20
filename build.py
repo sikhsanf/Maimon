@@ -2,7 +2,7 @@
 """Gabungkan src/*.js + head.html menjadi index.html (satu file)."""
 import pathlib
 s = pathlib.Path(__file__).parent / 'src'
-order = ['head.html', 'engine.js', 'builders2.js', 'world1.js', 'world2.js', 'world3.js', 'world4.js', 'field.js', 'outer.js', 'bogor.js', 'lab.js', 'quad.js', 'camrender.js', 'music.js', 'npc.js', 'gameA.js', 'story.js', 'gather.js', 'menus.js', 'gameB.js']
+order = ['head.html', 'engine.js', 'builders2.js', 'world1.js', 'world2.js', 'world3.js', 'world4.js', 'field.js', 'outer.js', 'bogor.js', 'lab.js', 'quad.js','evo.js', 'camrender.js', 'music.js', 'npc.js', 'gameA.js', 'story.js', 'gather.js', 'menus.js', 'gameB.js']
 head = (s / 'head.html').read_text()
 head = head.replace('</style>', (s / 'boot.css').read_text() + '</style>', 1).replace('<head>', '<head>\n' + (s / 'bootpre.html').read_text(), 1).replace('<body>', '<body>\n' + (s / 'boot.html').read_text(), 1)
 parts = [head]; rest = order[1:]

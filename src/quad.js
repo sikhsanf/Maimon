@@ -13,7 +13,7 @@ function buildQuad(S) {
   });
   const hw = S.head[0], hh = S.head[1], hd = S.head[2];
   const head = grp(body, 0, bh * 0.3, bd / 2 + hd / 2 - 0.06); r.head = head;
-  faceBox(r, head, hw, hh, hd, S.headCol || S.fur, { blush: S.blush || '#f59a9a' });
+  faceBox(r, head, hw, hh, hd, S.headCol || S.fur, { blush: S.blush || '#f59a9a', eyeC: S.eyeC });
   if (S.snout) { box(head, hw * 0.5, hh * 0.3, 0.1, toon(S.snout), 0, -hh * 0.16, hd / 2 + 0.04); box(head, 0.07, 0.05, 0.04, toon(S.nose || '#3a2a22'), 0, -hh * 0.06, hd / 2 + 0.1, { no: true }); }
   r.ears = [];
   [-1, 1].forEach((sx) => {
