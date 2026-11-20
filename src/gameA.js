@@ -3,11 +3,11 @@ const CITY = 'depok';
 /* =====================================================================
    DATA: tipe, jurus, spesies, makanan
    ===================================================================== */
-const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a' };
+const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a', Cahaya: '#e0b830', Es: '#6cc4e0' };
 /* 6 tipe: dua segitiga. Air>Api>Daun>Air · Suara>Batu>Bayangan>Suara · lintas segitiga netral */
 const BEATS = { Air: ['Api'], Api: ['Daun'], Daun: ['Air'], Suara: ['Batu'], Batu: ['Bayangan'], Bayangan: ['Suara'] };
 const tyOf = (e) => (e.type2 ? [e.type, e.type2] : [e.type]);
-const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : BEATS[a].includes(d) ? 1.6 : BEATS[d].includes(a) ? 0.7 : 1;
+const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : (BEATS[a] || []).includes(d) ? 1.6 : (BEATS[d] || []).includes(a) ? 0.7 : 1;
 /* def = Maimon (bisa tipe ganda): kalikan tiap tipe, batasi 0,5-2,0 */
 const typeMult = (att, def) => clamp(tyOf(def).reduce((m, t) => m * typeMult1(att, t), 1), 0.5, 2);
 const chips = (e) => tyOf(e).map((t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`).join('');
@@ -25,16 +25,31 @@ const MAI = {
   dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], spd: 40, type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
 };
 
+/* ---------- EVOLUSI: data (level 16 & 33), sprite dari evo.js ---------- */
+(function evoData() {
+  const E = {
+    kancik: { n: ['Kancik', 'Kancilon', 'Kancilraja'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Batu' }, ls: [[20, 'Badai Rimba', 'Daun', 95], [34, 'Raja Hutan', 'Daun', 125]], b: (st) => evoBuild('kancik', st) || buildKancik(st) },
+    cebongi: { n: ['Cebongi', 'Kodi', 'Katakraya'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Cahaya' }, ls: [[20, 'Tombak Air', 'Air', 95], [34, 'Tsunami Raja', 'Air', 125]], b: (st) => evoBuild('cebongi', st) || buildCebongi(st) },
+    pioyo: { n: ['Pioyo', 'Petokar', 'Jagoapi'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Cahaya' }, ls: [[20, 'Cakar Api', 'Api', 95], [34, 'Ledakan Feniks', 'Api', 125]], b: (st) => evoBuild('pioyo', st) || buildPioyo(st) },
+    kucingko: { n: ['Kucingko', 'Macanko'], hp: [34, 62], evo: [16], ls: [[18, 'Terkam Macan', 'Biasa', 85], [26, 'Raungan', 'Suara', 95]], b: (st) => st >= 2 ? evoBuild('kucingko', 2) : buildQuad(SPEC.kucingko) },
+    tikusil: { n: ['Tikusil', 'Tikusgar'], hp: [30, 58], evo: [16], ls: [[18, 'Bor Batu', 'Batu', 85], [26, 'Gempa Mini', 'Batu', 95]], b: (st) => st >= 2 ? evoBuild('tikusil', 2) : buildQuad(SPEC.tikusil) },
+    dombanyo: { n: ['Dombanyo', 'Gembulon'], hp: [38, 70], evo: [16], t2: { 2: 'Cahaya' }, ls: [[18, 'Tanduk Emas', 'Biasa', 85], [26, 'Taman Ajaib', 'Daun', 95]], b: (st) => st >= 2 ? evoBuild('dombanyo', 2) : buildQuad(SPEC.dombanyo) },
+  };
+  Object.keys(E).forEach((k) => { const e = E[k], d = MAI[k]; d.n = e.n; d.hp = e.hp; d.evo = e.evo; d.t2 = e.t2 || null; d.build = e.b; d.ls = d.ls.concat(e.ls); });
+})();
+const canEvolve = (m) => { const d = MAI[m.sp]; return !!(d.evo && m.st <= d.evo.length && m.st < d.n.length && m.lv >= d.evo[m.st - 1]); };
+
 /* =====================================================================
    ENTITAS: pemain, Maimon liar, teman
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
 const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
-const LVCAP = 20, xpNeed = (lv) => 10 + lv * 12;
+const LVCAP = 40, xpNeed = (lv) => lv <= 20 ? 10 + lv * 12 : 250 + (lv - 20) * 20;
 const speedOf = (e) => Math.round(MAI[e.sp].spd * (0.7 + 0.06 * e.lv));
 const hpMaxOf = (sp, st, lv = 5) => Math.round(MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1] * (0.6 + 0.08 * lv));
 const movesAt = (sp, lv) => MAI[sp].ls.filter((m) => m[0] <= lv).slice(-4);
 const FXK = { 'Seruduk': 'tackle', 'Sundul': 'tackle', 'Patuk': 'peck', 'Cakar': 'claw', 'Gigit': 'bite', 'Daun Tajam': 'leaf', 'Rumput Tajam': 'leaf', 'Daun Badai': 'leafstorm', 'Hujan Daun': 'leafstorm', 'Lempar Batu': 'rock', 'Lempar Kerikil': 'rock', 'Longsor Mini': 'rockfall', 'Semprot Air': 'water', 'Ombak Besar': 'wave', 'Kuak Keras': 'sound', 'Meong Keras': 'sound', 'Cicit Nyaring': 'sound', 'Kokok Api': 'fire', 'Api Jago': 'fireblast', 'Cakar Jago': 'fight', 'Loncat Lincah': 'pounce', 'Mata Bersinar': 'beam', 'Wol Beku': 'ice' };
+Object.assign(FXK, { 'Badai Rimba': 'leafstorm', 'Raja Hutan': 'leafstorm', 'Tombak Air': 'water', 'Tsunami Raja': 'wave', 'Cakar Api': 'fight', 'Ledakan Feniks': 'fireblast', 'Terkam Macan': 'pounce', 'Raungan': 'sound', 'Bor Batu': 'rock', 'Gempa Mini': 'rockfall', 'Tanduk Emas': 'tackle', 'Taman Ajaib': 'leaf' });
 let mode = 'loading', T = 0, cooldown = 0, talk = null, battle = null;
 const $ = (id) => document.getElementById(id);
 const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -49,7 +64,7 @@ function flash(ent, k) { ent.rig.root.traverse((m) => { if (m.isMesh && m.materi
 function mkMon(sp, st, x, z, lv = st === 2 ? 11 : 4, xp = 0) {
   const d = MAI[sp], rig = d.build(st); rig.off = R0() * 3; castAll(rig.root); world.add(rig.root);
   const hpMax = hpMaxOf(sp, st, lv);
-  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
+  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: (d.t2 && d.t2[st]) || d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
 }
 function placeEnt(e, dt) {
   const k = e.pop < 0.5 ? 0.35 + 0.65 * easeOutBack(e.pop / 0.5) : 1;
@@ -317,10 +332,11 @@ async function runFx(att, tgt, mv, hit) {
 }
 const xpFor = (w) => Math.round((14 + w.lv * 5) * (w.rare ? 2 : 1));
 function gainXp(m, amt) {
-  const ups = [], learned = []; if (m.lv >= LVCAP) return { ups, learned };
+  const ups = [], learned = []; if (m.lv >= LVCAP) return { ups, learned, evo: false };
+  const wasReady = canEvolve(m);
   m.xp += amt;
   while (m.lv < LVCAP && m.xp >= xpNeed(m.lv)) { m.xp -= xpNeed(m.lv); m.lv++; const old = m.hpMax; m.hpMax = hpMaxOf(m.sp, m.st, m.lv); m.hp = Math.min(m.hpMax, m.hp + m.hpMax - old); ups.push(m.lv); MAI[m.sp].ls.filter((x) => x[0] === m.lv).forEach((x) => learned.push(x[1])); }
-  return { ups, learned };
+  return { ups, learned, evo: !wasReady && canEvolve(m) };
 }
 
 /* ---------- GANTI MAIMON saat battle (makan 1 giliran; kalau pingsan wajib ganti) ---------- */
@@ -389,8 +405,9 @@ async function endBattle(res) {
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
-    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); });
+    const evoQ = []; mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.evo) evoQ.push(m); });
     for (const t of msgs) { if (typeof t === 'string') { toast(t, 1.7); await sleep(1500); } else { await levelUpFx(t.m, t.l, w); } if (mode !== 'feed') return; }
+    for (const m of evoQ) { if (mode !== 'feed') return; await evolveOffer(m); }
     toast(w.rare ? `✨ ${w.name} langka ini! Jangan sampai lepas!` : `${w.name} kecapekan dan lapar!`, 2); showFeed(w); saveGame();
   } else {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
@@ -420,7 +437,7 @@ function feed(id) {
   if (id === w.fav) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP; let rec = null;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { rec = { sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }; stash.push(rec); world.remove(w.rig.root); }
-    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
+    markDex(w.sp, 2); markForm(w.sp, w.st); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
     toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2); setTimeout(() => askNick(w, rec), 1200);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }

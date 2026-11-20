@@ -294,6 +294,18 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 .pulse{animation:pls .7s ease-in-out infinite alternate!important;outline:4px solid #ffd84a}
 @keyframes plsSpot{from{box-shadow:0 0 0 0 rgba(255,216,74,.9),0 0 0 200vmax rgba(8,6,20,.68)}to{box-shadow:0 0 0 12px rgba(255,216,74,0),0 0 0 200vmax rgba(8,6,20,.68)}}
 @keyframes pls{from{box-shadow:0 0 0 0 rgba(255,216,74,.9)}to{box-shadow:0 0 0 12px rgba(255,216,74,0)}}
+#evo{position:fixed;inset:0;z-index:70;display:none;background:radial-gradient(circle at 50% 42%,#2b2350 0,#07050f 75%);flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;text-align:center;pointer-events:auto;overflow:hidden}
+#evo .rays{position:absolute;left:50%;top:42%;width:230vmax;height:230vmax;margin:-115vmax 0 0 -115vmax;background:repeating-conic-gradient(rgba(255,226,120,0) 0 9deg,rgba(255,226,120,.22) 9deg 18deg);opacity:0;transition:opacity .8s;animation:evspin 9s linear infinite;pointer-events:none}
+#evo.go .rays,#evo.ask .rays{opacity:1}
+#evStage{position:relative;width:min(72vw,340px);height:min(72vw,340px);transition:transform .25s}
+#evStage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+#evStage img.sil{filter:brightness(0) invert(1) drop-shadow(0 0 22px #fff)}
+#evStage .evp{position:absolute;border-radius:2px;pointer-events:none}
+#evT{font-size:min(6vw,26px);line-height:1.35;min-height:3.2em;padding:0 18px;text-shadow:0 3px 0 #000;font-weight:700}#evT b{color:#ffe066}#evT small{opacity:.7;font-size:.65em}
+#evBtn{display:none;gap:12px}#evBtn button{min-width:130px;font-size:20px}
+#evFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:71}
+@keyframes evspin{to{transform:rotate(360deg)}}
+.ef{display:inline-block;text-align:center;font-size:13px;vertical-align:top}.ef img{display:block;width:60px;height:60px;image-rendering:pixelated;margin:0 auto}.ef.lk img{filter:brightness(0) opacity(.55)}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .45s}
 #pvig{position:fixed;inset:0;display:none;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 38%,rgba(10,6,30,.62) 100%)}
 .plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
@@ -430,6 +442,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
 <button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
+<div id="evo"><i class="rays"></i><div id="evStage"><img id="evA" alt=""><img id="evB" alt=""></div><div id="evT"></div><div id="evBtn"><button id="evYes">✨ Evolusi!</button><button id="evNo">Nanti</button></div></div><div id="evFlash"></div>
 <div id="lvflash"></div><div id="lvup"><i class="rays"></i><div class="t">LEVEL UP!</div><div class="n"></div><div class="s">★ ★ ★</div></div>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>
@@ -651,7 +664,7 @@ sun.position.set(-18, 34, 14); sun.target.position.set(0, 0, 0);
 const toon = (c, o = {}) => toonA({ color: c, ...o });
 const glow = (c) => new THREE.MeshBasicMaterial({ color: c });
 
-await __boot.step(1, 21);
+await __boot.step(1, 22);
 /* ---------- bahan: toon 3 tingkat + garis tepi ---------- */
 
 function pixTex(w, h, fn) {
@@ -910,7 +923,7 @@ function buildPioyo(st) {
 }
 
 
-await __boot.step(2, 21);
+await __boot.step(2, 22);
 
 /* =====================================================================
    KOTA: layout Depok (diorama kecil, data-driven — tiap kota punya layout sendiri)
@@ -1100,7 +1113,7 @@ const terrainMat = { m: null };
 }
 function updateWater(T) { terrainMat.water.offset.set(T * 0.03, T * 0.02); if (terrainMat.outer) terrainMat.outer.offset.set(T * 0.03, T * 0.02); if (terrainMat.bogor) terrainMat.bogor.offset.set(T * 0.03, T * 0.02); }
 
-await __boot.step(3, 21);
+await __boot.step(3, 22);
 
 /* =====================================================================
    POHON (faceted low-poly seperti Arena Piksel, digabung jadi 1 mesh), SEMAK, RUMPUT
@@ -1201,7 +1214,7 @@ function buildGrass(bx0 = -HX, bx1 = HX, bz0 = -HZ, bz1 = HZ, kf = kindAt, N = 5
   const mesh = new THREE.Mesh(g, m); mesh.frustumCulled = false; mesh.receiveShadow = true; mesh.layers.set(1); scene.add(mesh);
 }
 
-await __boot.step(4, 21);
+await __boot.step(4, 22);
 
 /* =====================================================================
    BANGUNAN: dinding bertekstur piksel (jendela, pintu), atap pelana bergenteng
@@ -1388,7 +1401,7 @@ function buildTrain() {
 }
 let trainT = 0; function updateTrain(dt) { trainT += dt; train.position.z = Math.sin(trainT * 0.28) * 14 - 5.2; train.position.y = 0.04; }
 
-await __boot.step(5, 21);
+await __boot.step(5, 22);
 
 function populateWorld() {
   buildBuildings(); buildProps();
@@ -1426,7 +1439,7 @@ function populateWorld() {
   buildTrees(); buildGrass(); populateField(); buildBogor(); buildOuter(); buildGrass(FD.x0, FD.x1, FD.z0, FD.z1, fkind, 30000, 77); buildTraffic(); buildTrain();
 }
 
-await __boot.step(6, 21);
+await __boot.step(6, 22);
 /* =====================================================================
    FIELD J1 — jalur Depok–Bogor. Menyambung LANGSUNG dari ujung selatan Jl. Margonda
    (tanpa portal): jalan yang sama, lebar yang sama, hanya ada gapura di sambungan.
@@ -1528,7 +1541,7 @@ function updateField(dt) {
   if (!gateOpen && player.z > FD.z1 - 5 && player.z < FD.z1 + 1 && T > fToastT) { fToastT = T + 6; toast('Ada Pak Polisi menjaga gerbang Bogor 👮', 2.6); }
 }
 
-await __boot.step(7, 21);
+await __boot.step(7, 22);
 /* =====================================================================
    TANAH LUAR — peta tidak lagi "melayang". Tanah menyambung keluar dari tepi Depok & field J1,
    jalan/sungai/rel meneruskan, pagar rendah di perbatasan, dan dua pintu keluar yang TERHALANG:
@@ -1699,7 +1712,7 @@ function updateOuter() {
   else if (player.x > HX + 1.6 && Math.abs(player.z - ECOR.z) < 2.0) { outerToastT = T + 7; toast('Semak lebat menutup jalan ke Cirebon. Butuh skill Tebas 🌿', 3.2); }
 }
 
-await __boot.step(8, 21);
+await __boot.step(8, 22);
 /* =====================================================================
    KOTA BOGOR (Sedang 36x28) — menyambung langsung dari ujung selatan J1 (z=54).
    Jl. Pajajaran (lanjutan jalan field, lebar sama) N-S, bundaran Tugu Kujang, Jl. Suryakencana E-W
@@ -1909,7 +1922,7 @@ function updateBogor() {
   else if (player.x < BG.x0 - 1.4 && Math.abs(player.z - ZR) < 2.0) { bogorToastT = T + 7; toast('Semak lebat menutup jalan ke Ujung Kulon. Butuh skill Tebas 🌿', 3.2); }
 }
 
-await __boot.step(9, 21);
+await __boot.step(9, 22);
 /* =====================================================================
    INTERIOR LAB MAIMON UI — ruangan di luar peta, dimasuki lewat pintu Lab di Depok Lama
    ===================================================================== */
@@ -1990,7 +2003,7 @@ function clearYaw(x, z, base) {
   return best;
 }
 
-await __boot.step(10, 21);
+await __boot.step(10, 22);
 
 function buildQuad(S) {
   const r = newRig(), g = r.root; r.size = 1; r.h = S.h || 0.8;
@@ -2059,7 +2072,7 @@ function buildPlayer() {
   return r;
 }
 
-await __boot.step(11, 21);
+await __boot.step(11, 22);
 /* =====================================================================
    EVOLUSI: sprite bentuk ke-2 / ke-3 (pilihan San, 20 Nov)
    kancik: Kancilon -> Kancilraja | cebongi: Kodi -> Katakraya | pioyo: Petokar -> Jagoapi
@@ -2167,12 +2180,13 @@ function evoFinish(r, size) {
   if (r.head && r.head.userData.rx0 === undefined) r.head.userData.rx0 = r.head.rotation.x;
   return r;
 }
+const EVO_SIZE = { kancik2: 1.3, kancik3: 1.15, cebongi2: 1.3, cebongi3: 1.15, pioyo2: 1.3, pioyo3: 1.15, kucingko2: 1.2, tikusil2: 1.15, dombanyo2: 1.0 };
 function evoBuild(sp, st) {
   const f = EVO[sp + st]; if (!f) return null;
-  const r = f(); return evoFinish(r, st === 3 ? 1.6 : 1.3);
+  const r = f(); return evoFinish(r, EVO_SIZE[sp + st] || 1.2);
 }
 
-await __boot.step(12, 21);
+await __boot.step(12, 22);
 
 /* =====================================================================
    KAMERA ORTOGRAFIS + RENDER (pipeline Arena Piksel: normal pass, color pass, outline pass, final)
@@ -2213,7 +2227,7 @@ function render(T) {
   renderer.render(finalScene, quadCam);
 }
 
-await __boot.step(13, 21);
+await __boot.step(13, 22);
 
 /* =====================================================================
    MUSIK PROSEDURAL (WebAudio) — tiap kota punya tema sendiri, battle punya tema sendiri.
@@ -2460,7 +2474,7 @@ const Music = (() => {
     while (cur.nextT < until) { playStep(cur, cur.nextT); cur.nextT += cur.sd; cur.step++; }
   }
   function tick() { if (!cur || !ctx) return; const now = ctx.currentTime; if (cur.nextT < now - 0.4) cur.nextT = now + 0.1; sched(now + 1.0); }
-  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && !document.hidden && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) { try { ctx.suspend(); } catch (e) {} } else { ctx.resume().then(() => { if (cur) cur.nextT = ctx.currentTime + 0.15; if (pending) { const q = pending; pending = null; play(q); } }).catch(() => {}); } }); }
+  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && !document.hidden && ctx.state !== 'running') ctx.resume(); }, 2000); const hush = () => { if (ctx) { try { ctx.suspend(); } catch (e) {} } }; addEventListener('pagehide', hush); document.addEventListener('freeze', hush); addEventListener('blur', () => { if (document.hidden) hush(); }); document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) { try { ctx.suspend(); } catch (e) {} } else { ctx.resume().then(() => { if (cur) cur.nextT = ctx.currentTime + 0.15; if (pending) { const q = pending; pending = null; play(q); } }).catch(() => {}); } }); }
 
   /* ---------------- API ---------------- */
   function ensure() { if (!ctx) { try { build(window.__bootCtx || new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
@@ -2495,7 +2509,7 @@ const Music = (() => {
   return { set lite(v) { lite = v; }, get lite() { return lite; }, TH, play, jingle, blip, toggle, unlock, ensure, renderOffline, get muted() { return muted; }, get name() { return cur && cur.name; } };
 })();
 
-await __boot.step(14, 21);
+await __boot.step(14, 22);
 
 /* =====================================================================
    MANUSIA: pemain (cowok/cewek), Prof. Catherine, Dokter Klinik
@@ -2551,17 +2565,17 @@ const LOOK = {
 };
 const buildPlayer2 = (gender) => buildHuman(LOOK[gender] || LOOK.boy);
 
-await __boot.step(15, 21);
+await __boot.step(15, 22);
 
 const CITY = 'depok';
 /* =====================================================================
    DATA: tipe, jurus, spesies, makanan
    ===================================================================== */
-const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a' };
+const TCOL = { Api: '#e8582a', Air: '#3b8fd6', Daun: '#4fae4f', Suara: '#b07ad8', Batu: '#9a8a70', Bayangan: '#5a4f7c', Biasa: '#9a9a9a', Cahaya: '#e0b830', Es: '#6cc4e0' };
 /* 6 tipe: dua segitiga. Air>Api>Daun>Air · Suara>Batu>Bayangan>Suara · lintas segitiga netral */
 const BEATS = { Air: ['Api'], Api: ['Daun'], Daun: ['Air'], Suara: ['Batu'], Batu: ['Bayangan'], Bayangan: ['Suara'] };
 const tyOf = (e) => (e.type2 ? [e.type, e.type2] : [e.type]);
-const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : BEATS[a].includes(d) ? 1.6 : BEATS[d].includes(a) ? 0.7 : 1;
+const typeMult1 = (a, d) => a === 'Biasa' || d === 'Biasa' ? 1 : (BEATS[a] || []).includes(d) ? 1.6 : (BEATS[d] || []).includes(a) ? 0.7 : 1;
 /* def = Maimon (bisa tipe ganda): kalikan tiap tipe, batasi 0,5-2,0 */
 const typeMult = (att, def) => clamp(tyOf(def).reduce((m, t) => m * typeMult1(att, t), 1), 0.5, 2);
 const chips = (e) => tyOf(e).map((t) => `<span class="chip" style="background:${TCOL[t]}">${t}</span>`).join('');
@@ -2579,16 +2593,31 @@ const MAI = {
   dombanyo: { info: { cat: 'Maimon Domba', desc: 'Domba berbulu tebal yang suka mengunyah rumput di kebun belimbing. Bulunya hangat dipeluk.', hab: 'Kebun belimbing', ht: '0,6 m', wt: '12 kg', emo: '🐑' }, n: ['Dombanyo'], spd: 40, type: 'Daun', fav: 'wortel', hp: [38], animal: 'domba', build: () => buildQuad(SPEC.dombanyo), s: 0.66, ls: [[1,'Seruduk','Biasa',40],[3,'Rumput Tajam','Daun',50],[9,'Wol Beku','Es',55],[14,'Hujan Daun','Daun',75]] },
 };
 
+/* ---------- EVOLUSI: data (level 16 & 33), sprite dari evo.js ---------- */
+(function evoData() {
+  const E = {
+    kancik: { n: ['Kancik', 'Kancilon', 'Kancilraja'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Batu' }, ls: [[20, 'Badai Rimba', 'Daun', 95], [34, 'Raja Hutan', 'Daun', 125]], b: (st) => evoBuild('kancik', st) || buildKancik(st) },
+    cebongi: { n: ['Cebongi', 'Kodi', 'Katakraya'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Cahaya' }, ls: [[20, 'Tombak Air', 'Air', 95], [34, 'Tsunami Raja', 'Air', 125]], b: (st) => evoBuild('cebongi', st) || buildCebongi(st) },
+    pioyo: { n: ['Pioyo', 'Petokar', 'Jagoapi'], hp: [46, 74, 120], evo: [16, 33], t2: { 3: 'Cahaya' }, ls: [[20, 'Cakar Api', 'Api', 95], [34, 'Ledakan Feniks', 'Api', 125]], b: (st) => evoBuild('pioyo', st) || buildPioyo(st) },
+    kucingko: { n: ['Kucingko', 'Macanko'], hp: [34, 62], evo: [16], ls: [[18, 'Terkam Macan', 'Biasa', 85], [26, 'Raungan', 'Suara', 95]], b: (st) => st >= 2 ? evoBuild('kucingko', 2) : buildQuad(SPEC.kucingko) },
+    tikusil: { n: ['Tikusil', 'Tikusgar'], hp: [30, 58], evo: [16], ls: [[18, 'Bor Batu', 'Batu', 85], [26, 'Gempa Mini', 'Batu', 95]], b: (st) => st >= 2 ? evoBuild('tikusil', 2) : buildQuad(SPEC.tikusil) },
+    dombanyo: { n: ['Dombanyo', 'Gembulon'], hp: [38, 70], evo: [16], t2: { 2: 'Cahaya' }, ls: [[18, 'Tanduk Emas', 'Biasa', 85], [26, 'Taman Ajaib', 'Daun', 95]], b: (st) => st >= 2 ? evoBuild('dombanyo', 2) : buildQuad(SPEC.dombanyo) },
+  };
+  Object.keys(E).forEach((k) => { const e = E[k], d = MAI[k]; d.n = e.n; d.hp = e.hp; d.evo = e.evo; d.t2 = e.t2 || null; d.build = e.b; d.ls = d.ls.concat(e.ls); });
+})();
+const canEvolve = (m) => { const d = MAI[m.sp]; return !!(d.evo && m.st <= d.evo.length && m.st < d.n.length && m.lv >= d.evo[m.st - 1]); };
+
 /* =====================================================================
    ENTITAS: pemain, Maimon liar, teman
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
 const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
-const LVCAP = 20, xpNeed = (lv) => 10 + lv * 12;
+const LVCAP = 40, xpNeed = (lv) => lv <= 20 ? 10 + lv * 12 : 250 + (lv - 20) * 20;
 const speedOf = (e) => Math.round(MAI[e.sp].spd * (0.7 + 0.06 * e.lv));
 const hpMaxOf = (sp, st, lv = 5) => Math.round(MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1] * (0.6 + 0.08 * lv));
 const movesAt = (sp, lv) => MAI[sp].ls.filter((m) => m[0] <= lv).slice(-4);
 const FXK = { 'Seruduk': 'tackle', 'Sundul': 'tackle', 'Patuk': 'peck', 'Cakar': 'claw', 'Gigit': 'bite', 'Daun Tajam': 'leaf', 'Rumput Tajam': 'leaf', 'Daun Badai': 'leafstorm', 'Hujan Daun': 'leafstorm', 'Lempar Batu': 'rock', 'Lempar Kerikil': 'rock', 'Longsor Mini': 'rockfall', 'Semprot Air': 'water', 'Ombak Besar': 'wave', 'Kuak Keras': 'sound', 'Meong Keras': 'sound', 'Cicit Nyaring': 'sound', 'Kokok Api': 'fire', 'Api Jago': 'fireblast', 'Cakar Jago': 'fight', 'Loncat Lincah': 'pounce', 'Mata Bersinar': 'beam', 'Wol Beku': 'ice' };
+Object.assign(FXK, { 'Badai Rimba': 'leafstorm', 'Raja Hutan': 'leafstorm', 'Tombak Air': 'water', 'Tsunami Raja': 'wave', 'Cakar Api': 'fight', 'Ledakan Feniks': 'fireblast', 'Terkam Macan': 'pounce', 'Raungan': 'sound', 'Bor Batu': 'rock', 'Gempa Mini': 'rockfall', 'Tanduk Emas': 'tackle', 'Taman Ajaib': 'leaf' });
 let mode = 'loading', T = 0, cooldown = 0, talk = null, battle = null;
 const $ = (id) => document.getElementById(id);
 const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
@@ -2603,7 +2632,7 @@ function flash(ent, k) { ent.rig.root.traverse((m) => { if (m.isMesh && m.materi
 function mkMon(sp, st, x, z, lv = st === 2 ? 11 : 4, xp = 0) {
   const d = MAI[sp], rig = d.build(st); rig.off = R0() * 3; castAll(rig.root); world.add(rig.root);
   const hpMax = hpMaxOf(sp, st, lv);
-  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
+  return { sp, st, lv, xp, rig, d, name: d.n[Math.min(st, d.n.length) - 1], type: d.type, type2: (d.t2 && d.t2[st]) || d.type2, fav: d.fav, x, z, ang: R0() * 6.28, ox: 0, oz: 0, hp: hpMax, hpMax, tgt: null, wait: R0() * 2, walk: false, state: 'wander', shake: 0, pop: 0.4, rad: 3.2, hx: x, hz: z, jump: 0, fade: 1, sc: rig.size * d.s * 0.8 };
 }
 function placeEnt(e, dt) {
   const k = e.pop < 0.5 ? 0.35 + 0.65 * easeOutBack(e.pop / 0.5) : 1;
@@ -2871,10 +2900,11 @@ async function runFx(att, tgt, mv, hit) {
 }
 const xpFor = (w) => Math.round((14 + w.lv * 5) * (w.rare ? 2 : 1));
 function gainXp(m, amt) {
-  const ups = [], learned = []; if (m.lv >= LVCAP) return { ups, learned };
+  const ups = [], learned = []; if (m.lv >= LVCAP) return { ups, learned, evo: false };
+  const wasReady = canEvolve(m);
   m.xp += amt;
   while (m.lv < LVCAP && m.xp >= xpNeed(m.lv)) { m.xp -= xpNeed(m.lv); m.lv++; const old = m.hpMax; m.hpMax = hpMaxOf(m.sp, m.st, m.lv); m.hp = Math.min(m.hpMax, m.hp + m.hpMax - old); ups.push(m.lv); MAI[m.sp].ls.filter((x) => x[0] === m.lv).forEach((x) => learned.push(x[1])); }
-  return { ups, learned };
+  return { ups, learned, evo: !wasReady && canEvolve(m) };
 }
 
 /* ---------- GANTI MAIMON saat battle (makan 1 giliran; kalau pingsan wajib ganti) ---------- */
@@ -2943,8 +2973,9 @@ async function endBattle(res) {
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
     const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
-    mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); });
+    const evoQ = []; mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.evo) evoQ.push(m); });
     for (const t of msgs) { if (typeof t === 'string') { toast(t, 1.7); await sleep(1500); } else { await levelUpFx(t.m, t.l, w); } if (mode !== 'feed') return; }
+    for (const m of evoQ) { if (mode !== 'feed') return; await evolveOffer(m); }
     toast(w.rare ? `✨ ${w.name} langka ini! Jangan sampai lepas!` : `${w.name} kecapekan dan lapar!`, 2); showFeed(w); saveGame();
   } else {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
@@ -2974,7 +3005,7 @@ function feed(id) {
   if (id === w.fav) {
     useBag(id); $('panel').style.display = 'none'; wilds.splice(wilds.indexOf(w), 1); const full = mates.length >= MAXP; let rec = null;
     if (!full) { w.state = 'follow'; w.pop = 0; w.hp = w.hpMax; mates.push(w); addChip(w); } else { rec = { sp: w.sp, st: w.st, hp: w.hpMax, lv: w.lv, xp: w.xp }; stash.push(rec); world.remove(w.rig.root); }
-    markDex(w.sp, 2); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
+    markDex(w.sp, 2); markForm(w.sp, w.st); if (S.stage === 2 && commonsCaught() >= 3) { S.stage = 3; setTimeout(() => toast('Data lengkap! Lapor ke Prof. Catherine 🎓', 3), 2800); } saveGame(); burst(w.x, 0.6, w.z); Music.jingle('catch');
     toast(full ? `Yeay! ${w.name} tertangkap! Tim penuh, dititip di Hotel Maimon 🏠` : `Yeay! ${w.name} ikut kamu! 🎉`, 3); respawns.push({ t: T + (w.rare ? 150 : 25), sp: w.sp, st: w.st, hx: w.hx, hz: w.hz, la: w.la || 0 }); leaveEncounter(2); setTimeout(() => askNick(w, rec), 1200);
   } else { w.shake = 0.6; toast('Hmm… bukan itu 🤔 coba yang lain!', 1.4); }
 }
@@ -3038,7 +3069,7 @@ function updateMates(dt) {
 }
 
 
-await __boot.step(16, 21);
+await __boot.step(16, 22);
 
 /* =====================================================================
    CERITA: title, buat karakter, dialog, NPC (Prof. Catherine, Dokter Sari), tujuan, Maimondex, klinik, simpan
@@ -3384,7 +3415,7 @@ async function healScene() {
   dialog([[D, 'Nah, sudah sehat lagi! Semangat ya, {n}!']]);
 }
 
-await __boot.step(17, 21);
+await __boot.step(17, 22);
 
 /* =====================================================================
    TAS + CARI MAKANAN: kebun warga (jagung/timun/wortel/kacang), kangkung di tepi danau, mancing ikan
@@ -3503,7 +3534,7 @@ $('pullb').onclick = () => {
 };
 $('fishx').onclick = () => { if (fishSt) endFish(false); };
 
-await __boot.step(18, 21);
+await __boot.step(18, 22);
 
 /* =====================================================================
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
@@ -3553,7 +3584,7 @@ function renderDex() {
   if (!v) { D.innerHTML = `<div class="plate" style="background:linear-gradient(150deg,#6b6b6b,#3a3a3a)"><div class="t"><small>No.${pad3(i + 1)}</small><b>???</b></div></div><div class="hint2">Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
   const dty = tyOf(d), weak = [...new Set(Object.keys(BEATS).filter((t) => dty.some((x) => BEATS[t].includes(x))))], strong = [...new Set(dty.flatMap((x) => BEATS[x]))];
   const rr = RARITY[RARITY_OF[sp] || 'umum'], rare = `<span class="rareb">${rr.star} ${rr.n}</span>`;
-  const evo = d.n.length > 1 ? `<div class="evo">${d.n.join(' → ')}</div>` : '';
+  const reach = (S.fm && S.fm[sp]) || (v > 1 ? 1 : 0), evo = d.n.length > 1 ? `<div class="evo">${v > 1 ? d.n.map((nm, f) => f + 1 <= reach ? `<span class="ef"><img src="${portrait(sp, f + 1)}" alt="">${nm}</span>` : `<span class="ef lk"><img src="${portrait(sp, f + 1)}" alt="">???</span>`).join(' → ') : '???'}<br><small>Evolusi: ${d.evo.map((l) => 'Lv ' + l).join(' · ')}</small></div>` : '';
   let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${dty.map(chipT).join('')}${rare}</div></div>`;
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
   if (v > 1) {
@@ -3573,11 +3604,12 @@ function renderTeam() {
   mates.forEach((m, i) => {
     const hp = Math.max(0, m.hp) / m.hpMax, need = xpNeed(m.lv), xp = m.lv >= LVCAP ? 1 : m.xp / need, kn = movesAt(m.sp, m.lv), lk = MAI[m.sp].ls.filter((x) => x[0] > m.lv).slice(0, 4 - kn.length);
     const c = document.createElement('div'); c.className = 'tc';
-    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''} · ⚡ ${speedOf(m)}</small><div style="margin-top:3px">${chipT(m.type)}</div></div></div>` +
+    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''} · ⚡ ${speedOf(m)}</small><div style="margin-top:3px">${tyOf(m).map(chipT).join('')}</div></div></div>` +
       `<div><div class="tl"><span>HP</span><span>${Math.ceil(m.hp)} / ${m.hpMax}</span></div><div class="tb"><i style="width:${Math.round(hp * 100)}%;background:${hp < 0.25 ? '#d8452e' : hp < 0.55 ? '#e8b030' : '#5cae3c'}"></i></div></div>` +
       `<div><div class="tl"><span>XP</span><span>${m.lv >= LVCAP ? 'MAKS' : `${m.xp} / ${need}`}</span></div><div class="tb"><i style="width:${Math.round(xp * 100)}%;background:#4a9ae8"></i></div></div>` +
       `<div class="mvg">${kn.map((x) => `<div class="m"><i class="chip" style="background:${TCOL[x[2]]};padding:0 4px">&nbsp;</i><span>${x[1]}</span></div>`).join('')}${lk.map((x) => `<div class="m lk">🔒 <span>Lv ${x[0]}</span></div>`).join('')}</div>`;
     if (i > 0) { const b = document.createElement('button'); b.textContent = '⭐ Jadikan Pemimpin'; b.onclick = () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); saveGame(); renderTeam(); }; c.appendChild(b); }
+    if (canEvolve(m)) { const b = document.createElement('button'); b.textContent = `✨ Evolusi → ${MAI[m.sp].n[m.st]}`; b.style.background = '#ffe066'; b.onclick = () => evolveScene(m); c.appendChild(b); }
     g.appendChild(c);
   });
   B.appendChild(g);
@@ -3612,7 +3644,61 @@ $('dexb').onclick = () => {
 document.querySelectorAll('#menu button').forEach((b) => { b.onclick = () => openScr(b.dataset.s); });
 document.querySelectorAll('.scr [data-x]').forEach((b) => { b.onclick = () => closeScr(b.dataset.x); });
 
-await __boot.step(19, 21);
+await __boot.step(19, 22);
+/* =====================================================================
+   EVOLUSI: konfirmasi, animasi, penerapan ke rig di dunia
+   ===================================================================== */
+let evoBusy = false;
+function markForm(sp, st) { S.fm = S.fm || {}; if ((S.fm[sp] || 1) < st) { S.fm[sp] = st; saveGame(); } }
+function applyEvolution(m) {
+  const d = MAI[m.sp]; world.remove(m.rig.root);
+  m.st++; const rig = d.build(m.st); rig.off = R0() * 3; castAll(rig.root); world.add(rig.root); m.rig = rig;
+  const oldMax = m.hpMax; m.hpMax = hpMaxOf(m.sp, m.st, m.lv); m.hp = Math.min(m.hpMax, m.hp + Math.max(0, m.hpMax - oldMax));
+  m.name = m.nick || d.n[Math.min(m.st, d.n.length) - 1]; m.type2 = (d.t2 && d.t2[m.st]) || d.type2; m.sc = rig.size * d.s * 0.8; m.pop = 0.2;
+  markForm(m.sp, m.st); markDex(m.sp, 2); renderChips(); saveGame();
+}
+function evoSparks(n, cols) {
+  const st = $('evStage'), r = st.getBoundingClientRect(), cx = r.width / 2, cy = r.height / 2;
+  for (let i = 0; i < n; i++) {
+    const e = document.createElement('i'), a = Math.random() * Math.PI * 2, dist = r.width * (0.4 + Math.random() * 0.7), sz = 6 + Math.random() * 10;
+    e.className = 'evp'; e.style.cssText = `left:${cx}px;top:${cy}px;width:${sz}px;height:${sz}px;background:${cols[i % cols.length]}`; st.appendChild(e);
+    e.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * dist}px),calc(-50% + ${Math.sin(a) * dist}px)) scale(0.2) rotate(180deg)`, opacity: 0 }], { duration: 900 + Math.random() * 900, easing: 'cubic-bezier(.1,.7,.3,1)' }).onfinish = () => e.remove();
+  }
+}
+function evoAsk(m) {
+  return new Promise((res) => {
+    const ov = $('evo'), nn = MAI[m.sp].n[m.st];
+    $('evA').src = portrait(m.sp, m.st); $('evA').className = ''; $('evB').style.display = 'none'; ov.classList.remove('go'); ov.classList.add('ask');
+    $('evT').innerHTML = `<b>${m.name}</b> bersinar terang!<br>Berevolusi menjadi <b>${nn}</b>?`; $('evBtn').style.display = 'flex'; ov.style.display = 'flex'; Music.blip(880);
+    $('evYes').onclick = () => { $('evBtn').style.display = 'none'; ov.classList.remove('ask'); res(true); };
+    $('evNo').onclick = () => { ov.style.display = 'none'; ov.classList.remove('ask'); toast(`${m.name} menunda evolusi. Bisa dilanjutkan dari menu Tim ✨`, 2.6); res(false); };
+  });
+}
+async function evolveScene(m) {
+  if (evoBusy || !canEvolve(m)) return; evoBusy = true;
+  const ov = $('evo'), d = MAI[m.sp], oldN = m.name, nn = d.n[m.st], A = $('evA'), B = $('evB'), T = $('evT'), fl = $('evFlash'), stg = $('evStage');
+  A.src = portrait(m.sp, m.st); B.src = portrait(m.sp, m.st + 1); A.className = ''; B.className = ''; A.style.display = 'block'; B.style.display = 'block'; A.style.opacity = 1; B.style.opacity = 0;
+  $('evBtn').style.display = 'none'; ov.style.display = 'flex'; ov.classList.add('go'); T.innerHTML = `<b>${oldN}</b> berevolusi…`;
+  stg.style.transform = 'scale(1)';
+  let delay = 460;
+  for (let i = 0; i < 18; i++) {
+    const showB = i % 2 === 1; A.className = 'sil'; B.className = 'sil'; A.style.opacity = showB ? 0 : 1; B.style.opacity = showB ? 1 : 0;
+    stg.style.transform = `scale(${1 + 0.05 * Math.sin(i) + i * 0.012})`; Music.blip(330 + i * 55); await sleep(delay); delay = Math.max(60, delay * 0.8);
+  }
+  fl.style.transition = 'opacity .18s'; fl.style.opacity = 1; Music.jingle('level'); await sleep(200);
+  applyEvolution(m); A.style.display = 'none'; B.className = ''; B.style.opacity = 1; stg.style.transform = 'scale(1.15)';
+  T.innerHTML = `Selamat! <b>${oldN}</b><br>berevolusi menjadi <b>${nn}</b>! ✨`;
+  fl.style.transition = 'opacity .9s'; fl.style.opacity = 0; evoSparks(46, ['#ffe066', '#ffffff', '#7fe0ff', '#ff9ac8', '#9be85a']);
+  burst(m.x, 0.8, m.z, '#ffe066', 30); await sleep(700); evoSparks(30, ['#ffe066', '#ffffff']); stg.style.transform = 'scale(1)';
+  await sleep(2200); T.innerHTML += `<br><small>Ketuk untuk lanjut</small>`;
+  await new Promise((r) => { const t = setTimeout(r, 3500); ov.onclick = () => { clearTimeout(t); r(); }; }); ov.onclick = null;
+  ov.style.display = 'none'; ov.classList.remove('go'); evoBusy = false;
+  const newMoves = MAI[m.sp].ls.filter((x) => x[0] > m.lv - 0 && false); void newMoves;
+  if (mode === 'menu' && typeof renderTeam === 'function') renderTeam();
+}
+async function evolveOffer(m) { if (await evoAsk(m)) await evolveScene(m); }
+
+await __boot.step(20, 22);
 /* =====================================================================
    LOOP UTAMA
    ===================================================================== */
@@ -3737,7 +3823,7 @@ function safeSpot(x, z) {
   return [-6.6, 10.4];
 }
 function unstick() { const [x, z] = safeSpot(player.x, player.z); player.x = x; player.z = z; mates.forEach((m, i) => { m.x = x - 0.6 * (i + 1); m.z = z; }); trail.length = 0; toast('Ayo lanjut jalan! 🐾', 1.6); }
-window.__g = { findPath, smoothPath, evoBuild, portraitRig, unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { evolveScene, evolveOffer, canEvolve, findPath, smoothPath, evoBuild, portraitRig, unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();

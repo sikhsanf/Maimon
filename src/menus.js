@@ -47,7 +47,7 @@ function renderDex() {
   if (!v) { D.innerHTML = `<div class="plate" style="background:linear-gradient(150deg,#6b6b6b,#3a3a3a)"><div class="t"><small>No.${pad3(i + 1)}</small><b>???</b></div></div><div class="hint2">Belum pernah ditemukan. Jelajahi Depok!</div>`; return; }
   const dty = tyOf(d), weak = [...new Set(Object.keys(BEATS).filter((t) => dty.some((x) => BEATS[t].includes(x))))], strong = [...new Set(dty.flatMap((x) => BEATS[x]))];
   const rr = RARITY[RARITY_OF[sp] || 'umum'], rare = `<span class="rareb">${rr.star} ${rr.n}</span>`;
-  const evo = d.n.length > 1 ? `<div class="evo">${d.n.join(' → ')}</div>` : '';
+  const reach = (S.fm && S.fm[sp]) || (v > 1 ? 1 : 0), evo = d.n.length > 1 ? `<div class="evo">${v > 1 ? d.n.map((nm, f) => f + 1 <= reach ? `<span class="ef"><img src="${portrait(sp, f + 1)}" alt="">${nm}</span>` : `<span class="ef lk"><img src="${portrait(sp, f + 1)}" alt="">???</span>`).join(' → ') : '???'}<br><small>Evolusi: ${d.evo.map((l) => 'Lv ' + l).join(' · ')}</small></div>` : '';
   let h = `<div class="plate" style="background:linear-gradient(150deg,${col},#2c2118)">${pimg(sp, 1)}<div class="t"><small>No.${pad3(i + 1)} · ${d.info.cat}</small><b>${d.n[0]}</b>${evo}${dty.map(chipT).join('')}${rare}</div></div>`;
   h += `<div class="sec"><h4>KELEBIHAN & KELEMAHAN</h4><div class="chips2"><span>💪 Kuat lawan</span>${strong.map(chipT).join('')}</div><div class="chips2" style="margin-top:4px"><span>😵 Lemah lawan</span>${weak.map(chipT).join('')}</div></div>`;
   if (v > 1) {
@@ -67,11 +67,12 @@ function renderTeam() {
   mates.forEach((m, i) => {
     const hp = Math.max(0, m.hp) / m.hpMax, need = xpNeed(m.lv), xp = m.lv >= LVCAP ? 1 : m.xp / need, kn = movesAt(m.sp, m.lv), lk = MAI[m.sp].ls.filter((x) => x[0] > m.lv).slice(0, 4 - kn.length);
     const c = document.createElement('div'); c.className = 'tc';
-    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''} · ⚡ ${speedOf(m)}</small><div style="margin-top:3px">${chipT(m.type)}</div></div></div>` +
+    c.innerHTML = `<div class="hd">${pimg(m.sp, m.st)}<div><b>${i === 0 ? '⭐ ' : ''}${m.name}</b><small>Lv ${m.lv}${i === 0 ? ' · PEMIMPIN' : ''} · ⚡ ${speedOf(m)}</small><div style="margin-top:3px">${tyOf(m).map(chipT).join('')}</div></div></div>` +
       `<div><div class="tl"><span>HP</span><span>${Math.ceil(m.hp)} / ${m.hpMax}</span></div><div class="tb"><i style="width:${Math.round(hp * 100)}%;background:${hp < 0.25 ? '#d8452e' : hp < 0.55 ? '#e8b030' : '#5cae3c'}"></i></div></div>` +
       `<div><div class="tl"><span>XP</span><span>${m.lv >= LVCAP ? 'MAKS' : `${m.xp} / ${need}`}</span></div><div class="tb"><i style="width:${Math.round(xp * 100)}%;background:#4a9ae8"></i></div></div>` +
       `<div class="mvg">${kn.map((x) => `<div class="m"><i class="chip" style="background:${TCOL[x[2]]};padding:0 4px">&nbsp;</i><span>${x[1]}</span></div>`).join('')}${lk.map((x) => `<div class="m lk">🔒 <span>Lv ${x[0]}</span></div>`).join('')}</div>`;
     if (i > 0) { const b = document.createElement('button'); b.textContent = '⭐ Jadikan Pemimpin'; b.onclick = () => { mates.unshift(mates.splice(i, 1)[0]); renderChips(); saveGame(); renderTeam(); }; c.appendChild(b); }
+    if (canEvolve(m)) { const b = document.createElement('button'); b.textContent = `✨ Evolusi → ${MAI[m.sp].n[m.st]}`; b.style.background = '#ffe066'; b.onclick = () => evolveScene(m); c.appendChild(b); }
     g.appendChild(c);
   });
   B.appendChild(g);

@@ -285,6 +285,18 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 .pulse{animation:pls .7s ease-in-out infinite alternate!important;outline:4px solid #ffd84a}
 @keyframes plsSpot{from{box-shadow:0 0 0 0 rgba(255,216,74,.9),0 0 0 200vmax rgba(8,6,20,.68)}to{box-shadow:0 0 0 12px rgba(255,216,74,0),0 0 0 200vmax rgba(8,6,20,.68)}}
 @keyframes pls{from{box-shadow:0 0 0 0 rgba(255,216,74,.9)}to{box-shadow:0 0 0 12px rgba(255,216,74,0)}}
+#evo{position:fixed;inset:0;z-index:70;display:none;background:radial-gradient(circle at 50% 42%,#2b2350 0,#07050f 75%);flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;text-align:center;pointer-events:auto;overflow:hidden}
+#evo .rays{position:absolute;left:50%;top:42%;width:230vmax;height:230vmax;margin:-115vmax 0 0 -115vmax;background:repeating-conic-gradient(rgba(255,226,120,0) 0 9deg,rgba(255,226,120,.22) 9deg 18deg);opacity:0;transition:opacity .8s;animation:evspin 9s linear infinite;pointer-events:none}
+#evo.go .rays,#evo.ask .rays{opacity:1}
+#evStage{position:relative;width:min(72vw,340px);height:min(72vw,340px);transition:transform .25s}
+#evStage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+#evStage img.sil{filter:brightness(0) invert(1) drop-shadow(0 0 22px #fff)}
+#evStage .evp{position:absolute;border-radius:2px;pointer-events:none}
+#evT{font-size:min(6vw,26px);line-height:1.35;min-height:3.2em;padding:0 18px;text-shadow:0 3px 0 #000;font-weight:700}#evT b{color:#ffe066}#evT small{opacity:.7;font-size:.65em}
+#evBtn{display:none;gap:12px}#evBtn button{min-width:130px;font-size:20px}
+#evFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:71}
+@keyframes evspin{to{transform:rotate(360deg)}}
+.ef{display:inline-block;text-align:center;font-size:13px;vertical-align:top}.ef img{display:block;width:60px;height:60px;image-rendering:pixelated;margin:0 auto}.ef.lk img{filter:brightness(0) opacity(.55)}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .45s}
 #pvig{position:fixed;inset:0;display:none;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 38%,rgba(10,6,30,.62) 100%)}
 .plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
@@ -327,6 +339,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
 <button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
+<div id="evo"><i class="rays"></i><div id="evStage"><img id="evA" alt=""><img id="evB" alt=""></div><div id="evT"></div><div id="evBtn"><button id="evYes">✨ Evolusi!</button><button id="evNo">Nanti</button></div></div><div id="evFlash"></div>
 <div id="lvflash"></div><div id="lvup"><i class="rays"></i><div class="t">LEVEL UP!</div><div class="n"></div><div class="s">★ ★ ★</div></div>
 <div id="toast" class="ui panel"></div>
 <div id="joy"><div id="knob"></div></div>

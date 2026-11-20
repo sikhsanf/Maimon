@@ -105,7 +105,8 @@ function evoFinish(r, size) {
   if (r.head && r.head.userData.rx0 === undefined) r.head.userData.rx0 = r.head.rotation.x;
   return r;
 }
+const EVO_SIZE = { kancik2: 1.3, kancik3: 1.15, cebongi2: 1.3, cebongi3: 1.15, pioyo2: 1.3, pioyo3: 1.15, kucingko2: 1.2, tikusil2: 1.15, dombanyo2: 1.0 };
 function evoBuild(sp, st) {
   const f = EVO[sp + st]; if (!f) return null;
-  const r = f(); return evoFinish(r, st === 3 ? 1.6 : 1.3);
+  const r = f(); return evoFinish(r, EVO_SIZE[sp + st] || 1.2);
 }
