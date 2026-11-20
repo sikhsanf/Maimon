@@ -331,7 +331,7 @@ function openSwap(forced) {
   $('swapT').textContent = forced ? `${battle.me.name} pingsan! Pilih penggantinya:` : 'Ganti pakai siapa? (habis 1 giliran)';
   $('swapX').style.display = forced ? 'none' : '';
   c.forEach((m) => { const b = document.createElement('button'); b.innerHTML = `<span>${m.name} <small>Lv${m.lv}</small> ${chips(m)}</span><small>${Math.ceil(m.hp)}/${m.hpMax}</small>`; b.onclick = () => { $('swapP').style.display = 'none'; doSwap(m, forced); }; L.appendChild(b); });
-  $('swapX').onclick = () => { $('swapP').style.display = 'none'; };
+  $('swapX').onclick = closeSwapUI;
   $('swapP').style.display = 'block'; $('moves').style.display = 'none';
 }
 function closeSwapUI() { $('swapP').style.display = 'none'; $('moves').style.display = ''; }

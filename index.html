@@ -2302,7 +2302,7 @@ const Music = (() => {
       A: [[0, 7, 2], [2, 8, 2], [4, 7, 2], [6, 5, 2], [8, 4, 4], [12, 5, 4], [16, 7, 2], [18, 8, 2], [20, 9, 2], [22, 8, 2], [24, 7, 6], [30, 5, 2]], B: [[0, 9, 2], [2, 11, 2], [4, 12, 4], [8, 11, 4], [12, 9, 4], [16, 8, 2], [18, 9, 2], [20, 11, 2], [22, 12, 2], [24, 14, 8]] },
   };
 
-  let ctx = null, master, comp, revIn, dlyIn, noiseBuf, cur = null, muted = false, timer = null, pending = null, duck = null;
+  let live = [], ctx = null, master, comp, revIn, dlyIn, noiseBuf, cur = null, muted = false, timer = null, pending = null, duck = null;
   const rng = (seed) => { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
 
   function impulse(dur, decay) { const n = ctx.sampleRate * dur | 0, b = ctx.createBuffer(2, n, ctx.sampleRate); for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay); } return b; }
@@ -2460,16 +2460,17 @@ const Music = (() => {
     while (cur.nextT < until) { playStep(cur, cur.nextT); cur.nextT += cur.sd; cur.step++; }
   }
   function tick() { if (!cur || !ctx) return; const now = ctx.currentTime; if (cur.nextT < now - 0.4) cur.nextT = now + 0.1; sched(now + 1.0); }
-  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (ctx && !document.hidden) ctx.resume(); }); }
+  function startTimer() { if (timer) return; try { const w = new Worker(URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }))); w.onmessage = tick; timer = w; } catch (e) { timer = setInterval(tick, 60); } setInterval(() => { if (ctx && !muted && !document.hidden && ctx.state !== 'running') ctx.resume(); }, 2000); document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) { try { ctx.suspend(); } catch (e) {} } else { ctx.resume().then(() => { if (cur) cur.nextT = ctx.currentTime + 0.15; if (pending) { const q = pending; pending = null; play(q); } }).catch(() => {}); } }); }
 
   /* ---------------- API ---------------- */
   function ensure() { if (!ctx) { try { build(window.__bootCtx || new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'playback' })); } catch (e) { return false; } } if (ctx.state === 'suspended') ctx.resume(); startTimer(); return true; }
   function play(name) {
     if (!ctx || ctx.state === 'suspended') { pending = name; return; } pending = null; if (cur && cur.name === name) return;
-    const old = cur, nw = start(name); if (!nw) return;
+    const old = cur, nw = start(name); if (!nw) return; const tt0 = ctx.currentTime;
+    live.filter((o) => o !== old).forEach((o) => { try { o.bus.gain.cancelScheduledValues(tt0); o.bus.gain.setValueAtTime(0.0001, tt0); o.bus.disconnect(); } catch (e) {} }); live = [];
     const t = ctx.currentTime; nw.bus.gain.setValueAtTime(0.0001, t); nw.bus.gain.linearRampToValueAtTime(1, t + 0.9);
     if (old) { old.bus.gain.cancelScheduledValues(t); old.bus.gain.setValueAtTime(old.bus.gain.value, t); old.bus.gain.linearRampToValueAtTime(0.0001, t + 1.1); setTimeout(() => { try { old.bus.disconnect(); } catch (e) {} }, 4000); }
-    cur = nw;
+    cur = nw; if (old) live.push(old); live.push(nw);
   }
   function jingle(kind) {
     if (!ctx) return; const t = ctx.currentTime + 0.05, bus = ctx.createGain(); bus.gain.value = 1; bus.connect(duck); const r = ctx.createGain(); r.gain.value = 0.5; bus.connect(r); r.connect(revIn);
@@ -2485,7 +2486,7 @@ const Music = (() => {
     o.connect(g); o2.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t + 0.08); o2.stop(t + 0.08);
   }
   function toggle() { muted = !muted; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.5, ctx.currentTime + 0.2); return !muted; }
-  function unlock() { if (ensure() && pending) { const p = pending; pending = null; cur = null; play(p); } }
+  function unlock() { if (ensure() && pending) { const p = pending; pending = null; play(p); } }
   // render offline (untuk uji kualitas)
   async function renderOffline(name, secs) {
     const sr = 22050, oc = new OfflineAudioContext(2, sr * secs, sr), saved = ctx; build(oc); const th = TH[name]; cur = start(name); cur.bus.gain.value = 1; cur.nextT = 0; sched(secs);
@@ -2884,7 +2885,7 @@ function openSwap(forced) {
   $('swapT').textContent = forced ? `${battle.me.name} pingsan! Pilih penggantinya:` : 'Ganti pakai siapa? (habis 1 giliran)';
   $('swapX').style.display = forced ? 'none' : '';
   c.forEach((m) => { const b = document.createElement('button'); b.innerHTML = `<span>${m.name} <small>Lv${m.lv}</small> ${chips(m)}</span><small>${Math.ceil(m.hp)}/${m.hpMax}</small>`; b.onclick = () => { $('swapP').style.display = 'none'; doSwap(m, forced); }; L.appendChild(b); });
-  $('swapX').onclick = () => { $('swapP').style.display = 'none'; };
+  $('swapX').onclick = closeSwapUI;
   $('swapP').style.display = 'block'; $('moves').style.display = 'none';
 }
 function closeSwapUI() { $('swapP').style.display = 'none'; $('moves').style.display = ''; }
