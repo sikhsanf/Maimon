@@ -283,11 +283,12 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
 #nameBox{display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 14px;width:min(340px,90vw)}
 @media (max-height:480px) and (orientation:landscape){#cbg.two #cprof{left:24%}#cbg.two #cplayer{left:50%}#cprof,#cplayer{bottom:96px;height:min(60vh,50vw);aspect-ratio:5/8}#create{inset:auto 3vw 124px auto;align-items:flex-end}#create .cards{flex-direction:column;width:200px}#cbg .cap{height:36vh}#cbg .wb{height:25vh;top:11%;font-size:10px}#cbg .wb::after{display:none}#cbg .items{font-size:26px}#cbg .jars{font-size:28px;height:10vh}}
 .pulse{animation:pls .7s ease-in-out infinite alternate!important;outline:4px solid #ffd84a}
+@keyframes plsSpot{from{box-shadow:0 0 0 0 rgba(255,216,74,.9),0 0 0 200vmax rgba(8,6,20,.68)}to{box-shadow:0 0 0 12px rgba(255,216,74,0),0 0 0 200vmax rgba(8,6,20,.68)}}
 @keyframes pls{from{box-shadow:0 0 0 0 rgba(255,216,74,.9)}to{box-shadow:0 0 0 12px rgba(255,216,74,0)}}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity .45s}
 #pvig{position:fixed;inset:0;display:none;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 42%,rgba(0,0,0,0) 38%,rgba(10,6,30,.62) 100%)}
 .plabel{position:fixed;transform:translate(-50%,-50%);color:#fff;font:700 15px var(--font-label);letter-spacing:1px;padding:4px 10px;border:3px solid #fff;box-shadow:0 3px 0 var(--edge);white-space:nowrap;display:none;z-index:2;pointer-events:none}
-#spot{display:none;position:fixed;z-index:8;border:4px solid #ffd84a;border-radius:10px;box-shadow:0 0 0 200vmax rgba(8,6,20,.62);pointer-events:none;animation:pls .7s ease-in-out infinite alternate}
+#spot{display:none;position:fixed;z-index:8;border:4px solid #ffd84a;border-radius:10px;box-shadow:0 0 0 200vmax rgba(8,6,20,.62);pointer-events:none;animation:plsSpot .7s ease-in-out infinite alternate}
 #spot b{position:absolute;white-space:nowrap;background:#ffd84a;color:var(--ink);border:3px solid var(--edge);padding:3px 10px;font:700 18px var(--font-display)}
 .stt{font-size:11px;padding:1px 5px;border-radius:6px;color:#fff;background:#d8452e;margin-left:4px;white-space:nowrap}.stt.poison{background:#8a4bc0}.stt.dizzy{background:#c99a10}.stt.fear{background:#6b5b95}
 </style>
