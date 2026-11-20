@@ -114,17 +114,17 @@ function updateLabels() {
 }
 /* ---------- jalur penunjuk (titik-titik kuning di tanah, dicari lewat A*) ---------- */
 const PATH_N = 110, pathM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.4, 0.08, 0.4).rotateY(Math.PI / 4), glow('#ff2e93'), PATH_N); pathM.visible = false; pathM.frustumCulled = false; scene.add(pathM);
-let pathPts = [], pathFor = null, pathX = 1e9, pathZ = 1e9, pathT = 0; const _pd = new THREE.Object3D();
+let pathPts = [], pathFail = false, pathFor = null, pathX = 1e9, pathZ = 1e9, pathT = 0; const _pd = new THREE.Object3D();
 function findPath(sx, sz, tx, tz) {
-  const CS = 0.5, NX = Math.round(HX * 2 / CS), NZ = Math.round(HZ * 2 / CS), cx = (i) => -HX + (i + 0.5) * CS, cz = (j) => -HZ + (j + 0.5) * CS, idx = (i, j) => j * NX + i;
+  const ZE = (tz > HZ || sz > HZ) ? BG.z1 : HZ, CS = ZE > HZ ? 1.0 : 0.5, NX = Math.round(HX * 2 / CS), NZ = Math.round((ZE + HZ) / CS), cx = (i) => -HX + (i + 0.5) * CS, cz = (j) => -HZ + (j + 0.5) * CS, idx = (i, j) => j * NX + i;
   const ci = (x) => Math.min(NX - 1, Math.max(0, Math.floor((x + HX) / CS))), cj = (z) => Math.min(NZ - 1, Math.max(0, Math.floor((z + HZ) / CS)));
   const blk = new Int8Array(NX * NZ).fill(-1), isB = (i, j) => { const k = idx(i, j); if (blk[k] < 0) blk[k] = blockedAt(cx(i), cz(j), 0.28) ? 1 : 0; return blk[k] === 1; };
   const si = ci(sx), sj = cj(sz); let gi = ci(tx), gj = cj(tz);
-  if (isB(gi, gj)) { let bd = 1e9; for (let a = -4; a <= 4; a++) for (let b = -4; b <= 4; b++) { const i = gi + a, j = gj + b; if (i < 0 || j < 0 || i >= NX || j >= NZ || isB(i, j)) continue; const d = a * a + b * b; if (d < bd) { bd = d; gi = i + 0; gj = j + 0; } } }
+  if (isB(gi, gj)) { let bd = 1e9; const gi0 = gi, gj0 = gj, R = ZE > HZ ? 5 : 8; for (let a = -R; a <= R; a++) for (let b = -R; b <= R; b++) { const i = gi0 + a, j = gj0 + b; if (i < 0 || j < 0 || i >= NX || j >= NZ || isB(i, j)) continue; const d = a * a + b * b; if (d < bd) { bd = d; gi = i; gj = j; } } }
   const g = new Float32Array(NX * NZ).fill(1e9), par = new Int32Array(NX * NZ).fill(-1), done = new Uint8Array(NX * NZ), open = [idx(si, sj)]; g[open[0]] = 0;
   const h = (i, j) => { const dx = Math.abs(i - gi), dz = Math.abs(j - gj); return Math.max(dx, dz) + 0.414 * Math.min(dx, dz); };
   let found = -1, guard = 0;
-  while (open.length && guard++ < 6000) {
+  while (open.length && guard++ < 12000) {
     let bi = 0, bf = 1e9; for (let q = 0; q < open.length; q++) { const k = open[q], f = g[k] + h(k % NX, (k / NX) | 0); if (f < bf) { bf = f; bi = q; } }
     const k = open.splice(bi, 1)[0]; if (done[k]) continue; done[k] = 1; const i = k % NX, j = (k / NX) | 0; if (i === gi && j === gj) { found = k; break; }
     for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) { if (!a && !b) continue; const ni = i + a, nj = j + b; if (ni < 0 || nj < 0 || ni >= NX || nj >= NZ || (isB(ni, nj) && !(ni === si && nj === sj))) continue; if (a && b && (isB(i + a, j) || isB(i, j + b))) continue; const nk = idx(ni, nj), ng = g[k] + (a && b ? 1.414 : 1); if (ng < g[nk]) { g[nk] = ng; par[nk] = k; open.push(nk); } }
@@ -142,7 +142,7 @@ function updatePath(dt) {
   if (!objTarget || mode !== 'play' || inside) { pathM.visible = false; pathFor = null; return; }
   let near = 1e9, ni = 1;
   for (let i = 1; i < pathPts.length; i++) { const [ax, az] = pathPts[i - 1], [bx, bz] = pathPts[i], dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = Math.max(0, Math.min(1, ((player.x - ax) * dx + (player.z - az) * dz) / L2)), d = Math.hypot(ax + dx * t - player.x, az + dz * t - player.z); if (d < near) { near = d; ni = i; } }
-  if (objTarget !== pathFor || pathPts.length < 2 || near > 1.6 || pathT < -6) { pathFor = objTarget; pathT = 0; pathPts = smoothPath(findPath(player.x, player.z, objTarget.x, objTarget.z)); pathPts.push([objTarget.x, objTarget.z]); ni = 1; }
+  if (objTarget !== pathFor || (!pathFail && (pathPts.length < 2 || near > 1.6)) || pathT < -6) { pathFor = objTarget; pathT = 0; const fp0 = findPath(player.x, player.z, objTarget.x, objTarget.z); pathFail = fp0.length === 0; pathPts = smoothPath(fp0); pathPts.push([objTarget.x, objTarget.z]); ni = 1; }
   const route = [[player.x, player.z], ...pathPts.slice(ni)];
   const dots = []; let carry = 0.2;
   for (let i = 1; i < route.length; i++) { const [ax, az] = route[i - 1], [bx, bz] = route[i], L = Math.hypot(bx - ax, bz - az); let d = carry; while (d < L) { const t = d / L, x = ax + (bx - ax) * t, z = az + (bz - az) * t; if (Math.hypot(x - player.x, z - player.z) > 1.0 && Math.hypot(x - objTarget.x, z - objTarget.z) > 1.1) dots.push([x, z]); d += 0.62; } carry = d - L; if (dots.length >= PATH_N) break; }
