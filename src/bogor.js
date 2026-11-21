@@ -9,7 +9,7 @@ var gateOpen = false, bogorOn = false;
 const BG = { x0: -18, x1: 18, z0: 54, z1: 82 }, ZR = 68, BTPU = 14;
 const BRD = [{ pts: [[-1, 54], [-1, 78.4]], w: 3.4 }, { pts: [[-18, ZR], [18, ZR]], w: 2.4 }];
 const KOL = { x: 7.6, z: 77.4, rx: 3.9, rz: 2.2 };
-const ROUND = { x: -1, z: ZR, ring: 2.9, isl: 1.15 };
+const ROUND = { x: -1, z: ZR, ring: 3.6, isl: 1.75 };
 const BPATHS = [[[0.9, 74.6], [3.0, 75.8], [3.6, 77.4]], [[11.6, 77.4], [13.4, 75.6], [15.2, 73.8]], [[-2.8, 75.2], [-7, 75.6], [-12.5, 76.8]], [[-1, 74], [-1, 76.6]]];
 const inBogor = (x, z) => x > BG.x0 && x < BG.x1 && z >= BG.z0 && z < BG.z1;
 const BEX = { hw: 1.5, len: 4.4 };
@@ -55,6 +55,38 @@ function bogorCorr(x, z, r) {
   return (x > BG.x1 - 0.8 && x < BG.x1 + BEX.len) || (x < BG.x0 + 0.8 && x > BG.x0 - BEX.len);
 }
 
+/* tanah khas Bogor: paving batu hangat, trotoar bata merah, rumput hijau-lumut yang lebih pekat */
+function bogorTile(k, x, z, pxi, pzi) {
+  const hh = hash2(pxi, pzi), n = fbm(x * 1.4, z * 1.4), v = fbm(x * 0.55, z * 0.55) * 0.7 + vnoise(x * 6, z * 6) * 0.18 + hh * 0.12;
+  switch (k) {
+    case 'road': { const fx = (x * 3.4) % 1, fz = (z * 3.4 + (Math.floor(x * 3.4) % 2) * 0.5) % 1, cell = hash2(Math.floor(x * 3.4) + 7, Math.floor(z * 3.4 + (Math.floor(x * 3.4) % 2) * 0.5));
+      if (fx < 0.13 || fz < 0.13) return shade(hex('#5a544b'), 0.9 + hh * 0.12); return shade(mixc(hex('#9d9686'), hex('#bbb29e'), cell), 0.92 + n * 0.16); }
+    case 'curb': { const row = Math.floor(z * 4), off = (row % 2) * 0.5, bx = (x * 4 + off) % 1, by = (z * 4) % 1; if (bx < 0.1 || by < 0.12) return hex('#7c4a3a'); return shade(hex('#b8654a'), 0.9 + hash2(Math.floor(x * 4 + off), row) * 0.22); }
+    case 'median': return shade(hex('#3f8a50'), 0.92 + hh * 0.1);
+    case 'plaza': { const g = (Math.floor(x * 2.2) + Math.floor(z * 2.2)) % 2, edge = (x * 2.2 % 1 < 0.08 || z * 2.2 % 1 < 0.08); return edge ? hex('#a8896a') : shade(hex(g ? '#dcb99a' : '#cfa888'), 0.95 + hh * 0.08); }
+    case 'lawn': { const c = mixc(PAL.lawn[clamp(Math.floor((v - 0.1) * 6), 0, 3)], hex('#2f9a68'), 0.42); const f = hash2(pxi * 5 + 1, pzi * 3 + 2); if (f < 0.004) return hex('#f6e9ff'); if (f < 0.006) return hex('#f08ab8'); return c; }
+    case 'forest': return mixc(tileColor('forest', x, z, pxi, pzi), hex('#1f5f45'), 0.35);
+    case 'grass': { const c = tileColor('grass', x, z, pxi, pzi); return mixc(c, hex('#3b8f5c'), 0.4); }
+    default: return tileColor(k === 'bridge' ? 'lane' : k, x, z, pxi, pzi);
+  }
+}
+/* suasana khas Bogor: Kota Hujan — langit kelabu kebiruan, kabut tipis, cahaya lebih sejuk, gerimis */
+const ATMO0 = { top: new THREE.Color('#8cc6ea'), bot: new THREE.Color('#eef4ee'), lit: new THREE.Color('#ffffff'), shade: new THREE.Color('#dce8ee'), haze: new THREE.Color('#eef4f4'), hemi: new THREE.Color(0xc4dcff), sun: new THREE.Color(0xfff0d4), cloud: 0.3, hz: 0, hI: 1.05, sI: 2.6 };
+const ATMO1 = { top: new THREE.Color('#6f93a8'), bot: new THREE.Color('#c4d3d0'), lit: new THREE.Color('#e4ecee'), shade: new THREE.Color('#8fa2ab'), haze: new THREE.Color('#cfdcd9'), hemi: new THREE.Color(0xa8cfd0), sun: new THREE.Color(0xe6f0e6), cloud: 0.8, hz: 0.2, hI: 1.12, sI: 2.15 };
+var atmoK = 0, atmoT = 0, rainEl = null;
+function bogorAtmo() {
+  const dt = Math.min(0.1, Math.max(0, T - atmoT)); atmoT = T;
+  const tgt = bogorOn && !inside && (mode === 'play' || mode === 'dialog' || mode === 'battle' || mode === 'feed') ? clamp((player.z - 42) / 16, 0, 1) : 0;
+  atmoK += (tgt - atmoK) * Math.min(1, dt * 1.5); const k = atmoK * atmoK * (3 - 2 * atmoK);
+  if (!rainEl) rainEl = document.getElementById('rain');
+  if (rainEl) rainEl.style.opacity = perfLv >= 2 ? 0 : (Math.max(0, k - 0.55) / 0.45 * 0.55).toFixed(2);
+  if (Math.abs(k - (bogorAtmo.last ?? -1)) < 0.004) return; bogorAtmo.last = k;
+  const u = skyU, A = ATMO0, B = ATMO1;
+  u.skyTop.value.lerpColors(A.top, B.top, k); u.skyBot.value.lerpColors(A.bot, B.bot, k); u.cloudLit.value.lerpColors(A.lit, B.lit, k); u.cloudShade.value.lerpColors(A.shade, B.shade, k);
+  u.uHazeCol.value.lerpColors(A.haze, B.haze, k); u.uCloud.value = lerp(A.cloud, B.cloud, k); u.uHaze.value = lerp(A.hz, B.hz, k);
+  hemi.color.lerpColors(A.hemi, B.hemi, k); hemi.intensity = lerp(A.hI, B.hI, k); sun.color.lerpColors(A.sun, B.sun, k); sun.intensity = lerp(A.sI, B.sI, k);
+}
+
 let bogorGate = { bar: null, rect: null, label: null };
 function openGate(on) {
   gateOpen = on;
@@ -66,7 +98,7 @@ function openGate(on) {
 function buildBogor() {
   bogorOn = true;
   const W = BG.x1 - BG.x0, H = BG.z1 - BG.z0, PW = W * BTPU, PH = H * BTPU;
-  const tex = toTex(pixCanvas(PW, PH, (pxi, pzi) => { const x = BG.x0 + (pxi + 0.5) / BTPU, z = BG.z0 + (pzi + 0.5) / BTPU, k = bkind(x, z); return tileColor(k === 'bridge' ? 'lane' : k, x, z, pxi, pzi + 12000); }));
+  const tex = toTex(pixCanvas(PW, PH, (pxi, pzi) => { const x = BG.x0 + (pxi + 0.5) / BTPU, z = BG.z0 + (pzi + 0.5) / BTPU, k = bkind(x, z); return bogorTile(k, x, z, pxi, pzi + 12000); }));
   const g = new THREE.PlaneGeometry(W, H, W * 2, H * 2); g.rotateX(-Math.PI / 2); g.translate((BG.x0 + BG.x1) / 2, 0, (BG.z0 + BG.z1) / 2);
   const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const gi = Math.round((p.getX(i) - BG.x0) * 2), gj = Math.round((p.getZ(i) - BG.z0) * 2); p.setY(i, BGRID[gj * BGX + gi]); }
   g.computeVertexNormals();
@@ -88,13 +120,39 @@ function buildBogor() {
   // loket Kebun Raya
   bldg(3.4, 73.2, 1.1, 0.9, 0.8, { ry: -Math.PI / 2, wall: '#d9c898', roof: '#2f7a4a', door: '#6a4a2a', doorX: 0.55, rh: 0.4, wins: [[0.25, 0.3, 5, 6]], seed: 13 });
 
-  /* ---------- bundaran + Tugu Kujang ---------- */
-  { const st = toon('#c9c4b4'), gold = toon('#e0b43a'), dk = toon('#8a8576'), cx = ROUND.x, cz = ROUND.z, y = groundY(cx, cz);
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.72, 0.34, 10), dk); base.position.set(cx, y + 0.17, cz); base.castShadow = true; world.add(base);
-    box(world, 0.34, 1.5, 0.34, st, cx, y + 1.0, cz); box(world, 0.5, 0.12, 0.5, dk, cx, y + 1.78, cz);
-    box(world, 0.12, 0.62, 0.05, gold, cx, y + 2.15, cz); box(world, 0.1, 0.3, 0.05, gold, cx + 0.07, y + 2.55, cz, { rz: -0.5 });
-    box(world, 0.06, 0.2, 0.05, gold, cx - 0.1, y + 2.0, cz, { rz: 0.7 });
-    circles.push({ x: cx, z: cz, r: 1.3 }); }
+  /* ---------- bundaran + Tugu Kujang (tinggi ±7,5 petak: ikon kota) ---------- */
+  { const st = toon('#d6d1c0'), st2 = toon('#bdb8a6'), gold = toon('#e8b830'), goldD = toon('#b8861c'), dk = toon('#8a8576'), cx = ROUND.x, cz = ROUND.z, y = groundY(cx, cz);
+    const cyl = (r0, r1, h, mat, yy, seg = 8) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, seg), mat); m.position.set(cx, y + yy, cz); m.castShadow = m.receiveShadow = true; world.add(m); return m; };
+    cyl(1.55, 1.5, 0.28, dk, 0.14, 10); cyl(1.25, 1.2, 0.28, st2, 0.42, 10); cyl(0.95, 0.9, 0.28, st, 0.7, 10);
+    cyl(0.62, 0.3, 4.6, st, 0.84 + 2.3, 8);                 // tiang meruncing
+    cyl(0.5, 0.5, 0.14, gold, 2.4, 8); cyl(0.4, 0.4, 0.14, gold, 3.7, 8); cyl(0.34, 0.34, 0.14, gold, 4.7, 8);   // cincin emas
+    cyl(0.42, 0.42, 0.3, dk, 5.55, 8);                       // kepala tiang
+    // Kujang raksasa: bilah melengkung dari potongan kotak
+    const blade = [[0.0, 0.0, 0.0, 0.3, 0.42], [0.04, 0.38, -0.06, 0.4, 0.4], [0.12, 0.76, -0.14, 0.52, 0.4], [0.26, 1.12, -0.26, 0.58, 0.38], [0.46, 1.44, -0.4, 0.54, 0.36], [0.7, 1.7, -0.58, 0.44, 0.32], [0.96, 1.9, -0.78, 0.32, 0.3], [1.2, 2.04, -1.0, 0.2, 0.26]];
+    blade.forEach(([dx, dy, rz, w, h], i) => { box(world, w, h, 0.12, i % 3 === 1 ? gold : goldD, cx + dx, y + 5.75 + dy, cz, { rz }); });
+    [[0.1, 0.6], [0.24, 1.0], [0.42, 1.34]].forEach(([dx, dy]) => box(world, 0.12, 0.12, 0.14, dk, cx + dx - 0.1, y + 5.75 + dy, cz, { rz: -0.4 }));
+    box(world, 0.34, 0.34, 0.34, gold, cx, y + 5.78, cz, { ry: 0.78 });
+    circles.push({ x: cx, z: cz, r: 1.75 }); }
+
+  /* ---------- lampu jalan heritage, pagar Kebun Raya, angkot hijau, gerobak ---------- */
+  { const dk = toon('#26302a'), warm = glow('#ffe7a0'), cap = toon('#3a4a3a');
+    const lamp = (x, z) => { const y = groundY(x, z); box(world, 0.24, 0.16, 0.24, dk, x, y + 0.08, z); box(world, 0.08, 1.6, 0.08, dk, x, y + 0.95, z); box(world, 0.3, 0.34, 0.3, warm, x, y + 1.9, z, { no: true }); box(world, 0.38, 0.08, 0.38, cap, x, y + 2.14, z); box(world, 0.14, 0.12, 0.14, cap, x, y + 2.24, z); circles.push({ x, z, r: 0.16 }); };
+    [[-3.45, 58.2], [1.45, 61.4], [-3.45, 64.6], [1.45, 56.4], [-1 + 3.0, 75.0], [-1 - 3.0, 75.0]].forEach(([x, z]) => lamp(x, z));
+    const rr = ROUND.ring + 0.5; [0.8, 2.4, 3.9, 5.5].forEach((a) => lamp(ROUND.x + Math.cos(a) * rr, ROUND.z + Math.sin(a) * rr)); }
+  { // pagar putih ala Istana di sisi Kebun Raya (hanya terbuka di gerbang)
+    const zf = 73.4, geos = [], mkb = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); geos.push(g); };
+    [[-17.6, -3.5], [1.5, 17.6]].forEach(([xa, xb]) => { const len = xb - xa, xm = (xa + xb) / 2; mkb(len, 0.07, 0.07, xm, 0.34, zf); mkb(len, 0.07, 0.07, xm, 0.72, zf);
+      for (let q = xa; q <= xb + 0.01; q += 0.46) { mkb(0.07, 0.78, 0.07, q, 0.39, zf); mkb(0.1, 0.1, 0.1, q, 0.82, zf); } });
+    const fm = new THREE.Mesh(mergeGeometries(geos), toon('#f4f2ea')); fm.castShadow = true; world.add(fm);
+    rects.push([-17.9, -3.5, zf - 0.12, zf + 0.12], [1.5, 17.9, zf - 0.12, zf + 0.12]); }
+  { [[-12.8, 68.62, Math.PI / 2], [11.6, 67.38, -Math.PI / 2]].forEach(([x, z, ry]) => { const a = buildCar('#2fa04a', true); a.scale.setScalar(1.3); a.position.set(x, groundY(x, z), z); a.rotation.y = ry; world.add(a); rects.push([x - 1.3, x + 1.3, z - 0.55, z + 0.55]); }); }
+  { const wood = toon('#9a6a3a'), pole = toon('#e9e4d6');
+    const cart = (x, z, ry, txt, c1, c2) => { const g = new THREE.Group(); g.position.set(x, groundY(x, z), z); g.rotation.y = ry; world.add(g);
+      box(g, 1.0, 0.42, 0.55, wood, 0, 0.3, 0); box(g, 1.05, 0.05, 0.6, toon('#d9c8a0'), 0, 0.53, 0); [-0.48, 0.48].forEach((px) => box(g, 0.05, 0.95, 0.05, pole, px, 0.78, -0.2));
+      for (let i = 0; i < 4; i++) box(g, 0.28, 0.05, 0.8, toon(i % 2 ? c1 : c2), -0.42 + i * 0.28, 1.28, -0.05, { rx: 0.18 });
+      const sg = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.24), new THREE.MeshBasicMaterial({ map: labelTex(txt, c1, '#ffffff') })); sg.position.set(0, 0.74, 0.29); g.add(sg);
+      [[-0.9, 0.45], [0.9, 0.45]].forEach(([sx, sz]) => box(g, 0.28, 0.26, 0.28, toon('#c0392b'), sx, 0.13, sz)); circles.push({ x, z, r: 0.55 }); };
+    cart(-4.8, 70.75, Math.PI, 'SOTO MIE', '#d9482e', '#ffffff'); cart(3.2, 65.55, 0, 'ASINAN', '#2f9a4a', '#f4f2ea'); }
 
   /* ---------- Kebun Raya: gerbang, kolam + jembatan kecil ---------- */
   { const wood = toon('#c9b88a'), roof = toon('#2f7a4a'), cream = toon('#f3ead2'), cx = -1, zc = 73.4;
@@ -205,6 +263,7 @@ function talkBotani() {
 function applyGateFromStory() { const want = S.stage >= 7; if (want !== gateOpen) openGate(want); }
 let bogorToastT = 0;
 function updateBogor() {
+  bogorAtmo();
   if (mode !== 'play' || inside || T < bogorToastT || player.z < BG.z0) return;
   if (player.x > BG.x1 + 1.4 && Math.abs(player.z - ZR) < 2.0) { bogorToastT = T + 7; toast('Semak lebat menutup jalan ke Bandung. Butuh skill Tebas 🌿', 3.2); }
   else if (player.x < BG.x0 - 1.4 && Math.abs(player.z - ZR) < 2.0) { bogorToastT = T + 7; toast('Semak lebat menutup jalan ke Ujung Kulon. Butuh skill Tebas 🌿', 3.2); }

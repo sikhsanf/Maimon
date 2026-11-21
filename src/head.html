@@ -59,6 +59,7 @@ button .e{font-size:24px;display:block;line-height:1}
 #battle .hp .l2{font-family:var(--font-label);font-size:15px;opacity:1;font-weight:800;background:var(--edge);color:#fff;padding:0 5px}
 #battle .hp .lv{font-family:var(--font-label);font-size:15px;font-weight:700;opacity:.9}
 #battle .hp.fl{position:fixed;transform:translate(-50%,-100%);right:auto;bottom:auto;width:150px;font-size:15px;padding:4px 8px;pointer-events:none}
+#rain{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity .8s;background:repeating-linear-gradient(104deg,transparent 0 31px,rgba(225,238,248,.55) 31px 32px,transparent 32px 79px),repeating-linear-gradient(104deg,transparent 0 53px,rgba(225,238,248,.4) 53px 54px,transparent 54px 111px);background-size:200px 200px,300px 300px;animation:rainmv .55s linear infinite}@keyframes rainmv{to{background-position:-40px 200px,-60px 300px}}
 #snd{position:fixed;pointer-events:auto;right:max(12px,env(safe-area-inset-right));bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:44px;height:44px;font-size:22px;padding:0;z-index:6;pointer-events:auto}
 #log{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);padding:6px 16px;font-size:26px;font-weight:700;text-align:center;max-width:88vw;opacity:0;transition:opacity .15s}
 #moves{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;width:min(660px,calc(100vw - 20px))}
@@ -338,7 +339,7 @@ body[data-mode=menu] #snd,body[data-mode=menu] #talk,body[data-mode=fish] #snd,b
   <div id="swapP" class="panel"><h3 id="swapT">Ganti pakai siapa?</h3><div id="swapL"></div><button id="swapX">Batal</button></div>
 </div>
 <div id="panel" class="ui panel"><h3 id="ptitle"></h3><div id="foods"></div><div id="phint"></div><button id="skip">Nanti saja</button></div>
-<button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
+<div id="rain"></div><button id="snd" class="ui">🔊</button><button id="rotR" class="ui rot" aria-label="Putar kamera kanan">⟳</button><button id="rotL" class="ui rot" aria-label="Putar kamera kiri">⟲</button>
 <div id="evo"><i class="rays"></i><div id="evStage"><img id="evA" alt=""><img id="evB" alt=""></div><div id="evT"></div><div id="evBtn"><button id="evYes">✨ Evolusi!</button><button id="evNo">Nanti</button></div></div><div id="evFlash"></div>
 <div id="lvflash"></div><div id="lvup"><i class="rays"></i><div class="t">LEVEL UP!</div><div class="n"></div><div class="s">★ ★ ★</div></div>
 <div id="toast" class="ui panel"></div>
