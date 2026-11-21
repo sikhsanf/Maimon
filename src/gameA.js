@@ -44,9 +44,9 @@ const canEvolve = (m) => { const d = MAI[m.sp]; return !!(d.evo && m.st <= d.evo
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
 const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
-const LVCAP = 40, xpNeed = (lv) => Math.round(10 + 2.5 * lv * lv);
+const LVCAP = 99, xpNeed = (lv) => Math.round(10 + 2.5 * lv * lv);
 /* level minimal untuk menantang kepala gym (Maimon terkuat di tim) — gym 1..9 */
-const GYM_MINLV = [10, 16, 20, 24, 28, 32, 35, 38, 40];
+const GYM_MINLV = [10, 15, 20, 25, 30, 35, 40, 45, 50];
 const gymTopLv = () => mates.reduce((a, m) => Math.max(a, m.lv), 0);
 const gymReady = (n) => gymTopLv() >= GYM_MINLV[n - 1];
 const speedOf = (e) => Math.round(MAI[e.sp].spd * (0.7 + 0.06 * e.lv));
