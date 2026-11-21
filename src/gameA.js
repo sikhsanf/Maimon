@@ -44,7 +44,11 @@ const canEvolve = (m) => { const d = MAI[m.sp]; return !!(d.evo && m.st <= d.evo
    ===================================================================== */
 const player = { rig: null, x: 1.6, z: 11.6, ang: Math.PI, walk: false, ox: 0, oz: 0 };
 const wilds = [], mates = [], respawns = [], stash = [], MAXP = 3;
-const LVCAP = 40, xpNeed = (lv) => lv <= 20 ? 10 + lv * 12 : 250 + (lv - 20) * 20;
+const LVCAP = 40, xpNeed = (lv) => Math.round(10 + 2.5 * lv * lv);
+/* level minimal untuk menantang kepala gym (Maimon terkuat di tim) — gym 1..9 */
+const GYM_MINLV = [10, 16, 20, 24, 28, 32, 35, 38, 40];
+const gymTopLv = () => mates.reduce((a, m) => Math.max(a, m.lv), 0);
+const gymReady = (n) => gymTopLv() >= GYM_MINLV[n - 1];
 const speedOf = (e) => Math.round(MAI[e.sp].spd * (0.7 + 0.06 * e.lv));
 const hpMaxOf = (sp, st, lv = 5) => Math.round(MAI[sp].hp[Math.min(st, MAI[sp].hp.length) - 1] * (0.6 + 0.08 * lv));
 const movesAt = (sp, lv) => MAI[sp].ls.filter((m) => m[0] <= lv).slice(-4);
@@ -330,7 +334,9 @@ async function runFx(att, tgt, mv, hit) {
   }
   doHit(); reset();
 }
-const xpFor = (w) => Math.round((14 + w.lv * 5) * (w.rare ? 2 : 1));
+const xpFor = (w) => Math.round((10 + w.lv * 4) * (w.rare ? 2 : 1));
+/* Maimon yang jauh lebih tinggi dari lawan dapat XP lebih kecil (min 25%) */
+const xpShare = (m, w, xp) => Math.max(1, Math.round(xp * Math.max(0.25, 1 - 0.12 * Math.max(0, m.lv - w.lv))));
 function gainXp(m, amt) {
   const ups = [], learned = []; if (m.lv >= LVCAP) return { ups, learned, evo: false };
   const wasReady = canEvolve(m);
@@ -404,8 +410,8 @@ async function endBattle(res) {
   closeSwapUI(); const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
-    const xp = xpFor(w), msgs = [`${me.name} dapat ${xp} XP!`];
-    const evoQ = []; mates.forEach((m, i) => { const r = gainXp(m, i === 0 ? xp : Math.floor(xp / 2)); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.evo) evoQ.push(m); });
+    const xp = xpFor(w), msgs = [`${me.name} dapat ${xpShare(me, w, xp)} XP!`];
+    const evoQ = []; mates.forEach((m, i) => { const r = gainXp(m, xpShare(m, w, i === 0 ? xp : Math.floor(xp / 2))); r.ups.forEach((l) => msgs.push({ m, l })); r.learned.forEach((n) => msgs.push(`📘 ${m.name} belajar jurus ${n}!`)); if (r.evo) evoQ.push(m); });
     for (const t of msgs) { if (typeof t === 'string') { toast(t, 1.7); await sleep(1500); } else { await levelUpFx(t.m, t.l, w); } if (mode !== 'feed') return; }
     for (const m of evoQ) { if (mode !== 'feed') return; await evolveOffer(m); }
     toast(w.rare ? `✨ ${w.name} langka ini! Jangan sampai lepas!` : `${w.name} kecapekan dan lapar!`, 2); showFeed(w); saveGame();

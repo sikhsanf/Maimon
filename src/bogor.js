@@ -196,7 +196,10 @@ function talkBotani() {
       S.stage = 8; saveGame(); Music.jingle('catch'); toast('Surat sudah diantar 💌', 2.8); });
     return;
   }
-  if (S.stage >= 8) { dialog([[P, 'Gym Kebun Raya belum siap, {n}. Datang lagi nanti ya! Sementara itu, tangkap Maimon Daun di sekitar sini.']]); return; }
+  if (S.stage >= 8) {
+    if (!gymReady(1)) { dialog([[P, `Mau menantang gym-ku, {n}? Maimon terkuatmu harus minimal Lv ${GYM_MINLV[0]} dulu. Sekarang baru Lv ${gymTopLv()}.`], [P, 'Latihan dulu di sekitar Bogor ya, dan tangkap Maimon Daun!']]); return; }
+    dialog([[P, 'Tim-mu sudah cukup kuat! Tapi Gym Kebun Raya masih kusiapkan. Segera hadir, {n}!']]); return;
+  }
   dialog([[P, 'Halo! Ada perlu apa, Nak? Kalau dari Depok, biasanya Prof. Catherine mengirim surat dulu.']]);
 }
 function applyGateFromStory() { const want = S.stage >= 7; if (want !== gateOpen) openGate(want); }
