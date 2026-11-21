@@ -222,7 +222,7 @@ function startBattle(w) {
   me.ang = Math.atan2(w.x - me.bx, w.z - me.bz); w.ang = Math.atan2(me.bx - w.x, me.bz - w.z); w.walk = false;
   clearArena(battle.cx, battle.cz, 3.2); camGoal.set(battle.cx, 0.3, battle.cz); zoomGoal = 0.42; pitch = 0.9; battle.camYaw = battleCamYaw([[battle.me.bx, battle.me.bz], [w.x, w.z], [battle.cx, battle.cz]], by).yaw; battle.yawG = battle.camYaw; $('hpL').classList.add('fl'); $('hpR').classList.add('fl');
   hpBar($('hpL'), me); hpBar($('hpR'), w); $('battle').style.display = 'block';
-  buildMoveButtons(); say(w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
+  buildMoveButtons(); say(w.tr ? `${w.tr.def.name} mengirim ${w.name}!` : w.rare ? `✨ ${w.name} LANGKA muncul!` : `${w.name} liar muncul!`, 1500);
 }
 function effHint(mv, foe) { const m = typeMult(mv[2], foe); return m > 1 ? '⭐ ampuh' : m < 1 ? '💤 kurang' : ''; }
 function curMoves(e) { return movesAt(e.sp, e.lv); }
@@ -233,7 +233,7 @@ function buildMoveButtons() {
   $('flee').onclick = flee; $('swapB').onclick = () => openSwap(false); setMovesEnabled(true);
 }
 function setMovesEnabled(on) { [...$('mvRow').children].filter((b) => !b.classList.contains('lock')).forEach((b) => b.classList.toggle('wait', !on)); [$('flee'), $('swapB')].forEach((b) => { b.style.pointerEvents = on ? 'auto' : 'none'; b.style.opacity = on ? 1 : 0.5; }); }
-function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def), stab = tyOf(att).includes(mv[2]) ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? 0.7 : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
+function calcDmg(att, mv, def) { const mult = typeMult(mv[2], def), stab = tyOf(att).includes(mv[2]) ? 1.5 : 1, lvF = 0.55 + 0.09 * att.lv, wildF = battle && att === battle.w ? (att.tr ? 0.9 : 0.7) : 1; return { dmg: Math.max(1, Math.round(mv[3] * mult * stab * lvF * wildF / 7 * (0.9 + R0() * 0.2))), mult }; }
 /* ---------- animasi jurus (tiap jurus punya gerakan sendiri) ---------- */
 const fxList = [], fxMats = {}, cubeGeo = new THREE.BoxGeometry(1, 1, 1);
 const fxMat = (c) => fxMats[c] || (fxMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -407,6 +407,7 @@ async function levelUpFx(m, lv, w) {
   await sleep(2300); b.classList.remove('go'); f.classList.remove('go'); m.state = 'follow'; if (w) { camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45; }
 }
 async function endBattle(res) {
+  if (battle && battle.w.tr) return trainerEnd(res);
   closeSwapUI(); const { w, me } = battle; me.status = w.status = null; $('battle').style.display = 'none'; logEl.style.opacity = 0;
   if (res === 'win') {
     battle = null; w.hp = 0; me.state = 'follow'; mode = 'feed'; Music.play(CITY); Music.jingle('win'); talk = w; w.state = 'face'; camGoal.set(w.x, 0.3, w.z); zoomGoal = 0.45;
@@ -419,7 +420,7 @@ async function endBattle(res) {
     Music.play(CITY); Music.jingle('lose'); toast(`${me.name} kecapekan… bawa ke Klinik Maimon 🩷`, 2.8); me.hp = Math.max(1, Math.round(me.hpMax * 0.3)); w.hp = w.hpMax; battle = null; me.state = 'follow'; w.state = 'wander'; w.tgt = null; w.wait = 2; leaveEncounter(6);
   }
 }
-function flee() { if (!battle || battle.busy) return; closeSwapUI(); const { w, me } = battle; me.status = w.status = null; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
+function flee() { if (!battle || battle.busy) return; if (battle.w.tr) { toast('Tidak bisa kabur dari battle pelatih!', 1.6); return; } closeSwapUI(); const { w, me } = battle; me.status = w.status = null; Music.play(CITY); $('battle').style.display = 'none'; logEl.style.opacity = 0; me.state = 'follow'; w.state = 'wander'; w.hp = w.hpMax; w.tgt = [w.x + (w.x - player.x) * 2, w.z + (w.z - player.z) * 2]; battle = null; toast('Kabur dulu!', 1.2); leaveEncounter(4); }
 let feedTimer = null; const stopFeedClock = () => { clearInterval(feedTimer); feedTimer = null; };
 function feedClock(w) { stopFeedClock(); let left = 20; const upd = () => { $('ptitle').textContent = `Kasih ${w.name} makan apa? ⏳ ${left}`; }; upd(); feedTimer = setInterval(() => { left--; if (mode !== 'feed' || talk !== w) { stopFeedClock(); return; } if (left <= 0) { stopFeedClock(); toast(`${w.name} sudah tidak sabar dan pergi… 💨`, 2); leaveEncounter(4); runAway(w); } else upd(); }, 1000); }
 function leaveEncounter(cd) { stopFeedClock(); saveGame(); restoreArena(); pitch = 0.66; mode = 'play'; talk = null; cooldown = T + cd; zoomGoal = 1; $('joy').style.display = ''; $('panel').style.display = 'none'; if (mates[0]) mates[0].state = 'follow'; }

@@ -172,7 +172,7 @@ function lockMsg(id) {
   if (id === 'home' && st < 4) return ['Bu Wati', 'Hotel baru buka untuk pelatih yang sudah lapor ke Prof. Catherine. Selesaikan tugasmu dulu ya, Nak.'];
   return null;
 }
-function interact() { if (mode !== 'play') return; if (nearSpot) { if (S.stage === 0) { toast('Temui Prof. Catherine dulu ya 🔬', 2.4); return; } return gatherAt(nearSpot); } if (!nearNPC) return; { const lk = lockMsg(nearNPC.id); if (lk) { pendingFocus = nearNPC; dialog([lk]); return; } } const nid = nearNPC.id; (nid === 'prof' ? talkProf : nid === 'home' ? talkHome : nid === 'tani' ? talkTani : nid === 'polisi' ? talkPolisi : nid === 'nurse' ? talkNurse : () => talkBogor(nid))(); }
+function interact() { if (mode !== 'play') return; if (nearSpot) { if (S.stage === 0) { toast('Temui Prof. Catherine dulu ya 🔬', 2.4); return; } return gatherAt(nearSpot); } if (!nearNPC) return; { const lk = lockMsg(nearNPC.id); if (lk) { pendingFocus = nearNPC; dialog([lk]); return; } } const nid = nearNPC.id; if (nearNPC.tr) return talkTrainer(nearNPC); (nid === 'prof' ? talkProf : nid === 'home' ? talkHome : nid === 'tani' ? talkTani : nid === 'polisi' ? talkPolisi : nid === 'nurse' ? talkNurse : () => talkBogor(nid))(); }
 let polisiT = 0;
 function talkPolisi() {
   const n = npcs.find((q) => q.id === 'polisi'); pendingFocus = n; polisiT = T + 25; const P = 'Pak Polisi';

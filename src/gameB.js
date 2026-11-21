@@ -50,13 +50,13 @@ function frame() {
 
   if (mode === 'play' && T > doorCool) { if (!inside && Math.hypot(player.x - LABDOOR.x, player.z - LABDOOR.z) < 0.55) goLab(true); else if (inside && Math.hypot(player.x - LABEXIT.x, player.z - LABEXIT.z) < 0.6) goLab(false); }
   if (yawGoal !== null) { yaw += (yawGoal - yaw) * Math.min(1, dt * 2.2); if (Math.abs(yawGoal - yaw) < 0.01) yawGoal = null; }
-  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); updateOuter(); updateBogor(); applyGateFromStory(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
+  introTick(dt); updateGather(dt); updateNPCs(dt); dlgTick(dt); updateInteract(); updateMarker(dt); updatePath(dt); updateLabels(); updatePick(dt); autoMeetProf(); autoMeetPolisi(); updateTrainers(); updateOuter(); updateBogor(); applyGateFromStory(); objT -= dt; if (objT < 0) { objT = 0.3; updateObjective(); }
   if (mode === 'title') { yaw += dt * 0.1; camGoal.set(-3 + Math.sin(T * 0.15) * 3, 0, 1); }
   humans.forEach((h) => { h.jump = Math.max(0, h.jump - dt); h.rig.root.position.set(h.x, groundY(h.x, h.z) + (h.jump > 0 ? Math.abs(Math.sin(h.jump * 9)) * 0.3 : 0), h.z); h.rig.root.rotation.y = h.ang; animRig(h.rig, T + h.off, false); });
   // pemicu battle + gelembung makanan
   let near = null, nd = 1e9;
   if (mode === 'play') {
-    wilds.forEach((w) => { const d = Math.hypot(w.x - player.x, w.z - player.z); if (d < nd) { nd = d; near = w; } });
+    wilds.forEach((w) => { if (w.tr) return; const d = Math.hypot(w.x - player.x, w.z - player.z); if (d < nd) { nd = d; near = w; } });
     if (near && nd < 2.2 && T > cooldown && !camBack && !camFocus && !actZ && mates[0] && S.stage !== 1) startBattle(near);
   }
   const bub = $('bubble');
@@ -122,7 +122,7 @@ function safeSpot(x, z) {
   return [-6.6, 10.4];
 }
 function unstick() { const [x, z] = safeSpot(player.x, player.z); player.x = x; player.z = z; mates.forEach((m, i) => { m.x = x - 0.6 * (i + 1); m.z = z; }); trail.length = 0; toast('Ayo lanjut jalan! 🐾', 1.6); }
-window.__g = { evolveScene, evolveOffer, canEvolve, findPath, smoothPath, evoBuild, portraitRig, unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, xpNeed, xpFor, xpShare, gymReady, GYM_MINLV, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
+window.__g = { TRAINERS, trainerStart, updateTrainers, talkTrainer, evolveScene, evolveOffer, canEvolve, findPath, smoothPath, evoBuild, portraitRig, unstick, safeSpot, talkProf, openHome, askNick, Music, blockedAt, get battle() { return battle; }, catchP, rarityOf, feed, npcRule, rects, get dbg() { const ri = renderer.info.render; return { yaw, joy: [joy.x, joy.y], pl: [player.x, player.z], calls: ri.calls, tris: ri.triangles, geoms: renderer.info.memory.geometries, perfLv, perfAvg, lite: Music.lite, camBack: !!camBack, camFocus: !!camFocus, actZ, cd: cooldown, T, zoomGoal, stage: S.stage }; }, typeMult, tyOf, BEATS, STAT, vehicles, blockedAt, portrait, openScr, closeScr, addBag, bagN, spots, GATHERDBG, startFish, runFx, fxClear, curMoves, gainXp, xpNeed, xpFor, xpShare, gymReady, GYM_MINLV, MAI, hpBar, stash, mkMon, markDex, renderChips, S, npcs, talkProf, talkNurse, dialog, enterCreate, beginStory, Music, setPitch: (p, y) => { pitch = p; if (y !== undefined) yaw = y; }, player, wilds, mates, get mode() { return mode; }, selectStarter, confirm: () => $('go').click(), startBattle, round, feed, endBattle, setCam: (x, z, zm, y) => { camGoal.set(x, 0, z); camTarget.set(x, 0, z); zoomGoal = zoom = zm; if (y !== undefined) yaw = y; } };
 frame();
 if (__boot.tapped) Music.unlock();
 __boot.done();
