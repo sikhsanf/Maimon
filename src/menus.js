@@ -3,7 +3,7 @@
    MENU ☰ : Maimondex (ensiklopedia) · Tim Saya (Maimon yang kita punya) · Tas (makanan)
    ===================================================================== */
 const PR = { r: null, s: null, cam: null, cache: {} };
-function portraitRig(key, build, rot = 0.75, bust = false) {
+function portraitRig(key, build, rot = 0.75, bust = false, px = 160) {
   if (PR.cache[key]) return PR.cache[key];
   try {
     if (!PR.r) {
@@ -11,7 +11,7 @@ function portraitRig(key, build, rot = 0.75, bust = false) {
       PR.s = new THREE.Scene(); PR.s.add(new THREE.HemisphereLight('#ffffff', '#9a8a6a', 2.1)); const dl = new THREE.DirectionalLight('#ffffff', 2.6); dl.position.set(2.5, 4, 3.5); PR.s.add(dl);
       PR.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 60);
     }
-    PR.r.setSize(bust === 'full' ? 320 : bust ? 384 : 160, bust === 'full' ? 512 : bust ? 384 : 160, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
+    PR.r.setSize(bust === 'full' ? 320 : bust ? 384 : px, bust === 'full' ? 512 : bust ? 384 : px, false); const rig = build(); rig.root.rotation.y = rot; rig.update && rig.update(0.3, false); PR.s.add(rig.root); rig.root.updateMatrixWorld(true);
     const bb = new THREE.Box3().setFromObject(rig.root), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.y * 1.05, sz.z) * 0.62;
     if (bust === 'full') { const rh = sz.y * 0.56, rw = rh * 320 / 512, cy = bb.min.y + sz.y * 0.5; PR.cam.left = -rw; PR.cam.right = rw; PR.cam.top = rh; PR.cam.bottom = -rh; PR.cam.updateProjectionMatrix(); c.y = cy; const sh = new THREE.Mesh(new THREE.CircleGeometry(sz.y * 0.3, 20), new THREE.MeshBasicMaterial({ color: 0x103a3f, transparent: true, opacity: 0.4 })); sh.rotation.x = -Math.PI / 2; sh.position.set(c.x, bb.min.y + 0.01, c.z); sh.scale.set(1, 0.9, 1); PR.s.add(sh); PR.cam.position.set(c.x + 1.5, cy + 1.6, c.z + 5); PR.cam.lookAt(c); PR.r.render(PR.s, PR.cam); const url0 = PR.r.domElement.toDataURL('image/png'); PR.s.remove(sh); PR.s.remove(rig.root); PR.cache[key] = url0; return url0; }
     if (bust) { const cy = bb.max.y - sz.y * 0.36, rb = sz.y * 0.44; PR.cam.left = -rb; PR.cam.right = rb; PR.cam.top = rb; PR.cam.bottom = -rb; PR.cam.updateProjectionMatrix(); c.y = cy; PR.cam.position.set(c.x + 1.3, cy + 0.7, c.z + 5); PR.cam.lookAt(c); }
